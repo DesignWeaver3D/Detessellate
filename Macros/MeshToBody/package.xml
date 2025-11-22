@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package format="1" xmlns="https://wiki.freecad.org/Package_Metadata">
+  <!-- Basic metadata -->
+  <name>MeshToBody</name>
+  <version>2.0.1</version>
+  <date>2025-11-18</date>
+  <description>
+    FreeCAD Macro to convert one or many Meshes to Refined Solids as BaseFeature of PartDesign Bodies.
+  </description>
+
+  <!-- Maintainer info -->
+  <maintainer email="designweaver3d@gmail.com">NSUBB (DesignWeaver3D)</maintainer>
+  <license>GPL-3.0-or-later</license>
+
+  <!-- Icon -->
+  <icon>MeshToBody.svg</icon>
+
+  <!-- Content definition -->
+  <content>
+    <macro>
+      <filename>MeshToBody_250611.py</filename>
+      <subdirectory>./</subdirectory>
+    </macro>
+  </content>
+
+  <!-- Optional metadata -->
+  <url type="repository">https://github.com/NSUBB/MeshToBody</url>
+  <url type="readme">https://github.com/NSUBB/MeshToBody/blob/main/README.md</url>
+  <url type="discussion">https://forum.freecad.org/viewtopic.php?t=97579</url>
+
+  <!-- FreeCAD compatibility -->
+  <requires>
+    <freecad>1.0.2+</freecad>
+  </requires>
+
+  <!-- Tags for searchability -->
+  <tags>
+    <tag>mesh</tag>
+    <tag>conversion</tag>
+    <tag>macro</tag>
+    <tag>partdesign</tag>
+  </tags>
+</package>
