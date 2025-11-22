@@ -111,7 +111,8 @@ class CreateSketchToolbarCommand:
                 "SketcherWireDoctor"
             )
 
-            icon_path = os.path.join(macro_path, "sketcherwiredoctor.svg")
+            # Load icon - adjust the filename to match your actual icon file
+            icon_path = os.path.join(macro_path, "sketcherwiredoctor.svg")  # or .png, whatever you have
             icon = QtGui.QIcon(icon_path) if os.path.exists(icon_path) else QtGui.QIcon()
 
             action = QtGui.QAction(icon, "Sketcher Wire Doctor", toolbar)
@@ -150,14 +151,14 @@ class CreateSketchToolbarCommand:
                 sys.path.append(macro_path)
 
             import importlib
-            if 'SketcherWireDoctor' in sys.modules:
-                import SketcherWireDoctor
-                importlib.reload(SketcherWireDoctor)
+            if 'SketcherWireDoctor_Main' in sys.modules:
+                import SketcherWireDoctor_Main
+                importlib.reload(SketcherWireDoctor_Main)
             else:
-                import SketcherWireDoctor
+                import SketcherWireDoctor_Main
 
-            # Call the appropriate function - adjust based on your macro's structure
-            # SketcherWireDoctor.main() or whatever function it uses
+            # Call the main function to show the docker
+            SketcherWireDoctor_Main.show_sketcher_wire_doctor()
 
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error running SketcherWireDoctor: {e}\n")
