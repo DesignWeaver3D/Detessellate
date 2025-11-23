@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<package format="1" xmlns="https://wiki.freecad.org/Package_Metadata">
+
+  <name>VarSetUpdate</name>
+
+  <description>`VarSetUpdate` is a FreeCAD macro designed to streamline the process of updating variable names and properties in VarSet objects. Originally authored by **Mathias L.** and extended by **[DesignWeaver](https://forum.freecad.org/memberlist.php?mode=viewprofile&amp;u=80381&amp;sid=658045436126114983df20117ee27bf5) (NSUBB)**, this utility provides a robust toolset for managing properties, ensuring compatibility with existing relationships, and simplifying modifications.</description>
+
+  <version>2025.4.25</version>
+
+  <date>2025-04-25</date>
+
+  <maintainer email="insubbeckley@gmail.com">NSUBB</maintainer>
+
+  <license file="LICENSE">GPLv3</license>
+
+  <url branch="main" type="repository">https://github.com/NSUBB/VarSet-Update</url>
+
+  <url type="readme">https://github.com/NSUBB/VarSet-Update/raw/main/README.md</url>
+
+  <icon>VarSetUpdate.svg</icon>
+
+</package>
