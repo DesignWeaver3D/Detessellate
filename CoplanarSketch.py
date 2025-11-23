@@ -3,7 +3,7 @@ import FreeCADGui
 import Part
 import Sketcher
 import PartDesign
-from PySide.QtWidgets import QDockWidget, QWidget, QVBoxLayout, QPushButton, QTextEdit, QLabel, QInputDialog
+from PySide.QtWidgets import QDockWidget, QWidget, QVBoxLayout, QPushButton, QTextEdit, QLabel, QInputDialog, QLineEdit
 from PySide.QtCore import Qt
 import time
 
@@ -27,6 +27,10 @@ class EdgeDataCollector(QDockWidget):
         self.select_coplanar_button.clicked.connect(self.select_coplanar_edges)
         self.select_coplanar_button.setVisible(False)
 
+        self.tolerance_label = QLabel("Coplanar tolerance:")
+        self.tolerance_input = QLineEdit("0.000001")  # default 1e-6
+
+
         self.clean_label = QLabel("Degenerate edges detected. Cleaning recommended for better performance.")
         self.clean_label.setVisible(False)
         self.clean_button = QPushButton("Clean Degenerate Edges")
@@ -45,6 +49,10 @@ class EdgeDataCollector(QDockWidget):
 
         layout.addWidget(self.collect_button)
         layout.addWidget(self.select_coplanar_label)
+
+        layout.addWidget(self.tolerance_label)
+        layout.addWidget(self.tolerance_input)
+
         layout.addWidget(self.select_coplanar_button)
         layout.addWidget(self.clean_label)
         layout.addWidget(self.clean_button)
@@ -65,16 +73,16 @@ class EdgeDataCollector(QDockWidget):
 
         obj = selection[0].Object
         edges = obj.Shape.Edges
-        
+
         # Collect edges with validity checking
         self.collected_edges = []
         invalid_count = 0
         degenerate_count = 0
         property_error_count = 0
-        
+
         for edge in edges:
             edge_index = edges.index(edge)  # Get actual FreeCAD edge index
-            
+
             # Cache vertex points to avoid repeated API calls
             try:
                 vertex_points = [v.Point for v in edge.Vertexes]
@@ -82,7 +90,7 @@ class EdgeDataCollector(QDockWidget):
             except:
                 vertex_points = []
                 vertex_count = 0
-            
+
             edge_dict = {
                 'edge': edge,
                 'name': f"Edge{edge_index+1}",
@@ -92,7 +100,7 @@ class EdgeDataCollector(QDockWidget):
                 'vertex_count': vertex_count,
                 'error_reason': None
             }
-            
+
             # Check for validity issues
             if vertex_count != 2:
                 edge_dict['valid'] = False
@@ -108,11 +116,11 @@ class EdgeDataCollector(QDockWidget):
                     edge_dict['error_reason'] = "Property access error"
                     property_error_count += 1
                     invalid_count += 1
-            
+
             self.collected_edges.append(edge_dict)
 
         # Calculate mass center from valid edges only
-        all_points = [point for edge_dict in self.collected_edges 
+        all_points = [point for edge_dict in self.collected_edges
                       if edge_dict['valid'] for point in edge_dict['vertex_points']]
         if all_points:
             self.edge_mass_center = sum(all_points, FreeCAD.Vector()).multiply(1.0 / len(all_points))
@@ -120,13 +128,13 @@ class EdgeDataCollector(QDockWidget):
         duration = time.time() - start_time
         expected_count = len(edges)
         actual_count = len(self.collected_edges)
-        
+
         self.info_display.append(f"Collected {actual_count} edges from {obj.Label}.")
-        
+
         if expected_count != actual_count:
             skipped_count = expected_count - actual_count
             self.info_display.append(f"Skipped {skipped_count} edges due to processing errors.")
-        
+
         if invalid_count > 0:
             error_details = []
             if degenerate_count > 0:
@@ -134,7 +142,7 @@ class EdgeDataCollector(QDockWidget):
             if property_error_count > 0:
                 error_details.append(f"{property_error_count} property errors")
             self.info_display.append(f"Invalid edges found: {', '.join(error_details)}.")
-            
+
             # Show cleaning option only when degenerates are found
             self.clean_label.setVisible(True)
             self.clean_button.setVisible(True)
@@ -148,7 +156,7 @@ class EdgeDataCollector(QDockWidget):
             self.select_coplanar_label.setVisible(True)
             self.select_coplanar_button.setVisible(True)
             self.create_sketch_button.setVisible(False)  # Hidden until coplanar selection
-        
+
         self.info_display.append(f"Elapsed time: {duration:.4f} seconds.\n")
 
     def select_coplanar_edges(self):
@@ -156,7 +164,7 @@ class EdgeDataCollector(QDockWidget):
         if not self.collected_edges:
             self.info_display.append("Error: No edge data collected. Click 'Collect Edge Data' first.")
             return
-            
+
         start_time = time.time()
         selection = FreeCADGui.Selection.getSelectionEx()
         if not selection:
@@ -176,30 +184,30 @@ class EdgeDataCollector(QDockWidget):
             # Use cached vertex points from our collected data for plane calculation
             edge1_name = selected_edge_names[0]
             edge2_name = selected_edge_names[1]
-            
+
             # Find edges in our collected data
             edge1_dict = next((ed for ed in self.collected_edges if ed['name'] == edge1_name), None)
             edge2_dict = next((ed for ed in self.collected_edges if ed['name'] == edge2_name), None)
-            
+
             if not edge1_dict or not edge2_dict:
                 self.info_display.append("Error: Selected edges not found in collected data.")
                 return
-                
+
             if edge1_dict['vertex_count'] != 2 or edge2_dict['vertex_count'] != 2:
                 self.info_display.append("Error: Selected edges have invalid vertex counts.")
                 return
-            
+
             # Collect all unique vertices from both edges
             all_vertices = edge1_dict['vertex_points'] + edge2_dict['vertex_points']
             unique_vertices = []
             for v in all_vertices:
                 if not any((v - existing).Length < 1e-6 for existing in unique_vertices):
                     unique_vertices.append(v)
-            
+
             if len(unique_vertices) < 3:
                 self.info_display.append("Error: Edges are colinear; cannot define plane.")
                 return
-            
+
             # Use first three unique vertices to define plane
             v1, v2, v3 = unique_vertices[:3]
             plane_normal = (v2 - v1).cross(v3 - v1)
@@ -216,10 +224,16 @@ class EdgeDataCollector(QDockWidget):
             return
 
         def is_coplanar(edge_dict):
-            if edge_dict['vertex_count'] != 2:  # Skip degenerate edges
+            if edge_dict['vertex_count'] != 2:
                 return False
-            v1, v2 = edge_dict['vertex_points']  # Use cached vertex points
-            return abs((v1 - plane_point).dot(plane_normal)) < 1e-6 and abs((v2 - plane_point).dot(plane_normal)) < 1e-6
+            v1, v2 = edge_dict['vertex_points']
+            try:
+                # Clamp user input between 1e-6 and 1.0
+                tol = max(1e-6, min(float(self.tolerance_input.text()), 1.0))
+            except:
+                tol = 1e-6  # fallback if input is invalid
+            return abs((v1 - plane_point).dot(plane_normal)) < tol and \
+                   abs((v2 - plane_point).dot(plane_normal)) < tol
 
         coplanar_edge_dicts = [edge_dict for edge_dict in self.collected_edges if is_coplanar(edge_dict)]
         coplanar_edges = [edge_dict['edge'] for edge_dict in coplanar_edge_dicts]
@@ -236,7 +250,7 @@ class EdgeDataCollector(QDockWidget):
         duration = time.time() - start_time
         self.info_display.append(f"Selected {len(coplanar_edges)} coplanar edges.")
         self.info_display.append(f"Elapsed time: {duration:.4f} seconds.\n")
-        
+
         # Show Create Sketch button after coplanar selection
         self.create_sketch_button.setVisible(True)
 
@@ -279,7 +293,7 @@ class EdgeDataCollector(QDockWidget):
     def create_standalone_sketch(self, temp_sketch, edges):
         """Create standalone sketch using current stable implementation"""
         doc = FreeCAD.ActiveDocument
-        
+
         final_sketch = doc.addObject("Sketcher::SketchObject", "Sketch")
         final_sketch.Placement = temp_sketch.Placement
         doc.recompute()
@@ -314,9 +328,9 @@ class EdgeDataCollector(QDockWidget):
     def create_body_sketch(self, temp_sketch, edges, target_body):
         """Create sketch attached to PartDesign body"""
         doc = FreeCAD.ActiveDocument
-        
+
         final_sketch = doc.addObject("Sketcher::SketchObject", "Sketch")
-        
+
         # Add sketch to body
         target_body.ViewObject.dropObject(final_sketch, None, '', [])
         doc.recompute()
@@ -327,7 +341,7 @@ class EdgeDataCollector(QDockWidget):
         final_sketch.AttachmentOffset.Base = temp_sketch.Placement.Base
         final_sketch.AttachmentOffset.Rotation = temp_sketch.Placement.Rotation
         final_sketch.Placement = FreeCAD.Placement()
-        
+
         doc.recompute()
 
         # Add geometry (same as standalone)
@@ -359,27 +373,27 @@ class EdgeDataCollector(QDockWidget):
         return final_sketch
 
     def show_destination_dialog(self):
-        """Show destination dialog and return choice info"""        
+        """Show destination dialog and return choice info"""
         try:
             FreeCAD.Console.PrintMessage("DEBUG: Starting destination dialog...\n")
-            
+
             doc = FreeCAD.ActiveDocument
             body_names = [o.Name for o in doc.Objects if o.isDerivedFrom("PartDesign::Body")]
             options = ["<Standalone (Part Workbench)>", "<Create New Body (PartDesign)>"] + body_names
-            
+
             FreeCAD.Console.PrintMessage(f"DEBUG: Dialog options: {options}\n")
-            
+
             item, ok = QInputDialog.getItem(FreeCADGui.getMainWindow(),
                                             "Sketch Placement Options",
                                             "Choose a placement option:",
                                             options, 0, False)
-            
+
             FreeCAD.Console.PrintMessage(f"DEBUG: Dialog result - item: '{item}', ok: {ok}\n")
-            
+
             if not ok or not item:
                 FreeCAD.Console.PrintMessage("DEBUG: Dialog cancelled or no item selected\n")
                 return None
-                
+
             if item == "<Standalone (Part Workbench)>":
                 FreeCAD.Console.PrintMessage("DEBUG: Standalone option selected\n")
                 return {"type": "standalone"}
@@ -389,7 +403,7 @@ class EdgeDataCollector(QDockWidget):
             else:
                 FreeCAD.Console.PrintMessage(f"DEBUG: Existing body option selected: {item}\n")
                 return {"type": "existing_body", "body_name": item}
-                
+
         except Exception as e:
             FreeCAD.Console.PrintError(f"DEBUG: Dialog error: {e}\n")
             return {"type": "standalone"}  # Fallback
@@ -399,7 +413,7 @@ class EdgeDataCollector(QDockWidget):
         if not self.collected_edges:
             self.info_display.append("Error: No edge data collected. Click 'Collect Edge Data' first.")
             return
-            
+
         doc = FreeCAD.ActiveDocument
         if not doc:
             self.info_display.append("Error: No active FreeCAD document.")
@@ -415,10 +429,10 @@ class EdgeDataCollector(QDockWidget):
         doc.openTransaction("Create Sketch from Selection")
         temp_sketch = None
         final_sketch = None
-        
+
         try:
             FreeCAD.Console.PrintMessage("DEBUG: Starting sketch creation\n")
-            
+
             selected_edges = []
             selected_objects = FreeCADGui.Selection.getSelectionEx()
             source_object = None
@@ -457,7 +471,7 @@ class EdgeDataCollector(QDockWidget):
             # Show destination dialog
             choice = self.show_destination_dialog()
             FreeCAD.Console.PrintMessage(f"DEBUG: Dialog returned: {choice}\n")
-            
+
             if not choice:
                 self.info_display.append("Sketch creation cancelled by user.")
                 if temp_sketch:
@@ -511,7 +525,7 @@ class EdgeDataCollector(QDockWidget):
         if not doc:
             self.info_display.append("Error: No active FreeCAD document.")
             return
-            
+
         selection = FreeCADGui.Selection.getSelectionEx()
         if not selection or not hasattr(selection[0].Object, "Shape"):
             self.info_display.append("Error: Select a valid Part object to clean.")
@@ -519,18 +533,18 @@ class EdgeDataCollector(QDockWidget):
 
         start_time = time.time()
         doc.openTransaction("Clean Degenerate Edges")
-        
+
         try:
             source_object = selection[0].Object
             original_shape = source_object.Shape
-            
+
             self.info_display.append(f"Cleaning degenerate edges from {source_object.Label}...")
-            
+
             # Copy the shape to edit
             shape = original_shape.copy()
             valid_faces = []
             skipped_faces = 0
-            
+
             # Check each face for degenerate edge references
             for f in shape.Faces:
                 try:
@@ -542,39 +556,39 @@ class EdgeDataCollector(QDockWidget):
                 except Exception as err:
                     self.info_display.append(f"Warning: Skipping face due to error: {err}")
                     skipped_faces += 1
-            
+
             if not valid_faces:
                 self.info_display.append("Error: No valid faces found after cleaning.")
                 doc.abortTransaction()
                 return
-            
+
             # Rebuild shape from retained faces
             cleaned_shape = Part.Compound(valid_faces)
-            
+
             # Create new object with cleaned shape
             cleaned_object = doc.addObject("Part::Feature", f"{source_object.Label}_Cleaned")
             cleaned_object.Shape = cleaned_shape
             cleaned_object.Label = f"{source_object.Label}_Cleaned"
-            
+
             doc.recompute()
-            
+
             # Select the new clean object and hide the original
             FreeCADGui.Selection.clearSelection()
             FreeCADGui.Selection.addSelection(cleaned_object)
             source_object.Visibility = False
-            
+
             duration = time.time() - start_time
             self.info_display.append(f"Created cleaned object: {cleaned_object.Label}")
             self.info_display.append(f"Retained {len(valid_faces)} faces, skipped {skipped_faces} faces with degenerate edges.")
             self.info_display.append(f"Original object hidden following Part workbench convention.")
             self.info_display.append(f"Elapsed time: {duration:.4f} seconds.")
             self.info_display.append("Automatically collecting edge data from cleaned object...\n")
-            
+
             doc.commitTransaction()
-            
+
             # Automatically re-collect data on the cleaned object
             self.collect_data()
-            
+
         except Exception as e:
             doc.abortTransaction()
             self.info_display.append(f"Cleaning failed: {e}")
