@@ -10,6 +10,7 @@ command_specs = [
     ("MeshPlacement", "Commands.MeshPlacementCommand", "MeshPlacementCommand", "Detessellate Mesh", True),
     ("MeshToBody", "Commands.MeshToBodyCommand", "MeshToBodyCommand", "Detessellate Mesh", True),
     ("CoplanarSketch", "Commands.CoplanarSketchCommand", "CoplanarSketchCommand", "Detessellate Sketch", True),
+    ("EdgeLoopSelector", "Commands.EdgeLoopSelectorCommand", "EdgeLoopSelectorCommand", "Detessellate Utilities", True),
     ("CreateSketchToolbar", "Commands.CreateSketchToolbarCommand", "CreateSketchToolbarCommand", "Detessellate Sketch", False),  # Menu only
 ]
 
