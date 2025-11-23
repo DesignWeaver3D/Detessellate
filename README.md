@@ -1,5 +1,7 @@
 # FreeCAD Edge Loop Selector
 
+<img width="64" height="64" alt="EdgeLoopSelector" src="https://github.com/user-attachments/assets/e2de31f8-bf12-46f7-b5eb-5a7271ec598b" />
+
 A FreeCAD macro that automatically selects all edges in a connected loop from a single or dual edge selection. Works with both sketches and solid shapes.
 
 ## Features
