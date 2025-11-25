@@ -28,4 +28,9 @@
 Initial release under a new versioning system.  
 **Only tested on Windows with FreeCAD v1.0.2** — Linux/macOS testers welcome.
 
----
+## License
+
+This project is licensed under the [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html).  
+You are free to use, modify, and redistribute this macro under the terms of the GPLv3.
+
+© NSUBB (aka DesignWeaver3D)
