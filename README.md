@@ -27,13 +27,19 @@ Detessellate is a collection of FreeCAD macros that introduce an **algorithm-ass
 > Some of these macros are included for convenience and are not strictly part of the Detessellate workflow.
 
 ## 🚀 Getting Started
-1. ~~Install via **FreeCAD Addon Manager**~~ (hopefully coming soon) or download the Detessellate folder from this repo.  
-2. Place the folder in your FreeCAD `Mod` directory.
-   - Windows:  C:\Users\<username>\AppData\Roaming\FreeCAD\Mod
-   - Linux: /home/<username>/.FreeCAD/Mod
-   - macOS: /Users/<username>/Library/Preferences/FreeCAD/Mod
-3. Restart FreeCAD.
-4. Access tools from the **Detessellate workbench** and/or the custom toolbars that the workbench creates.   
+Install via **FreeCAD Addon Manager** by adding the Detessellate Repository to the custom repositories list.
+1. Open the Preferences via **Edit > Preferences**.
+2. Go to **Addon Manager Options**.
+3. Click the green **Plus** button under the **Custom Repository** list window to add to the list.
+4. Paste the **Repository URL** into the **Custom Repository** dialog box: **https://github.com/DesignWeaver3D/Detessellate**
+5. Type in the **Branch** name: **main**
+6. Click **OK**
+7. Open **Addon Manager** and find **Detessellate** in the list.
+8. Click **Install**
+10. **Restart** FreeCAD.
+11. Access tools from the **Detessellate workbench** and/or the custom toolbars that the workbench creates.
+
+<img width="885" height="932" alt="image" src="https://github.com/user-attachments/assets/8a0a0d23-7a0b-46d9-a032-3d1cb1f87fb2" />
 
 ## 📖 Roadmap
 - 📚 Expanded documentation and tutorials  
