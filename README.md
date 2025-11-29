@@ -3,6 +3,8 @@ FreeCAD workbench of tools to reverse engineer meshes
 
 <img width="128" height="128" alt="Detessellate" src="https://github.com/user-attachments/assets/0c7ede91-acdf-4160-bc04-fc37f76c0e3c" />
 
+FreeCAD Forum: https://forum.freecad.org/viewtopic.php?t=101467
+
 Detessellate is a collection of FreeCAD macros that introduce an **algorithm-assisted workflow** for reverse engineering mesh models such as imported STL, OBJ, or 3MF files.  
 
 ## ✨ Workflow
