@@ -95,7 +95,11 @@ class CreateSketchToolbarCommand:
             icon = QtGui.QIcon(icon_path) if os.path.exists(icon_path) else QtGui.QIcon()
 
             action = QtGui.QAction(icon, "Sketch ReProfile", toolbar)
-            action.setToolTip("Reprocess sketch profiles - converts construction lines to circles, arcs, and splines")
+            action.setToolTip(
+                "<b>SketchReProfile</b><br><br>"
+                "Draws lines, circles, arcs, and splines over construction geometry<br><br>"
+                "<i>Detessellate_SketchReProfile</i>"
+            )
             action.triggered.connect(lambda: self.run_sketch_reprofile(macro_path))
 
             toolbar.addAction(action)
@@ -119,7 +123,11 @@ class CreateSketchToolbarCommand:
             icon = QtGui.QIcon(icon_path) if os.path.exists(icon_path) else QtGui.QIcon()
 
             action = QtGui.QAction(icon, "Sketcher Wire Doctor", toolbar)
-            action.setToolTip("Fix sketch wire connectivity issues")
+            action.setToolTip(
+                "<b>SketcherWireDoctor</b><br><br>"
+                "Detects sketch issues and provides repair tools<br><br>"
+                "<i>Detessellate_SketcherWireDoctor</i>"
+            )
             action.triggered.connect(lambda: self.run_sketcher_wiredoctor(macro_path))
 
             toolbar.addAction(action)
