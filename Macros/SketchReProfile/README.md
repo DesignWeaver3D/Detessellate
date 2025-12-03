@@ -8,7 +8,7 @@
 ## ⚠️ This repository is automatically synced from Detessellate.
 Do not push changes directly to this repo — they will be overwritten on the next sync.
 
-To contribute, make changes in the Detessellate repo under Macros/MeshToBody/.
+To contribute, make changes in the Detessellate repo under Macros/SketchReProfile/.
 
 ### 🔍 Features
 
