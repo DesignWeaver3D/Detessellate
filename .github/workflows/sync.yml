@@ -90,6 +90,7 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "Sync from Detessellate @ ${{ github.sha }}"
+            git remote set-url origin https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/DesignWeaver3D/${{ matrix.macro.repo }}.git
             git push origin main --force
             echo "✓ Sync complete for ${{ matrix.macro.name }}"
           fi
