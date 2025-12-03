@@ -1,0 +1,70 @@
+name: Sync Macros to Satellite Repos
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        macro:
+          - name: CoplanarSketch
+            path: Macros/CoplanarSketch
+            repo: CoplanarSketch
+          - name: VarSet-Update
+            path: Macros/VarSet-Update
+            repo: VarSet-Update
+          - name: TopoMatchSelector
+            path: Macros/TopoMatchSelector
+            repo: TopoMatchSelector
+          - name: EdgeLoopSelector
+            path: Macros/EdgeLoopSelector
+            repo: EdgeLoopSelector
+          - name: SketchReProfile
+            path: Macros/SketchReProfile
+            repo: SketchReProfile
+          - name: MeshPlacement
+            path: Macros/MeshPlacement
+            repo: MeshPlacement
+          - name: MeshToBody
+            path: Macros/MeshToBody
+            repo: MeshToBody
+          - name: SketcherWireDoctor
+            path: Macros/SketcherWireDoctor
+            repo: SketcherWireDoctor
+    
+    steps:
+      - name: Checkout Detessellate
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Git
+        run: |
+          git config --global user.name "Detessellate Sync Bot"
+          git config --global user.email "actions@github.com"
+      
+      - name: Sync ${{ matrix.macro.name }}
+        run: |
+          echo "================================================"
+          echo "Syncing: ${{ matrix.macro.name }}"
+          echo "Source path: ${{ matrix.macro.path }}"
+          echo "Target repo: DesignWeaver3D/${{ matrix.macro.repo }}"
+          echo "================================================"
+          
+          BRANCH_NAME="sync-${{ matrix.macro.name }}"
+          
+          echo "Creating subtree split from ${{ matrix.macro.path }}..."
+          git subtree split --prefix=${{ matrix.macro.path }} -b $BRANCH_NAME
+          
+          echo "Pushing to ${{ matrix.macro.repo }}:main..."
+          git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/DesignWeaver3D/${{ matrix.macro.repo }}.git $BRANCH_NAME:main --force
+          
+          echo "Cleaning up temporary branch $BRANCH_NAME..."
+          git branch -D $BRANCH_NAME || true
+          
+          echo "✓ Sync complete for ${{ matrix.macro.name }}"
