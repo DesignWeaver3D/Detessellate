@@ -47,6 +47,7 @@ Install via **FreeCAD Addon Manager** by adding the Detessellate Repository to t
 - 🎯 Integration with FreeCAD Addon Manager
 
 ## 📜 Changelog
+- **v0.1.4** (2025‑12‑02) – Fixed regression in CoplanarSketch Macro
 - **v0.1.3** (2025‑12‑02) – Optimized CoplanarSketch Macro for better handling of larger edge counts
 - **v0.1.2** (2025‑11‑30) – Improved tooltips for all toolbars  
 - **v0.1.1** (2025‑11‑30) – Bug fix for `package.xml` for Addon Manager  
