@@ -4,6 +4,12 @@
 The **MeshToBody** FreeCAD macro converts the selected or all mesh objects into a refined, simple solid or fusion of solids and integrates it into a **PartDesign Body**. 
 Version **2.0** introduces a unified workflow with improved report messaging and robust cleanup.
 
+## ⚠️ **This repository is automatically synced from [Detessellate](https://github.com/DesignWeaver3D/Detessellate).**
+
+**Do not push changes directly to this repo** — they will be overwritten on the next sync.
+
+To contribute, make changes in the Detessellate repo under `Macros/CoplanarSketch/`.
+
 📺 Click the image below to watch the demo video on YouTube
 
 [![Watch the demo video](https://img.youtube.com/vi/EWC2T1qP_OI/maxresdefault.jpg)](https://www.youtube.com/watch?v=EWC2T1qP_OI)
