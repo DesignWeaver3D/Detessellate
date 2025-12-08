@@ -45,7 +45,7 @@ def select_connected_loop_or_sketch():
                 if neighbor != i:
                     edge_graph[i].add(neighbor)
 
-        # Find connected components
+        # Find connected components using DFS
         def dfs(start, visited):
             group = []
             stack = [start]
@@ -65,23 +65,32 @@ def select_connected_loop_or_sketch():
                 comp = dfs(i, visited)
                 components.append(comp)
 
-        # If only one edge selected, pick its loop
-        if len(selected_indices) == 1:
-            target = selected_indices[0]
-            matching = next((comp for comp in components if target in comp), None)
-        else:
-            # Multiple edges selected: find loop that contains all
-            selected_set = set(selected_indices)
-            matching = next((comp for comp in components if selected_set.issubset(set(comp))), None)
+        # Find all unique loops containing selected edges
+        unique_loops = []
+        seen_loop_sets = []
+        
+        for edge_idx in selected_indices:
+            matching_comp = next((comp for comp in components if edge_idx in comp), None)
+            if matching_comp:
+                loop_set = frozenset(matching_comp)
+                if loop_set not in seen_loop_sets:
+                    seen_loop_sets.append(loop_set)
+                    unique_loops.append(matching_comp)
 
-        if not matching:
+        if not unique_loops:
             FreeCAD.Console.PrintError("Error: Could not find a matching loop for the selected edge(s).\n")
             return
 
+        # Select all edges from all unique loops
         FreeCADGui.Selection.clearSelection()
-        for i in matching:
+        all_edges_to_select = set()
+        for loop in unique_loops:
+            all_edges_to_select.update(loop)
+        
+        for i in sorted(all_edges_to_select):
             FreeCADGui.Selection.addSelection(obj, f"Edge{i+1}")
-        FreeCAD.Console.PrintMessage(f"Selected {len(matching)} edges from the sketch loop.\n")
+        
+        FreeCAD.Console.PrintMessage(f"Selected {len(all_edges_to_select)} edges from {len(unique_loops)} loop(s).\n")
         return
 
     # --- Handle Solids and Part shapes ---
@@ -102,44 +111,127 @@ def select_connected_loop_or_sketch():
         FreeCAD.Console.PrintError(f"Error processing selection: {e}\n")
         return
 
-    start_edge = selected_edge_objects[0]
-    parent_faces = []
-    for face in obj.Shape.Faces:
-        for face_edge in face.Edges:
-            if face_edge.isSame(start_edge):
-                parent_faces.append(face)
-                break
-
-    if not parent_faces:
-        FreeCAD.Console.PrintError("Error: Could not find a parent face for the selected edge.\n")
+    # Validate at least 2 edges selected for 3D objects
+    if len(selected_edge_objects) < 2:
+        FreeCAD.Console.PrintError("Error: Please select at least 2 edges from a 3D object to define the plane.\n")
         return
 
-    found_loop = None
-    for face in parent_faces:
-        if found_loop:
+    # Collect unique vertex points from selected edges
+    tolerance = 1e-6
+    unique_points = []
+    all_points = []
+    
+    for edge in selected_edge_objects:
+        for vertex in edge.Vertexes:
+            pt = vertex.Point
+            all_points.append(pt)
+            if not any(pt.isEqual(existing, tolerance) for existing in unique_points):
+                unique_points.append(pt)
+
+    if len(unique_points) < 3:
+        FreeCAD.Console.PrintError("Error: Selected edges do not provide enough unique points to define a plane.\n")
+        return
+
+    # Find 3 non-collinear points to define plane
+    plane_point = unique_points[0]
+    plane_normal = None
+    
+    for i in range(1, len(unique_points)):
+        v1 = unique_points[i] - plane_point
+        for j in range(i + 1, len(unique_points)):
+            v2 = unique_points[j] - plane_point
+            cross = v1.cross(v2)
+            if cross.Length > tolerance:
+                plane_normal = cross.normalize()
+                break
+        if plane_normal:
             break
-        for wire in face.Wires:
-            wire_edges = wire.Edges
-            if not any(edge.isSame(start_edge) for edge in wire_edges):
-                continue
-            if all(any(edge.isSame(e) for edge in wire_edges) for e in selected_edge_objects):
-                found_loop = wire
-                break
 
-    if not found_loop:
-        FreeCAD.Console.PrintError("Error: The selected edges do not all belong to the same continuous loop.\n")
+    if not plane_normal:
+        FreeCAD.Console.PrintError("Error: Selected edges are collinear and cannot define a plane.\n")
         return
 
-    FreeCADGui.Selection.clearSelection()
-    selected_count = 0
-    for edge_in_loop in found_loop.Edges:
-        for idx, original_edge in enumerate(all_obj_edges):
-            if original_edge.isSame(edge_in_loop):
-                FreeCADGui.Selection.addSelection(obj, f"Edge{idx+1}")
-                selected_count += 1
-                break
+    # Check all points lie on the defined plane
+    for pt in all_points:
+        distance = abs((pt - plane_point).dot(plane_normal))
+        if distance > tolerance:
+            FreeCAD.Console.PrintError("Error: Selected edges are not coplanar.\n")
+            return
 
-    FreeCAD.Console.PrintMessage(f"Selected {selected_count} edges in the connected loop.\n")
+    # Find all unique loops containing selected edges on coplanar faces
+    unique_loop_sets = []
+    
+    for start_edge in selected_edge_objects:
+        # Find parent faces that contain this edge
+        parent_faces = []
+        for face in obj.Shape.Faces:
+            for face_edge in face.Edges:
+                if face_edge.isSame(start_edge):
+                    parent_faces.append(face)
+                    break
+
+        if not parent_faces:
+            FreeCAD.Console.PrintWarning(f"Warning: Could not find a parent face for a selected edge.\n")
+            continue
+
+        # Filter to only coplanar faces
+        coplanar_faces = []
+        for face in parent_faces:
+            # Get face normal and a point on the face
+            face_normal = face.normalAt(0, 0)
+            face_point = face.valueAt(0, 0)
+            
+            # Check if normals are parallel (dot product near ±1)
+            dot = abs(face_normal.normalize().dot(plane_normal))
+            if abs(dot - 1.0) < tolerance:
+                # Check if face lies on same plane
+                distance = abs((face_point - plane_point).dot(plane_normal))
+                if distance < tolerance:
+                    coplanar_faces.append(face)
+
+        if not coplanar_faces:
+            FreeCAD.Console.PrintWarning(f"Warning: Could not find a coplanar face for a selected edge.\n")
+            continue
+
+        # Find wire on coplanar faces containing this edge
+        found_loop = None
+        for face in coplanar_faces:
+            if found_loop:
+                break
+            for wire in face.Wires:
+                wire_edges = wire.Edges
+                if any(edge.isSame(start_edge) for edge in wire_edges):
+                    found_loop = wire
+                    break
+
+        if found_loop:
+            # Convert wire to set of edge indices
+            loop_indices = set()
+            for edge_in_loop in found_loop.Edges:
+                for idx, original_edge in enumerate(all_obj_edges):
+                    if original_edge.isSame(edge_in_loop):
+                        loop_indices.add(idx)
+                        break
+            
+            # Check if we've already found this loop
+            loop_frozen = frozenset(loop_indices)
+            if loop_frozen not in unique_loop_sets:
+                unique_loop_sets.append(loop_frozen)
+
+    if not unique_loop_sets:
+        FreeCAD.Console.PrintError("Error: Could not find loops for the selected edges.\n")
+        return
+
+    # Select all edges from all unique loops
+    FreeCADGui.Selection.clearSelection()
+    all_edges_to_select = set()
+    for loop_set in unique_loop_sets:
+        all_edges_to_select.update(loop_set)
+    
+    for idx in sorted(all_edges_to_select):
+        FreeCADGui.Selection.addSelection(obj, f"Edge{idx+1}")
+
+    FreeCAD.Console.PrintMessage(f"Selected {len(all_edges_to_select)} edges from {len(unique_loop_sets)} loop(s).\n")
 
 # --- Run the macro ---
 select_connected_loop_or_sketch()
