@@ -52,7 +52,7 @@ Install via **FreeCAD Addon Manager** by adding the Detessellate Repository to t
 - 🎯 Integration with FreeCAD Addon Manager
 
 ## 📜 Changelog
-- **v0.1.6** (2025‑12-07) - Added EdgeLoopToSketch macro for creating sketches from EdgeLoopSelector
+- **v0.1.6** (2025‑12-07) - Added EdgeLoopToSketch macro for creating sketches from EdgeLoopSelector. Added face selection method to EdgeLoopSelector.
 - **v0.1.5** (2025‑12-07) - Added multiple loop selection to EdgeLoopSelector
 - **v0.1.4** (2025‑12‑02) – Fixed regression in CoplanarSketch Macro
 - **v0.1.3** (2025‑12‑02) – Optimized CoplanarSketch Macro for better handling of larger edge counts
