@@ -1,5 +1,7 @@
 # FreeCAD EdgeLoopToSketch
 
+<img width="128" height="128" alt="EdgeLoopToSketch" src="https://github.com/user-attachments/assets/2ed2553e-633c-4be4-aacc-32f5d4691915" />
+
 A FreeCAD macro that converts selected 3D edges into parametric sketches while preserving curve types (lines, arcs, circles, B-splines).
 
 ## Why Use This Tool?
