@@ -7,6 +7,10 @@ FreeCAD Forum: https://forum.freecad.org/viewtopic.php?t=101467
 
 Detessellate is a collection of FreeCAD macros that introduce an **algorithm-assisted workflow** for reverse engineering mesh models such as imported STL, OBJ, or 3MF files.  
 
+📺 Click the image below to watch the demo video on YouTube
+
+[![Watch the demo video](https://img.youtube.com/vi/QLw4me9nutA/maxresdefault.jpg)](https://www.youtube.com/watch?v=QLw4me9nutA)
+
 ## ✨ Workflow
 1. Use **MeshPlacement** and **MeshToBody** to align and convert meshes to solids.  
 2. Use **CoplanarSketch** to generate construction sketches for reconstructive solid features.  
