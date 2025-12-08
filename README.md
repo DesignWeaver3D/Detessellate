@@ -24,7 +24,8 @@ Detessellate is a collection of FreeCAD macros that introduce an **algorithm-ass
 - <img width="25" height="25" alt="CoplanarSketch" src="https://github.com/user-attachments/assets/a941d04a-1707-400b-bd9c-d0751c8ea021" /> [CoplanarSketch](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/CoplanarSketch/README.md) – generate construction sketches from coplanar edges on tessellated solids  
 - <img width="25" height="25" alt="SketchReProfileIcon" src="https://github.com/user-attachments/assets/b21b52fa-843c-4c4d-8b63-4600f9488f41" /> [SketchReProfile](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/SketchReProfile/README.md) – rebuild normal geometry profiles from construction sketches  
 - <img width="25" height="25" alt="SketcherWireDoctorIcon" src="https://github.com/user-attachments/assets/21fd3989-5f19-4127-a680-0e17d17534ec" /> [SketcherWireDoctor](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/SketcherWireDoctor/README.md) – repair and clean sketch wires  
-- <img width="25" height="25" alt="EdgeLoopSelectorIcon" src="https://github.com/user-attachments/assets/e2de31f8-bf12-46f7-b5eb-5a7271ec598b" /> [EdgeLoopSelector](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/EdgeLoopSelector/README.md) – select and process edge loops  
+- <img width="25" height="25" alt="EdgeLoopSelectorIcon" src="https://github.com/user-attachments/assets/e2de31f8-bf12-46f7-b5eb-5a7271ec598b" /> [EdgeLoopSelector](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/EdgeLoopSelector/README.md) – select and process edge loops
+- [EdgeLoopToSketch](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/EdgeLoopToSketch/README.md) - Generate sketches from selected coplanar 3D edges, preserving edge type.
 - <img width="25" height="25" alt="VarSetUpdateIcon" src="https://github.com/user-attachments/assets/9634b68f-6d81-4f1b-a367-122271b6bdc5" /> [VarSet-Update](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/VarSet-Update/README.md) – update variable sets properties  
 - <img width="25" height="25" alt="TopomatchSelectorIcon" src="https://github.com/user-attachments/assets/9bc7beca-cde8-40ee-b50c-679865858a58" /> [TopoMatchSelector](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/TopoMatchSelector/README.md) – match and select topology from earlier body features  
 
@@ -51,6 +52,7 @@ Install via **FreeCAD Addon Manager** by adding the Detessellate Repository to t
 - 🎯 Integration with FreeCAD Addon Manager
 
 ## 📜 Changelog
+- **v0.1.6** (2025‑12-07) - Added EdgeLoopToSketch macro for creating sketches from EdgeLoopSelector
 - **v0.1.5** (2025‑12-07) - Added multiple loop selection to EdgeLoopSelector
 - **v0.1.4** (2025‑12‑02) – Fixed regression in CoplanarSketch Macro
 - **v0.1.3** (2025‑12‑02) – Optimized CoplanarSketch Macro for better handling of larger edge counts
