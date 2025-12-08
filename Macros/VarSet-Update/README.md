@@ -29,7 +29,7 @@
 - **Error Resilience**: Comprehensive error handling to manage and recover from issues during updates.
 
 ## How to Use
-1. Run the macro in FreeCAD.
+1. Run the macro in FreeCAD by clicking the tool icon.
 2. Select a VarSet from the dropdown.
 3. Choose the variable you want to modify.
 4. Edit any of the object properties in their respective fields (e.g., name, group or tooltip).
@@ -40,7 +40,9 @@
 ## Requirements
 - **FreeCAD Version**: 1.0 or newer. During development, v1.1 b40971 was used and confirmed stable.
 
-## Installation
+## Alternative Installation
+This macro is bundled with the Detessellate Workbench, but can also be manually installed separately.
+
 1. Download the latest version of `VarSetUpdate` from [GitHub](https://github.com/NSUBB/VarSet-Update/tree/main).
 2. Place the macro file in your FreeCAD `Macro` folder.
 3. Launch FreeCAD and run the macro from the Macro menu.
