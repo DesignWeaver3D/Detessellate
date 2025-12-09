@@ -9,8 +9,8 @@
 __Name__ = "VarSet Update"
 __Comment__ = "This macro updates the name or other attribute of a VarSet property (variable) via backup and recreation of the property."
 __Author__ = "Mathias L., NSUBB"
-__Version__ = "0.3.14"
-__Date__ = "2025-04-24"
+__Version__ = "0.3.15"
+__Date__ = "2025-11-22"
 __License__ = "GNU GPL v3.0"
 __Web__ = "https://github.com/NSUBB/VarSet-Update"
 __Wiki__ = " "
@@ -24,9 +24,11 @@ __Files__ = "VarSetUpdate_v0.3.14.FCMacro, VarSetUpdate.svg"
 
 # v0.1 3/26/2025 Original version by Mathias L. posted to https://github.com/FreeCAD/FreeCAD/issues/16222#issuecomment-2754714033
 # v0.3.14 4/24/2025 Modified by NSUBB (FreeCAD Forum user DesignWeaver) to add many additional features.
+# v0.3.15 2025-11-22 Modified by OldBeard to solve the problem of replace being applied on partial matches and to add some mare property tyepes
 
 import FreeCAD
 from PySide import QtGui
+import re
 
 class UpdateVarSetDialog(QtGui.QDialog):
     def __init__(self):
@@ -251,7 +253,10 @@ class UpdateVarSetDialog(QtGui.QDialog):
             "App::PropertyDistance",
             "App::PropertyLength",
             "App::PropertyInteger",
-            "App::PropertyString"
+            "App::PropertyString",
+            "App::PropertyFloat",
+            "App::PropertyPercent",
+            "App::PropertyQuantity"
         ]
 
         self.property_type_input.addItems(possible_types)
@@ -294,8 +299,8 @@ class UpdateVarSetDialog(QtGui.QDialog):
                 # Validate the input based on the target type
                 if target_type == "App::PropertyInteger":
                     return int(float(user_input))  # Allow float input but truncate/round to int
-                elif target_type == "App::PropertyFloat":
-                    return float(user_input)
+                elif target_type in ["App::PropertyFloat", "App::PropertyLength", "App::PropertyDistance", "App::PropertyQuantity", "App::PropertyPercent"]:
+                    return float(user_input)  # Length, distance, quantity and percent are treated as floats
                 elif target_type == "App::PropertyAngle":
                     return float(user_input)  # Assume angle is in degrees
                 elif target_type in ["App::PropertyString"]:
@@ -309,8 +314,6 @@ class UpdateVarSetDialog(QtGui.QDialog):
                         return False
                     else:
                         raise ValueError("Invalid Bool input. Enter 'True' or 'False'.")
-                elif target_type in ["App::PropertyLength", "App::PropertyDistance"]:
-                    return float(user_input)  # Length and distance are treated as floats
                 else:
                     raise ValueError(f"Unsupported target type: {target_type}")
             except ValueError as e:
@@ -333,7 +336,7 @@ class UpdateVarSetDialog(QtGui.QDialog):
             if expression_engine:
                 for path, expression in expression_engine:
                     if old_name in expression:
-                        updated_expression = expression.replace(old_name, new_name)
+                        updated_expression = re.sub(r"\b%s\b" % old_name , new_name, expression)
                         try:
                             obj.setExpression(path, updated_expression)
                             updated_count += 1
@@ -400,8 +403,8 @@ class UpdateVarSetDialog(QtGui.QDialog):
 
                     # Restore expressions across the entire document
                     for obj, path, expression in backed_up_expressions:
-                        updated_path = path.replace(old_name, new_name)  # Update path to reflect new property name
-                        updated_expression = expression.replace(old_name, new_name)  # Update formula to reflect new property name
+                        updated_path = re.sub(r"\b%s\b" % old_name , new_name, path)  # Update path to reflect new property name
+                        updated_expression = re.sub(r"\b%s\b" % old_name , new_name, expression)  # Update formula to reflect new property name
                         try:
                             obj.setExpression(updated_path, updated_expression)  # Restore updated expression
                             self.results_text.append(f"Restored expression for '{updated_path}' in '{obj.Name}': '{updated_expression}'.\n")
