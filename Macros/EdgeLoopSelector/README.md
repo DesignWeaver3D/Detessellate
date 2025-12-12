@@ -11,10 +11,11 @@ This macro bridges a workflow gap in FreeCAD. While you can select entire faces,
 - **Efficiency**: Faster than manually clicking dozens of edges in complex geometry
 
 ## Features
-- **Smart Loop Detection**: Select one or more edges, get entire connected loop(s)
+- **Smart Loop Detection**: Select one or more edges, get entire connected loop(s) or wire(s)
 - **Multi-Loop Selection**: Select edges from multiple loops to select all those loops at once
 - **Multi-Edge Support**: Select multiple edges from the same loop for confirmation
 - **Sketch Support**: Works with sketches in both standalone and Body contexts
+- **Wire Support**: Works with SubShapeBinder wires created from binding sketches
 - **Solid Support**: Works with edges on faces of solid models with coplanarity validation
 - **Automatic Detection**: Intelligently determines if you're working with a sketch or solid
 
@@ -26,6 +27,12 @@ This macro bridges a workflow gap in FreeCAD. While you can select entire faces,
 2. Select one or more edges from desired connected loops
 3. Run the macro by clicking its tool button or Detessellate > EdgeLoopSelector
 4. All edges in the connected loop will be selected
+
+### For Wires
+
+1. Select one or more edges from a wire or multiple wires
+3. Run the macro by clicking its tool button or Detessellate > EdgeLoopSelector
+4. All edges in all wires will be selected. If any edges or wires in the new selection are not coplanar, a warning will print in the Report View.
 
 ### For Solid Models
 
@@ -64,5 +71,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - FreeCAD 1.0.2 or later (tested on 1.0.2 and 1.1 dev builds)
 
 ## Changelog
-- Version 2.0.0 (2025-12-07) Updated to allow multiple loop selection based on all selected edges from sketch or solid object
-- Version 1.0.0 (2025-11-12) Initial release supports single loop selection from selected edge or edges in sketch or solid object
+- **2.1.0** (2025-12-11) Updated to handle SubShapeBinder and wire edges.
+- **2.0.0** (2025-12-07) Updated to allow multiple loop selection based on all selected edges from sketch or solid object
+- **1.0.0** (2025-11-12) Initial release supports single loop selection from selected edge or edges in sketch or solid object
