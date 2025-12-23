@@ -25,6 +25,7 @@ __Files__ = "VarSetUpdate_v0.3.14.FCMacro, VarSetUpdate.svg"
 # v0.1 3/26/2025 Original version by Mathias L. posted to https://github.com/FreeCAD/FreeCAD/issues/16222#issuecomment-2754714033
 # v0.3.14 4/24/2025 Modified by NSUBB (FreeCAD Forum user DesignWeaver) to add many additional features.
 # v0.3.15 2025-11-22 Modified by OldBeard to solve the problem of replace being applied on partial matches and to add some mare property tyepes
+# v0.3.16 2025-12-23 Modified by OldBeard & DesignWeaver3D. Add data type conversion when changing property type. Fixed display of Current Value for unitless properties that don't have user_string attribute.
 
 import FreeCAD
 from PySide import QtGui
