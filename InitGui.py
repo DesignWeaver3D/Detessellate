@@ -11,6 +11,8 @@ command_specs = [
     ("Detessellate_CoplanarSketch", "Commands.CoplanarSketchCommand", "CoplanarSketchCommand", "Detessellate Sketch", True),
     ("Detessellate_EdgeLoopSelector", "Commands.EdgeLoopSelectorCommand", "EdgeLoopSelectorCommand", "Detessellate Utilities", True),
     ("Detessellate_EdgeLoopToSketch", "Commands.EdgeLoopToSketchCommand", "EdgeLoopToSketchCommand", "Detessellate Utilities", True),
+    ("Detessellate_PointPlaneSketch", "Commands.PointPlaneSketchCommand", "PointPlaneSketchCommand", "Detessellate Sketch", True),
+    ("Detessellate_ReconstructSolid", "Commands.ReconstructSolidCommand", "ReconstructSolidCommand", "Detessellate Utilities", True),
     ("Detessellate_TopoMatchSelector", "Commands.TopoMatchSelectorCommand", "TopoMatchSelectorCommand", "Detessellate Utilities", False),  # Menu only
     ("Detessellate_VarSetUpdate", "Commands.VarSetUpdateCommand", "VarSetUpdateCommand", "Detessellate Utilities", True),
     ("CreateSketchToolbar", "Commands.CreateSketchToolbarCommand", "CreateSketchToolbarCommand", "Detessellate Sketch", False),  # Menu only
