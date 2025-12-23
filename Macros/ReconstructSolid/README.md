@@ -42,8 +42,7 @@ This macro is bundled with the [Detessellate Workbench](https://github.com/youru
 
 1. Download `ReconstructSolid.py`
 2. Place or Copy the downloaded file in the Macro folder
-  - In FreeCAD, Macro folder path can be found by going to: 
+    - In FreeCAD, Macro folder path can be found by going to: 
       - `Macro → Macros...` shown in `User macros location`
-      - Or via Preferences > Python > Macro > Macro Path
+      - Or via `Preferences > Python > Macro > Macro Path`
 3. Close and reopen the Macro dialog or restart FreeCAD
-
