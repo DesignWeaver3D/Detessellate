@@ -99,10 +99,11 @@ This macro is bundled with the [Detessellate Workbench](https://github.com/youru
 ### Manual Installation
 
 1. Download `EdgeLoopToSketch.py`
-2. In FreeCAD, go to `Macro → Macros...`
-3. Click `User macros location` to open your macro folder
-4. Copy the downloaded file to this folder
-5. Restart FreeCAD or click `Refresh` in the Macro dialog
+2. Place or Copy the downloaded file in the **Macro** folder
+    - In FreeCAD, Macro folder path can be found by going to: 
+      - `Macro → Macros...` shown in `User macros location`
+      - Or via `Preferences > Python > Macro > Macro Path`
+3. Close and reopen the Macro dialog or restart FreeCAD
 
 ## Workflow Integration
 
