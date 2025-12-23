@@ -54,6 +54,7 @@ Install via **FreeCAD Addon Manager** by adding the Detessellate Repository to t
 - 🎯 Integration with FreeCAD Addon Manager
 
 ## 📜 Changelog
+- **v0.2.0** (2025‑12-23) - Added ReconstructSolid and PointPlaneSketch macros. Patched Varset-Update to improve data type handling & conversion.
 - **v0.1.8** (2025‑12-08) - VarSetUpdate patched by @VeryOldBeard to fix the problem of replace being applied on partial matches and to add some more property tyepes.
 - **v0.1.7** (2025‑12-08) - EdgeLoopToSketch macro updated to v2.0 which fixes bugs and creates additional constraints in the sketch.
 - **v0.1.6** (2025‑12-07) - Added EdgeLoopToSketch macro for creating sketches from EdgeLoopSelector. Added face selection method to EdgeLoopSelector.
