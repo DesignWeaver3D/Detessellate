@@ -19,12 +19,13 @@ PointPlaneSketch reduces the manual effort of aligning datum planes to scan data
 
 ## Quick Start
 
-1. **Import point cloud**: Load your point cloud as a Points object in FreeCAD
-2. **Select vertices**: Pick 3 or more vertices that roughly define your plane
-3. **Run macro**: Execute PointPlaneSketch—a docker window appears
-4. **Adjust tolerance**: Fine-tune which points are included in the fit
-5. **Update preview**: See highlighted points that will be used
-6. **Create sketch**: Generate the datum plane and sketch with construction points
+1. **Import mesh or point cloud**: Points shape object can be derived from either 
+2. **Create points shape**: Use `Part > Points from Shape` to create selectabe points shape object
+3. **Select vertices**: Pick 3 or more vertices that roughly define your plane
+4. **Run macro**: Execute PointPlaneSketch—a docker window appears
+5. **Adjust tolerance**: Fine-tune which points are included in the fit
+6. **Update preview**: See highlighted points that will be used
+7. **Create sketch**: Generate the datum plane and sketch with construction points for either Part or PartDesign
 
 ## Profile Plane Points (Optional)
 
@@ -46,8 +47,8 @@ For objects with filleted edges where the outer profile sits offset from the bas
 
 ## Output Options
 
-- **Standalone (Part Workbench)**: Independent datum plane and sketch
-- **New Body (PartDesign)**: Creates a new PartDesign body containing the datum and sketch
+- **Standalone (Part Workbench)**: Independent datum plane and sketch using Placement
+- **New Body (PartDesign)**: Creates a new PartDesign body containing the datum and sketch using Attachment Offset
 - **Existing Body**: Adds the datum and sketch to a body you select
 
 ## Requirements
@@ -57,9 +58,16 @@ For objects with filleted edges where the outer profile sits offset from the bas
 
 ## Installation
 
-1. Download `PointPlaneSketch.FCMacro`
-2. Place in your FreeCAD Macros directory
-3. Run from Macro → Macros...
+This macro is bundled with the [Detessellate Workbench](https://github.com/yourusername/Detessellate), but can also be installed separately.
+
+### Manual Installation
+
+1. Download `PointPlaneSketch.py`
+2. Place or Copy the downloaded file in the Macro folder
+    - In FreeCAD, Macro folder path can be found by going to: 
+      - `Macro → Macros...` shown in `User macros location`
+      - Or via `Preferences > Python > Macro > Macro Path`
+3. Close and reopen the Macro dialog or restart FreeCAD
 
 ## Tips
 
@@ -68,3 +76,7 @@ For objects with filleted edges where the outer profile sits offset from the bas
 - Decrease tolerance for tighter plane definitions
 - Use negative offset distances to capture profiles toward the camera
 - Profile points are particularly useful for rounded edges and chamfers
+- For easier point selection
+  - Set original mesh or points object `View Property > Selectable` to `No`
+  - Set point object `View Property > Point Size` to ≥ `8`
+  - Set point object `View Property > On Top When Selected` to `Enabled`
