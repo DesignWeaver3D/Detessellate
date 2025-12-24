@@ -1,6 +1,6 @@
 # PointPlaneSketch
 
-A FreeCAD macro for creating datum planes and sketches directly from point cloud data. It uses RANSAC plane fitting on user‑selected points, making it easier to turn scan data into usable geometry.
+A FreeCAD macro for creating datum planes and sketches from mesh point data. It uses RANSAC plane fitting on user‑selected points, making it easier to turn scan data into usable geometry.
 
 <img width="128" height="128" alt="PointPlaneSketch" src="https://github.com/user-attachments/assets/4ed28d6d-6908-47f5-bf3a-f589f030016a" />
 
