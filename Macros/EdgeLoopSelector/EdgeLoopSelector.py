@@ -9,9 +9,15 @@ def selectEdges(obj, edges):
     FreeCADGui.Selection.addSelection(obj, names)
 
 def select_connected_loop_or_sketch():
+    tolerance = 1e-6
+
     selection = FreeCADGui.Selection.getSelectionEx()
     if not selection:
         FreeCAD.Console.PrintError("Error: Please select one or more edges or faces.\n")
+        return
+
+    if len(selection) > 1:
+        FreeCAD.Console.PrintError("Error: Please select elements from only one object.\n")
         return
 
     obj = selection[0].Object
@@ -21,9 +27,6 @@ def select_connected_loop_or_sketch():
     # --- Check if faces are selected ---
     selected_faces = []
     for sel_ex in selection:
-        if sel_ex.Object.Name != obj.Name:
-            FreeCAD.Console.PrintError("Error: Please select elements from only one object.\n")
-            return
         for sub_name in sel_ex.SubElementNames:
             if sub_name.startswith("Face"):
                 face_idx = int(sub_name[4:]) - 1
@@ -31,7 +34,6 @@ def select_connected_loop_or_sketch():
 
     if selected_faces:
         # Handle face selection
-        tolerance = 1e-6
 
         # Get plane from first face
         first_face = selected_faces[0]
@@ -77,9 +79,6 @@ def select_connected_loop_or_sketch():
     if len(obj.Shape.Faces) == 0 and len(obj.Shape.Wires) > 0:
         selected_edge_indices = []
         for sel_ex in selection:
-            if sel_ex.Object.Name != obj.Name:
-                FreeCAD.Console.PrintError("Error: Please select edges from only one object.\n")
-                return
             for edge_name in sel_ex.SubElementNames:
                 if edge_name.startswith("Edge"):
                     edge_idx = int(edge_name[4:]) - 1
@@ -92,7 +91,6 @@ def select_connected_loop_or_sketch():
         selected_edge_objects = [all_obj_edges[i] for i in selected_edge_indices]
         
         # Find which wires contain the selected edges
-        tolerance = 1e-6
         wires_to_select = set()
         
         for edge_idx in selected_edge_indices:
@@ -179,9 +177,6 @@ def select_connected_loop_or_sketch():
     if obj.TypeId.startswith("Sketcher::SketchObject"):
         selected_indices = []
         for sel_ex in selection:
-            if sel_ex.Object.Name != obj.Name:
-                FreeCAD.Console.PrintError("Error: Please select edges from only one sketch.\n")
-                return
             for edge_name in sel_ex.SubElementNames:
                 if edge_name.startswith("Edge"):
                     edge_idx = int(edge_name[4:]) - 1
@@ -259,9 +254,6 @@ def select_connected_loop_or_sketch():
     selected_edge_objects = []
     try:
         for sel_ex in selection:
-            if sel_ex.Object.Name != obj.Name:
-                FreeCAD.Console.PrintError("Error: Please select edges from only one object.\n")
-                return
             for edge_name in sel_ex.SubElementNames:
                 if edge_name.startswith("Edge"):
                     edge_idx = int(edge_name[4:]) - 1
@@ -279,7 +271,6 @@ def select_connected_loop_or_sketch():
         return
 
     # Collect unique vertex points from selected edges
-    tolerance = 1e-6
     unique_points = []
     all_points = []
 
