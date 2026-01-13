@@ -2,6 +2,12 @@ import FreeCAD
 import FreeCADGui
 from collections import defaultdict
 
+
+def selectEdges(obj, edges):
+    FreeCADGui.Selection.clearSelection()
+    names = [f"Edge{idx+1}" for idx in sorted(edges)]
+    FreeCADGui.Selection.addSelection(obj, names)
+
 def select_connected_loop_or_sketch():
     selection = FreeCADGui.Selection.getSelectionEx()
     if not selection:
@@ -61,9 +67,7 @@ def select_connected_loop_or_sketch():
                             break
 
         # Select all edges
-        FreeCADGui.Selection.clearSelection()
-        for idx in sorted(all_edges_to_select):
-            FreeCADGui.Selection.addSelection(obj, f"Edge{idx+1}")
+        selectEdges(obj, all_edges_to_select)
 
         FreeCAD.Console.PrintMessage(f"Selected {len(all_edges_to_select)} edges from {len(selected_faces)} face(s).\n")
         return
@@ -113,9 +117,7 @@ def select_connected_loop_or_sketch():
                         break
         
         # Select all edges
-        FreeCADGui.Selection.clearSelection()
-        for idx in sorted(all_edges_to_select):
-            FreeCADGui.Selection.addSelection(obj, f"Edge{idx+1}")
+        selectEdges(obj, all_edges_to_select)
         
         # Perform coplanarity check AFTER selection for warning purposes
         if len(wires_to_select) > 1:
@@ -243,13 +245,11 @@ def select_connected_loop_or_sketch():
             return
 
         # Select all edges from all unique loops
-        FreeCADGui.Selection.clearSelection()
         all_edges_to_select = set()
         for loop in unique_loops:
             all_edges_to_select.update(loop)
 
-        for i in sorted(all_edges_to_select):
-            FreeCADGui.Selection.addSelection(obj, f"Edge{i+1}")
+        selectEdges(obj, all_edges_to_select)
 
         FreeCAD.Console.PrintMessage(f"Selected {len(all_edges_to_select)} edges from {len(unique_loops)} loop(s).\n")
         return
@@ -384,13 +384,11 @@ def select_connected_loop_or_sketch():
         return
 
     # Select all edges from all unique loops
-    FreeCADGui.Selection.clearSelection()
     all_edges_to_select = set()
     for loop_set in unique_loop_sets:
         all_edges_to_select.update(loop_set)
 
-    for idx in sorted(all_edges_to_select):
-        FreeCADGui.Selection.addSelection(obj, f"Edge{idx+1}")
+    selectEdges(obj, all_edges_to_select)
 
     FreeCAD.Console.PrintMessage(f"Selected {len(all_edges_to_select)} edges from {len(unique_loop_sets)} loop(s).\n")
 
