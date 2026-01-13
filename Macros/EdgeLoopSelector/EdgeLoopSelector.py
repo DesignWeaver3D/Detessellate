@@ -16,6 +16,7 @@ def select_connected_loop_or_sketch():
 
     obj = selection[0].Object
     all_obj_edges = obj.Shape.Edges
+    all_obj_edges_hash = [e.hashCode() for e in all_obj_edges]
 
     # --- Check if faces are selected ---
     selected_faces = []
@@ -369,10 +370,10 @@ def select_connected_loop_or_sketch():
             # Convert wire to set of edge indices
             loop_indices = set()
             for edge_in_loop in found_loop.Edges:
-                for idx, original_edge in enumerate(all_obj_edges):
-                    if original_edge.isSame(edge_in_loop):
-                        loop_indices.add(idx)
-                        break
+                edge_in_loop_hash = edge_in_loop.hashCode()
+                if edge_in_loop_hash in all_obj_edges_hash:
+                    idx = all_obj_edges_hash.index(edge_in_loop_hash)
+                    loop_indices.add(idx)
 
             # Check if we've already found this loop
             loop_frozen = frozenset(loop_indices)
