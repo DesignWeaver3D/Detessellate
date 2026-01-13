@@ -130,7 +130,7 @@ def select_connected_loop_or_sketch():
                         try:
                             pt = edge.valueAt(edge.FirstParameter + param * (edge.LastParameter - edge.FirstParameter))
                             all_wire_points.append(pt)
-                        except:
+                        except Exception:
                             pass
             
             # Try to find a plane from all wire points
@@ -167,7 +167,7 @@ def select_connected_loop_or_sketch():
                         break
                 
                 if not all_coplanar:
-                    FreeCAD.Console.PrintWarning(f"Warning: Selected wires are not coplanar.\n")
+                    FreeCAD.Console.PrintWarning("Warning: Selected wires are not coplanar.\n")
         
         FreeCAD.Console.PrintMessage(f"Selected {len(all_edges_to_select)} edges from {len(wires_to_select)} wire(s).\n")
         return
@@ -332,7 +332,7 @@ def select_connected_loop_or_sketch():
                     break
 
         if not parent_faces:
-            FreeCAD.Console.PrintWarning(f"Warning: Could not find a parent face for a selected edge.\n")
+            FreeCAD.Console.PrintWarning("Warning: Could not find a parent face for a selected edge.\n")
             continue
 
         # Filter to only coplanar faces
@@ -351,7 +351,7 @@ def select_connected_loop_or_sketch():
                     coplanar_faces.append(face)
 
         if not coplanar_faces:
-            FreeCAD.Console.PrintWarning(f"Warning: Could not find a coplanar face for a selected edge.\n")
+            FreeCAD.Console.PrintWarning("Warning: Could not find a coplanar face for a selected edge.\n")
             continue
 
         # Find wire on coplanar faces containing this edge
