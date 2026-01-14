@@ -84,7 +84,9 @@ def select_connected_loop_or_sketch():
         # Select all edges
         selectEdges(obj, all_edges_to_select)
 
-        FreeCAD.Console.PrintMessage(f"Selected {len(all_edges_to_select)} edges from {len(selected_faces)} face(s).\n")
+        FreeCAD.Console.PrintMessage(
+            f"Selected {len(all_edges_to_select)} edges from {len(selected_faces)} face(s).\n"
+        )
         return
 
     # --- Handle objects with Wires but no Faces (e.g., SubShapeBinder from sketch) ---
@@ -150,7 +152,9 @@ def select_connected_loop_or_sketch():
                 if not all_coplanar:
                     FreeCAD.Console.PrintWarning("Warning: Selected wires are not coplanar.\n")
         
-        FreeCAD.Console.PrintMessage(f"Selected {len(all_edges_to_select)} edges from {len(wires_to_select)} wire(s).\n")
+        FreeCAD.Console.PrintMessage(
+            f"Selected {len(all_edges_to_select)} edges from {len(wires_to_select)} wire(s).\n"
+        )
         return
 
     # --- Handle Sketches in 3D view ---
@@ -227,7 +231,9 @@ def select_connected_loop_or_sketch():
 
         selectEdges(obj, all_edges_to_select)
 
-        FreeCAD.Console.PrintMessage(f"Selected {len(all_edges_to_select)} edges from {len(unique_loops)} loop(s).\n")
+        FreeCAD.Console.PrintMessage(
+            f"Selected {len(all_edges_to_select)} edges from {len(unique_loops)} loop(s).\n"
+        )
         return
 
     # --- Handle Solids and Part shapes ---
@@ -238,7 +244,9 @@ def select_connected_loop_or_sketch():
 
     # Validate at least 2 edges selected for 3D objects
     if len(selected_edge_objects) < 2:
-        FreeCAD.Console.PrintError("Error: Please select at least 2 edges from a 3D object to define the plane.\n")
+        FreeCAD.Console.PrintError(
+            "Error: Please select at least 2 edges from a 3D object to define the plane.\n"
+        )
         return
 
     # Collect unique vertex points from selected edges
@@ -252,7 +260,9 @@ def select_connected_loop_or_sketch():
                 unique_points.append(pt)
 
     if len(unique_points) < 3:
-        FreeCAD.Console.PrintError("Error: Selected edges do not provide enough unique points to define a plane.\n")
+        FreeCAD.Console.PrintError(
+            "Error: Selected edges do not provide enough unique points to define a plane.\n"
+        )
         return
 
     # Find 3 non-collinear points to define plane
@@ -322,7 +332,9 @@ def select_connected_loop_or_sketch():
 
     selectEdges(obj, all_edges_to_select)
 
-    FreeCAD.Console.PrintMessage(f"Selected {len(all_edges_to_select)} edges from {len(unique_loop_sets)} loop(s).\n")
+    FreeCAD.Console.PrintMessage(
+        f"Selected {len(all_edges_to_select)} edges from {len(unique_loop_sets)} loop(s).\n"
+    )
 
 # --- Run the macro ---
 select_connected_loop_or_sketch()
