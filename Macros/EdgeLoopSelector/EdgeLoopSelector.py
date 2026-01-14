@@ -8,6 +8,24 @@ def selectEdges(obj, edges):
     names = [f"Edge{idx+1}" for idx in sorted(edges)]
     FreeCADGui.Selection.addSelection(obj, names)
 
+def getPlaneNormal(unique_points, tolerance):
+    if len(unique_points) < 3:
+        return
+    plane_point = unique_points[0]
+    plane_normal = None
+    for i in range(1, len(unique_points)):
+        v1 = unique_points[i] - plane_point
+        for j in range(i + 1, len(unique_points)):
+            v2 = unique_points[j] - plane_point
+            cross = v1.cross(v2)
+            if cross.Length > tolerance:
+                plane_normal = cross.normalize()
+                break
+        if plane_normal:
+            return plane_normal
+
+    return
+
 def select_connected_loop_or_sketch():
     tolerance = 1e-6
 
@@ -117,24 +135,11 @@ def select_connected_loop_or_sketch():
                     if len(unique_points) >= 100:  # Limit for performance
                         break
             
-            plane_normal = None
-            plane_point = None
-            
-            if len(unique_points) >= 3:
-                plane_point = unique_points[0]
-                for i in range(1, len(unique_points)):
-                    v1 = unique_points[i] - plane_point
-                    for j in range(i + 1, len(unique_points)):
-                        v2 = unique_points[j] - plane_point
-                        cross = v1.cross(v2)
-                        if cross.Length > tolerance:
-                            plane_normal = cross.normalize()
-                            break
-                    if plane_normal:
-                        break
-            
+            plane_normal = getPlaneNormal(unique_points, tolerance)
+
             # Check if all wires are coplanar
             if plane_normal:
+                plane_point = unique_points[0]
                 all_coplanar = True
                 for pt in all_wire_points:
                     distance = abs((pt - plane_point).dot(plane_normal))
@@ -248,7 +253,6 @@ def select_connected_loop_or_sketch():
     # Collect unique vertex points from selected edges
     unique_points = []
     all_points = []
-
     for edge in selected_edge_objects:
         for vertex in edge.Vertexes:
             pt = vertex.Point
@@ -261,25 +265,14 @@ def select_connected_loop_or_sketch():
         return
 
     # Find 3 non-collinear points to define plane
-    plane_point = unique_points[0]
-    plane_normal = None
-
-    for i in range(1, len(unique_points)):
-        v1 = unique_points[i] - plane_point
-        for j in range(i + 1, len(unique_points)):
-            v2 = unique_points[j] - plane_point
-            cross = v1.cross(v2)
-            if cross.Length > tolerance:
-                plane_normal = cross.normalize()
-                break
-        if plane_normal:
-            break
+    plane_normal = getPlaneNormal(unique_points, tolerance)
 
     if not plane_normal:
         FreeCAD.Console.PrintError("Error: Selected edges are collinear and cannot define a plane.\n")
         return
 
     # Check all points lie on the defined plane
+    plane_point = unique_points[0]
     for pt in all_points:
         distance = abs((pt - plane_point).dot(plane_normal))
         if distance > tolerance:
