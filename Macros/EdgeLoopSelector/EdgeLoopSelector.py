@@ -70,44 +70,36 @@ def select_connected_loop_or_sketch():
         return
 
     # --- Handle objects with Wires but no Faces (e.g., SubShapeBinder from sketch) ---
-    if len(obj.Shape.Faces) == 0 and len(obj.Shape.Wires) > 0:
-        selected_edge_indices = []
-        for sel_ex in selection:
-            for edge_name in sel_ex.SubElementNames:
-                if edge_name.startswith("Edge"):
-                    edge_idx = int(edge_name[4:]) - 1
-                    selected_edge_indices.append(edge_idx)
+    if not obj.Shape.Faces and obj.Shape.Wires:
 
-        if not selected_edge_indices:
+        selected_edge_objects = [sub for sub in subObjects if sub.ShapeType == "Edge"]
+        if not selected_edge_objects:
             FreeCAD.Console.PrintError("Error: No valid edges were selected.\n")
             return
 
-        selected_edge_objects = [all_obj_edges[i] for i in selected_edge_indices]
-        
         # Find which wires contain the selected edges
         wires_to_select = set()
-        
-        for edge_idx in selected_edge_indices:
-            selected_edge = all_obj_edges[edge_idx]
+        for selected_edge in selected_edge_objects:
+            selected_edge_hash = selected_edge.hashCode()
             for wire in obj.Shape.Wires:
+                wire_edges_hash = [e.hashCode() for e in wire.Edges]
                 # Check if this edge is in this wire
-                for wire_edge in wire.Edges:
-                    if wire_edge.isSame(selected_edge):
-                        wires_to_select.add(wire)
-                        break
-        
+                if selected_edge_hash in wire_edges_hash:
+                    wires_to_select.add(wire)
+
         if not wires_to_select:
             FreeCAD.Console.PrintError("Error: Could not find wires containing the selected edges.\n")
             return
-        
+
         # Collect all edge indices from selected wires
         all_edges_to_select = set()
         for wire in wires_to_select:
-            for wire_edge in wire.Edges:
-                for idx, original_edge in enumerate(all_obj_edges):
-                    if original_edge.isSame(wire_edge):
-                        all_edges_to_select.add(idx)
-                        break
+            wire_edges_hash = [e.hashCode() for e in wire.Edges]
+            for wire_edge_hash in wire_edges_hash:
+                if wire_edge_hash in all_obj_edges_hash:
+                    idx = all_obj_edges_hash.index(wire_edge_hash)
+                    all_edges_to_select.add(idx)
+
         
         # Select all edges
         selectEdges(obj, all_edges_to_select)
@@ -115,19 +107,8 @@ def select_connected_loop_or_sketch():
         # Perform coplanarity check AFTER selection for warning purposes
         if len(wires_to_select) > 1:
             # Collect all points from all selected wires
-            all_wire_points = []
-            for wire in wires_to_select:
-                for edge in wire.Edges:
-                    for vertex in edge.Vertexes:
-                        all_wire_points.append(vertex.Point)
-                    # Sample additional points for circular edges
-                    for param in [0.25, 0.5, 0.75]:
-                        try:
-                            pt = edge.valueAt(edge.FirstParameter + param * (edge.LastParameter - edge.FirstParameter))
-                            all_wire_points.append(pt)
-                        except Exception:
-                            pass
-            
+            all_wire_points = [p for w in wires_to_select for e in w.Edges for p in e.discretize(4)]
+
             # Try to find a plane from all wire points
             unique_points = []
             for pt in all_wire_points:
