@@ -291,9 +291,6 @@ def select_connected_loop_or_sketch():
             FreeCAD.Console.PrintError("Error: Selected edges are not coplanar.\n")
             return
 
-    # Find all unique loops containing selected edges on coplanar faces
-    unique_loop_sets = []
-
     selected_edges_hash = {e.hashCode() for e in selected_edge_objects}
 
     # Find parent faces that contain this edge
@@ -344,7 +341,7 @@ def select_connected_loop_or_sketch():
     selectEdges(obj, all_edges_to_select)
 
     FreeCAD.Console.PrintMessage(
-        f"Selected {len(all_edges_to_select)} edges from {len(unique_loop_sets)} loop(s).\n"
+        f"Selected {len(all_edges_to_select)} edges.\n"
     )
 
 # --- Run the macro ---
