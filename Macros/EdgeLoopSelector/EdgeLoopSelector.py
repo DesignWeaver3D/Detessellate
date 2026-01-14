@@ -99,13 +99,24 @@ def select_connected_loop_or_sketch():
 
         # Find which wires contain the selected edges
         wires_to_select = set()
-        for selected_edge in selected_edge_objects:
-            selected_edge_hash = selected_edge.hashCode()
-            for wire in obj.Shape.Wires:
-                wire_edges_hash = [e.hashCode() for e in wire.Edges]
-                # Check if this edge is in this wire
-                if selected_edge_hash in wire_edges_hash:
-                    wires_to_select.add(wire)
+        selected_edges_hash = {e.hashCode() for e in selected_edge_objects}
+        all_obj_wires = obj.Shape.Wires
+
+        if len(selected_edges_hash) < len(all_obj_wires):
+            # this way will take a lot of time if run macro twice with thousands edges
+            for selected_edge_hash in selected_edges_hash:
+                for wire in reversed(all_obj_wires):
+                    wire_edges_hash = {e.hashCode() for e in wire.Edges}
+                    # Check if this edge is in this wire
+                    if selected_edge_hash in wire_edges_hash:
+                        wires_to_select.add(wire)
+                        all_obj_wires.remove(wire)
+        else:
+            # this way slower with big amount of wires in shape
+            all_obj_wires_hash = [{e.hashCode() for e in w.Edges} for w in all_obj_wires]
+            for idx, wire_hash in enumerate(all_obj_wires_hash):
+                if not selected_edges_hash.isdisjoint(wire_hash):
+                    wires_to_select.add(all_obj_wires[idx])
 
         if not wires_to_select:
             FreeCAD.Console.PrintError("Error: Could not find wires containing the selected edges.\n")
@@ -114,7 +125,7 @@ def select_connected_loop_or_sketch():
         # Collect all edge indices from selected wires
         all_edges_to_select = set()
         for wire in wires_to_select:
-            wire_edges_hash = [e.hashCode() for e in wire.Edges]
+            wire_edges_hash = {e.hashCode() for e in wire.Edges}
             for wire_edge_hash in wire_edges_hash:
                 if wire_edge_hash in all_obj_edges_hash:
                     idx = all_obj_edges_hash.index(wire_edge_hash)
@@ -319,7 +330,7 @@ def select_connected_loop_or_sketch():
     all_edges_to_select = set()
     for face in coplanar_faces:
         for wire in face.Wires:
-            wire_edges_hash = [e.hashCode() for e in wire.Edges]
+            wire_edges_hash = {e.hashCode() for e in wire.Edges}
             if not set(wire_edges_hash).isdisjoint(set(selected_edges_hash)):
                 for wire_edge_hash in wire_edges_hash:
                     if wire_edge_hash in all_obj_edges_hash:
