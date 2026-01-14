@@ -21,16 +21,12 @@ def select_connected_loop_or_sketch():
         return
 
     obj = selection[0].Object
+    subObjects = selection[0].SubObjects
     all_obj_edges = obj.Shape.Edges
     all_obj_edges_hash = [e.hashCode() for e in all_obj_edges]
 
     # --- Check if faces are selected ---
-    selected_faces = []
-    for sel_ex in selection:
-        for sub_name in sel_ex.SubElementNames:
-            if sub_name.startswith("Face"):
-                face_idx = int(sub_name[4:]) - 1
-                selected_faces.append(obj.Shape.Faces[face_idx])
+    selected_faces = [sub for sub in subObjects if sub.ShapeType == "Face"]
 
     if selected_faces:
         # Handle face selection
@@ -61,13 +57,11 @@ def select_connected_loop_or_sketch():
         # Collect all edge loops from selected faces
         all_edges_to_select = set()
         for face in selected_faces:
-            for wire in face.Wires:
-                for edge in wire.Edges:
-                    # Find index of this edge in all_obj_edges
-                    for idx, original_edge in enumerate(all_obj_edges):
-                        if original_edge.isSame(edge):
-                            all_edges_to_select.add(idx)
-                            break
+            for edge in face.Edges:
+                edge_hash = edge.hashCode()
+                if edge_hash in all_obj_edges_hash:
+                    idx = all_obj_edges_hash.index(edge_hash)
+                    all_edges_to_select.add(idx)
 
         # Select all edges
         selectEdges(obj, all_edges_to_select)
