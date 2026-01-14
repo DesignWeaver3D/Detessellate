@@ -231,18 +231,9 @@ def select_connected_loop_or_sketch():
         return
 
     # --- Handle Solids and Part shapes ---
-    selected_edge_objects = []
-    try:
-        for sel_ex in selection:
-            for edge_name in sel_ex.SubElementNames:
-                if edge_name.startswith("Edge"):
-                    edge_idx = int(edge_name[4:]) - 1
-                    selected_edge_objects.append(all_obj_edges[edge_idx])
-        if not selected_edge_objects:
-            FreeCAD.Console.PrintError("Error: No valid edges were selected.\n")
-            return
-    except Exception as e:
-        FreeCAD.Console.PrintError(f"Error processing selection: {e}\n")
+    selected_edge_objects = [sub for sub in subObjects if sub.ShapeType == "Edge"]
+    if not selected_edge_objects:
+        FreeCAD.Console.PrintError("Error: No valid edges were selected.\n")
         return
 
     # Validate at least 2 edges selected for 3D objects
@@ -282,71 +273,52 @@ def select_connected_loop_or_sketch():
     # Find all unique loops containing selected edges on coplanar faces
     unique_loop_sets = []
 
-    for start_edge in selected_edge_objects:
-        # Find parent faces that contain this edge
-        parent_faces = []
-        for face in obj.Shape.Faces:
-            for face_edge in face.Edges:
-                if face_edge.isSame(start_edge):
-                    parent_faces.append(face)
-                    break
+    selected_edges_hash = {e.hashCode() for e in selected_edge_objects}
 
-        if not parent_faces:
-            FreeCAD.Console.PrintWarning("Warning: Could not find a parent face for a selected edge.\n")
-            continue
+    # Find parent faces that contain this edge
+    parent_faces = []
+    for face in obj.Shape.Faces:
+        face_edges_hash = {e.hashCode() for e in face.Edges}
+        if not face_edges_hash.isdisjoint(selected_edges_hash):
+            parent_faces.append(face)
 
-        # Filter to only coplanar faces
-        coplanar_faces = []
-        for face in parent_faces:
-            # Get face normal and a point on the face
-            face_normal = face.normalAt(0, 0)
-            face_point = face.valueAt(0, 0)
-
-            # Check if normals are parallel (dot product near ±1)
-            dot = abs(face_normal.normalize().dot(plane_normal))
-            if abs(dot - 1.0) < tolerance:
-                # Check if face lies on same plane
-                distance = abs((face_point - plane_point).dot(plane_normal))
-                if distance < tolerance:
-                    coplanar_faces.append(face)
-
-        if not coplanar_faces:
-            FreeCAD.Console.PrintWarning("Warning: Could not find a coplanar face for a selected edge.\n")
-            continue
-
-        # Find wire on coplanar faces containing this edge
-        found_loop = None
-        for face in coplanar_faces:
-            if found_loop:
-                break
-            for wire in face.Wires:
-                wire_edges = wire.Edges
-                if any(edge.isSame(start_edge) for edge in wire_edges):
-                    found_loop = wire
-                    break
-
-        if found_loop:
-            # Convert wire to set of edge indices
-            loop_indices = set()
-            for edge_in_loop in found_loop.Edges:
-                edge_in_loop_hash = edge_in_loop.hashCode()
-                if edge_in_loop_hash in all_obj_edges_hash:
-                    idx = all_obj_edges_hash.index(edge_in_loop_hash)
-                    loop_indices.add(idx)
-
-            # Check if we've already found this loop
-            loop_frozen = frozenset(loop_indices)
-            if loop_frozen not in unique_loop_sets:
-                unique_loop_sets.append(loop_frozen)
-
-    if not unique_loop_sets:
-        FreeCAD.Console.PrintError("Error: Could not find loops for the selected edges.\n")
+    if not parent_faces:
+        FreeCAD.Console.PrintWarning("Warning: Could not find a parent face for a selected edge.\n")
         return
 
-    # Select all edges from all unique loops
+    # Filter to only coplanar faces
+    coplanar_faces = []
+    for face in parent_faces:
+        # Get face normal and a point on the face
+        face_normal = face.normalAt(0, 0)
+        face_point = face.valueAt(0, 0)
+
+        # Check if normals are parallel (dot product near ±1)
+        dot = abs(face_normal.normalize().dot(plane_normal))
+        if abs(dot - 1.0) < tolerance:
+            # Check if face lies on same plane
+            distance = abs((face_point - plane_point).dot(plane_normal))
+            if distance < tolerance:
+                coplanar_faces.append(face)
+
+    if not coplanar_faces:
+        FreeCAD.Console.PrintWarning("Warning: Could not find a coplanar face for a selected edge.\n")
+        return
+
+    # Find wire on coplanar faces containing this edge
     all_edges_to_select = set()
-    for loop_set in unique_loop_sets:
-        all_edges_to_select.update(loop_set)
+    for face in coplanar_faces:
+        for wire in face.Wires:
+            wire_edges_hash = [e.hashCode() for e in wire.Edges]
+            if not set(wire_edges_hash).isdisjoint(set(selected_edges_hash)):
+                for wire_edge_hash in wire_edges_hash:
+                    if wire_edge_hash in all_obj_edges_hash:
+                        idx = all_obj_edges_hash.index(wire_edge_hash)
+                        all_edges_to_select.add(idx)
+
+    if not all_edges_to_select:
+        FreeCAD.Console.PrintError("Error: Could not find loops for the selected edges.\n")
+        return
 
     selectEdges(obj, all_edges_to_select)
 
