@@ -1,65 +1,89 @@
-
-__version__ = "1.0.0"
-__status__ = "beta"
-__date__ = "2025-08-21"
-__author__ = "NSUBB (aka DesignWeaver3D)"
+__version__ = "2.0.0"
+__date__ = "2025-01-18"
+__author__ = "DesignWeaver3D"
 
 """
-SketchReProfile Macro for FreeCAD
+Optimized graph-based approach that:
+1. Detects circular arc runs and creates arcs/circles
+2. Detects colinear line runs and simplifies
+3. Creates b-splines for remaining curves
+4. Adds endpoint constraints
 
-Version: 1.0.0
-Status: beta
-Author: NSUBB (aka DesignWeaver3D)
-License: GNU GPL v3.0
-GitHub: https://github.com/NSUBB
-Reddit: u/DesignWeaver3D
-
-This macro converts mesh-derived sketches to clean reconstructed geometry:
-automatically detects and creates circles, arcs, B-splines from tessellated construction lines.
+PREREQUISITES:
+- Sketch must be open in edit mode
+- Geometry should be construction mode (recommended workflow)
 """
-
-# SPDX-License-Identifier: GPL-3.0-or-later
-
-# License: GNU General Public License v3.0
-# This macro is free software: you can redistribute it and/or modify
-# it under the terms of the GNU GPL as published by the Free Software Foundation,
-# either version 3 of the License, or (at your option) any later version.
-# See https://www.gnu.org/licenses/gpl-3.0.html for details.
-
 
 import FreeCAD as App
 import FreeCADGui as Gui
 import Part, Sketcher
-import math
-import numpy as np
 import time
+import math
 from collections import defaultdict
 
 def get_open_sketch():
-    edit_obj = Gui.ActiveDocument.getInEdit()
-    if edit_obj and hasattr(edit_obj, 'Object'):
-        obj = edit_obj.Object
-        if hasattr(obj, 'TypeId') and 'Sketch' in obj.TypeId:
-            return obj
+    """Get the currently open sketch for editing."""
+    if Gui.ActiveDocument:
+        edit_obj = Gui.ActiveDocument.getInEdit()
+        if edit_obj and hasattr(edit_obj, 'Object'):
+            obj = edit_obj.Object
+            if hasattr(obj, 'TypeId') and 'Sketch' in obj.TypeId:
+                return obj
     return None
 
 def extract_edge_data(sketch):
+    """
+    Extract edge data from sketch geometry with geo_idx tracked.
+    Each edge includes a 'used_by' field to track which processing phase used it.
+
+    OPTIMIZATION: Cache property accesses to minimize FreeCAD API calls.
+    """
     data = []
-    for geo in sketch.Geometry:
+
+    # Single API call to get geometry list
+    geometry = sketch.Geometry
+
+    for idx, geo in enumerate(geometry):
         if hasattr(geo, 'TypeId'):
-            if geo.TypeId == 'Part::GeomLineSegment':
-                data.append({'type': 'line',
-                             'start': (geo.StartPoint.x, geo.StartPoint.y),
-                             'end': (geo.EndPoint.x, geo.EndPoint.y)})
-            elif geo.TypeId == 'Part::GeomArcOfCircle':
-                data.append({'type': 'arc',
-                             'start': (geo.StartPoint.x, geo.StartPoint.y),
-                             'end': (geo.EndPoint.x, geo.EndPoint.y),
-                             'center': (geo.Center.x, geo.Center.y),
-                             'radius': geo.Radius})
+            # Cache TypeId property access
+            type_id = geo.TypeId
+
+            if type_id == 'Part::GeomLineSegment':
+                # Cache all property accesses
+                start_pt = geo.StartPoint
+                end_pt = geo.EndPoint
+
+                data.append({
+                    'geo_idx': idx,
+                    'type': 'line',
+                    'start': (start_pt.x, start_pt.y),
+                    'end': (end_pt.x, end_pt.y),
+                    'length': math.hypot(
+                        end_pt.x - start_pt.x,
+                        end_pt.y - start_pt.y
+                    ),
+                    'used_by': None  # Track usage: 'arc', 'colinear', 'spline', etc.
+                })
+            elif type_id == 'Part::GeomArcOfCircle':
+                # Cache all property accesses
+                start_pt = geo.StartPoint
+                end_pt = geo.EndPoint
+                center_pt = geo.Center
+
+                data.append({
+                    'geo_idx': idx,
+                    'type': 'arc',
+                    'start': (start_pt.x, start_pt.y),
+                    'end': (end_pt.x, end_pt.y),
+                    'center': (center_pt.x, center_pt.y),
+                    'radius': geo.Radius,
+                    'length': geo.toShape().Length,
+                    'used_by': None
+                })
     return data
 
 def find_connected_vertices(edges, tol=1e-6):
+    """Group vertices within tolerance."""
     groups = []
     for e in edges:
         for pt in [e['start'], e['end']]:
@@ -75,345 +99,593 @@ def find_connected_vertices(edges, tol=1e-6):
     return mapping
 
 def build_graph(edges):
-    graph, lookup = {}, {}
+    """Build adjacency graph preserving geo_idx."""
+    graph, edge_lookup = {}, {}
     for e in edges:
         s, t = e['start'], e['end']
         if s != t:
             graph.setdefault(s, []).append(t)
             graph.setdefault(t, []).append(s)
-            lookup[(s, t)] = lookup[(t, s)] = e
-    return graph, lookup
+            edge_lookup[(s, t)] = e
+            edge_lookup[(t, s)] = e
+    return graph, edge_lookup
 
-def detect_polygons(graph, edge_lookup):
-    visited, polys = set(), []
-    for v in graph:
-        if v in visited:
+def walk_graph_find_sequences(graph, edge_lookup):
+    """Walk graph once to find all connected sequences with traversal direction."""
+    visited_edges = set()
+    sequences = []
+
+    for start_vertex in graph:
+        for first_neighbor in graph[start_vertex]:
+            edge_key = (start_vertex, first_neighbor)
+
+            if edge_key in visited_edges or (first_neighbor, start_vertex) in visited_edges:
+                continue
+
+            sequence = []
+            prev_vertex = start_vertex
+            curr_vertex = first_neighbor
+
+            while True:
+                edge_key = (prev_vertex, curr_vertex)
+                visited_edges.add(edge_key)
+                visited_edges.add((curr_vertex, prev_vertex))
+
+                edge = edge_lookup[edge_key]
+
+                # Store edge with traversal direction
+                sequence.append({
+                    'edge': edge,
+                    'from': prev_vertex,
+                    'to': curr_vertex
+                })
+
+                neighbors = [n for n in graph[curr_vertex] if n != prev_vertex]
+
+                if not neighbors:
+                    break
+
+                if neighbors[0] == start_vertex and len(sequence) >= 3:
+                    break
+
+                prev_vertex = curr_vertex
+                curr_vertex = neighbors[0]
+
+            if sequence:
+                sequences.append(sequence)
+
+    return sequences
+
+def find_equal_length_runs(sequence, length_tolerance=1e-4):
+    """Find consecutive equal-length edge runs in a sequence."""
+    if not sequence:
+        return []
+
+    runs = []
+    current_run = {
+        'start_idx': 0,
+        'length': sequence[0]['edge']['length'],
+        'items': [sequence[0]]  # Store the full item (edge + direction)
+    }
+
+    for i in range(1, len(sequence)):
+        item = sequence[i]
+        edge = item['edge']
+        length_diff = abs(edge['length'] - current_run['length'])
+
+        if length_diff <= length_tolerance:
+            current_run['items'].append(item)
+        else:
+            if len(current_run['items']) >= 3:
+                current_run['end_idx'] = i - 1
+                current_run['count'] = len(current_run['items'])
+                runs.append(current_run)
+
+            current_run = {
+                'start_idx': i,
+                'length': edge['length'],
+                'items': [item]
+            }
+
+    if len(current_run['items']) >= 3:
+        current_run['end_idx'] = len(sequence) - 1
+        current_run['count'] = len(current_run['items'])
+        runs.append(current_run)
+
+    return runs
+
+def analyze_run_geometry(run):
+    """Analyze if a run represents circular geometry."""
+    items = run['items']
+
+    # Build ordered vertex path using traversal direction
+    vertices = [items[0]['from']]
+    for item in items:
+        vertices.append(item['to'])
+
+    first_pt = vertices[0]
+    last_pt = vertices[-1]
+    is_closed = math.hypot(first_pt[0] - last_pt[0], first_pt[1] - last_pt[1]) < 1e-6
+
+    if len(vertices) < 3:
+        return {'is_circular': False}
+
+    p1 = vertices[0]
+    p2 = vertices[len(vertices)//2]
+    p3 = vertices[-1]
+
+    try:
+        ax, ay = p1[0], p1[1]
+        bx, by = p2[0], p2[1]
+        cx, cy = p3[0], p3[1]
+
+        d = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by))
+        if abs(d) < 1e-9:
+            return {'is_circular': False}
+
+        ux = ((ax*ax + ay*ay) * (by - cy) + (bx*bx + by*by) * (cy - ay) + (cx*cx + cy*cy) * (ay - by)) / d
+        uy = ((ax*ax + ay*ay) * (cx - bx) + (bx*bx + by*by) * (ax - cx) + (cx*cx + cy*cy) * (bx - ax)) / d
+
+        center = (ux, uy)
+
+        radii = [math.hypot(v[0] - ux, v[1] - uy) for v in vertices]
+        avg_radius = sum(radii) / len(radii)
+        max_deviation = max(abs(r - avg_radius) for r in radii)
+
+        if max_deviation > avg_radius * 0.05:
+            return {'is_circular': False}
+
+        start_angle = math.atan2(vertices[0][1] - uy, vertices[0][0] - ux)
+        end_angle = math.atan2(vertices[-1][1] - uy, vertices[-1][0] - ux)
+        arc_angle = math.degrees((end_angle - start_angle) % (2 * math.pi))
+
+        return {
+            'is_circular': True,
+            'center': center,
+            'radius': avg_radius,
+            'arc_angle': arc_angle,
+            'is_full_circle': is_closed,
+            'max_deviation': max_deviation,
+            'start_point': vertices[0],
+            'end_point': vertices[-1]
+        }
+
+    except Exception as e:
+        return {'is_circular': False}
+
+def create_arc_from_run(sketch, run, geom_info):
+    """
+    Create arc geometry from a circular run.
+    Marks edges as used by 'arc' phase.
+    Returns tuple: (new geometry index, set of replaced geo_idx, arc data for constraints)
+    """
+    radius = geom_info['radius']
+
+    # Create arc using traversal-ordered vertices
+    items = run['items']
+
+    # Build ordered vertex path
+    vertices = [items[0]['from']]
+    for item in items:
+        vertices.append(item['to'])
+
+    # Use vertices along the traversal path
+    start_pt = App.Vector(vertices[0][0], vertices[0][1], 0)
+    mid_pt = App.Vector(vertices[1][0], vertices[1][1], 0)  # Second vertex
+    end_pt = App.Vector(vertices[-1][0], vertices[-1][1], 0)
+
+    # Create arc geometry only (no constraints or center lines yet)
+    arc = Part.Arc(start_pt, mid_pt, end_pt)
+    idx_arc = sketch.addGeometry(arc, False)
+
+    # Mark edges as used by arc phase
+    for item in run['items']:
+        item['edge']['used_by'] = 'arc'
+
+    # Collect geometry indices that were replaced
+    replaced_indices = set(item['edge']['geo_idx'] for item in run['items'])
+
+    # Store arc data for later - DON'T read center yet
+    arc_data = {
+        'geo_idx': idx_arc,
+        'radius': radius,
+        'is_circle': False
+    }
+
+    return idx_arc, replaced_indices, arc_data
+
+def detect_and_create_circles(sketch, sequences, graph, edge_lookup):
+    """
+    Detect and create circles from closed loops BEFORE arc detection.
+    Returns tuple: (set of edges used, list of circle data for later constraints)
+    """
+    phase_start = time.time()
+
+    circles_created = 0
+    used_edges = set()
+    circle_data = []  # Store (geo_idx, center_x, center_y, radius) for later
+
+    for sequence in sequences:
+        if len(sequence) < 3:
             continue
-        poly, curr, prev = [], v, None
-        for _ in range(100):
-            poly.append(curr)
-            visited.add(curr)
-            next_v = [n for n in graph[curr] if n != prev]
-            if not next_v or (next_v[0] == v and len(poly) >= 3):
-                break
-            prev, curr = curr, next_v[0]
-        if len(poly) >= 3:
-            edges = []
-            for i in range(len(poly)):
-                key = (poly[i], poly[(i + 1) % len(poly)])
-                if key in edge_lookup:
-                    edges.append(edge_lookup[key])
-                else:
-                    print(f"[INFO] Skipped missing edge: {key}")
-            if edges:
-                polys.append({'vertices': poly, 'edges': edges})
-    return polys
 
-def calculate_edge_length(edge):
-    if edge['type'] == 'line':
-        dx = edge['end'][0] - edge['start'][0]
-        dy = edge['end'][1] - edge['start'][1]
-        return math.hypot(dx, dy)
-    if edge['type'] == 'arc':
-        cx, cy = edge['center']
-        sx, sy = edge['start']
-        ex, ey = edge['end']
-        a1 = math.atan2(sy - cy, sx - cx)
-        a2 = math.atan2(ey - cy, ex - cx)
-        diff = (a2 - a1 + math.pi * 3) % (2 * math.pi) - math.pi
-        return edge['radius'] * abs(diff)
-    return 0.0
+        # Check if this sequence forms a closed loop
+        first_vertex = sequence[0]['from']
+        last_vertex = sequence[-1]['to']
 
-def log_initial_edge_stats(edges):
-    from collections import Counter
+        # Check if there's an edge connecting last back to first (closing edge)
+        closing_edge_key = (last_vertex, first_vertex)
+        closing_edge = edge_lookup.get(closing_edge_key) or edge_lookup.get((first_vertex, last_vertex))
 
-    lengths = [calculate_edge_length(e) for e in edges]
-    total = len(lengths)
+        if not closing_edge or id(closing_edge) in used_edges:
+            continue
 
-    App.Console.PrintMessage(f"Total edges analyzed: {total}\n")
+        # Check if all edges in sequence are equal length
+        runs = find_equal_length_runs(sequence, length_tolerance=1e-4)
 
-    if not lengths:
-        App.Console.PrintMessage("No edges with measurable length.\n")
+        for run in runs:
+            # Only consider runs that use the entire sequence
+            if len(run['items']) != len(sequence):
+                continue
+
+            # Analyze geometry
+            items = run['items']
+            vertices = [items[0]['from']]
+            for item in items:
+                vertices.append(item['to'])
+
+            if len(vertices) < 3:
+                continue
+
+            # Check circularity
+            center_x = sum(v[0] for v in vertices) / len(vertices)
+            center_y = sum(v[1] for v in vertices) / len(vertices)
+
+            radii = [math.hypot(v[0] - center_x, v[1] - center_y) for v in vertices]
+            avg_radius = sum(radii) / len(radii)
+            max_deviation = max(abs(r - avg_radius) for r in radii)
+
+            # If deviation is small enough, it's a circle
+            if max_deviation <= avg_radius * 0.05:
+                # Create circle geometry only (no constraints or center lines yet)
+                circle = Part.Circle()
+                circle.Center = App.Vector(center_x, center_y, 0)
+                circle.Radius = avg_radius
+                idx_circle = sketch.addGeometry(circle, False)
+
+                circles_created += 1
+
+                # Store data for later - DON'T read center yet
+                circle_data.append({
+                    'geo_idx': idx_circle,
+                    'radius': avg_radius,
+                    'is_circle': True
+                })
+
+                # Mark all edges as used (including closing edge)
+                for item in run['items']:
+                    item['edge']['used_by'] = 'circle'
+                    used_edges.add(id(item['edge']))
+
+                closing_edge['used_by'] = 'circle'
+                used_edges.add(id(closing_edge))
+
+    elapsed = time.time() - phase_start
+    App.Console.PrintMessage(f"Circles: {circles_created} created, {len(used_edges)} edges ({elapsed:.4f}s)\n")
+
+    return used_edges, circle_data
+
+def process_circular_runs(sketch, sequences):
+    """
+    Process all sequences to find and create arcs from circular runs.
+    Only processes edges not already used by circles.
+    Returns tuple: (set of used geometry indices, list of arc data for constraints)
+    """
+    phase_start = time.time()
+
+    used_geo_indices = set()
+    processed_edges = set()
+    arcs_created = 0
+    arc_data_list = []  # Collect arc data for later constraints
+
+    for seq_idx, sequence in enumerate(sequences):
+        # Filter out already-processed edges AND edges used by circles
+        unprocessed_sequence = [item for item in sequence
+                               if id(item['edge']) not in processed_edges
+                               and item['edge']['used_by'] is None]
+
+        if not unprocessed_sequence:
+            continue
+
+        runs = find_equal_length_runs(unprocessed_sequence)
+
+        for run in runs:
+            geom_info = analyze_run_geometry(run)
+
+            if geom_info['is_circular']:
+                # Should only be arcs here (circles handled separately)
+                new_idx, replaced_indices, arc_data = create_arc_from_run(sketch, run, geom_info)
+                used_geo_indices.update(replaced_indices)
+                arc_data_list.append(arc_data)
+
+                # Mark these edges as processed to prevent duplicates
+                for item in run['items']:
+                    processed_edges.add(id(item['edge']))
+
+                arcs_created += 1
+
+    elapsed = time.time() - phase_start
+    App.Console.PrintMessage(f"Arcs: {arcs_created} created, {len(used_geo_indices)} edges ({elapsed:.4f}s)\n")
+
+    return used_geo_indices, arc_data_list
+
+def add_coincident_constraints_to_endpoints(sketch):
+    """Add coincident constraints to endpoints (from original code)."""
+    phase_start = time.time()
+
+    try:
+        # Use FreeCAD's built-in constraint detection with default tolerance
+        sketch.detectMissingPointOnPointConstraints()
+        initial_constraints = len(sketch.Constraints)
+
+        sketch.makeMissingPointOnPointCoincident()
+
+        final_constraints = len(sketch.Constraints)
+        added = final_constraints - initial_constraints
+
+        if added > 0:
+            sketch.solve()
+
+        elapsed = time.time() - phase_start
+        App.Console.PrintMessage(f"Constraints: {added} coincident added ({elapsed:.4f}s)\n")
+
+        return added
+
+    except Exception as e:
+        App.Console.PrintError(f"Error adding endpoint constraints: {e}\n")
+        return 0
+
+def apply_arc_circle_constraints(sketch, circle_data, arc_data):
+    """
+    Apply all constraints for circles and arcs in batch.
+    1. Create center lines
+    2. Point-on-point constraints
+    3. Radius constraints
+    4. Recompute
+    5. Center point coincident constraints (in batches)
+    6. Block constraints
+
+    OPTIMIZATION: Cache sketch.Geometry access and use larger solver batches.
+    """
+    phase_start = time.time()
+
+    # Combine all arc/circle data and sort by geo_idx for consistent pairing
+    all_data = circle_data + arc_data
+    all_data.sort(key=lambda d: d['geo_idx'])
+
+    if not all_data:
         return
 
-    avg = sum(lengths) / total
-    rounded_lengths = [round(l, 4) for l in lengths]
-    count = Counter(rounded_lengths)
-    mode_val, mode_freq = count.most_common(1)[0]
-
-    greater = [l for l in lengths if l > avg]
-    lesser = [l for l in lengths if l < avg]
-    lesser_avg = sum(lesser) / len(lesser) if lesser else 0.0
-
-    App.Console.PrintMessage(f"Average length: {avg:.4f}\n")
-    App.Console.PrintMessage(f"Mode length: {mode_val:.4f} ({mode_freq} edges)\n")
-    App.Console.PrintMessage(f"Edges > average: {len(greater)}\n")
-    App.Console.PrintMessage(f"Edges < average: {len(lesser)}\n")
-    App.Console.PrintMessage(f"Mean length of edges < average: {lesser_avg:.4f}\n")
-
-def log_initial_geometry_stats(edges):
-    App.Console.PrintMessage("\n=== INITIAL EDGE GEOMETRY STATISTICS ===\n")
-    log_initial_edge_stats(edges)
-    App.Console.PrintMessage("\n=== END OF INITIAL EDGE GEOMETRY STATISTICS ===\n")
-
-def is_equilateral_polygon(polygon, tolerance=1e-3):
-    lengths = [calculate_edge_length(e) for e in polygon['edges']]
-    min_len, max_len = min(lengths), max(lengths)
-    stats = {'min': min_len, 'max': max_len, 'avg': sum(lengths)/len(lengths), 'range': max_len - min_len}
-    return (stats['range'] <= tolerance), lengths, stats
-
-def analyze_equilateral(polygons):
-    return [p for p in polygons if is_equilateral_polygon(p)[0]]
-
-def best_fit_circle(verts):
-    A, b = [], []
-    for x, y in verts:
-        A.append([2*x, 2*y, 1])
-        b.append(x**2 + y**2)
-    try:
-        sol = np.linalg.solve(np.dot(np.transpose(A), A), np.dot(np.transpose(A), b))
-        h, k, _ = sol
-        center = (h, k)
-        radius = sum(math.hypot(x - h, y - k) for x, y in verts) / len(verts)
-        return center, radius
-    except:
-        return None, None
-
-def add_circumcircle_with_constraints(sketch, center, radius):
-    cx, cy = center
+    # Step 1: Batch create all center lines
+    # Read centers fresh now (after all geometry/constraint changes)
     origin = App.Vector(0, 0, 0)
-    endpoint = App.Vector(cx, cy, 0)
-    line = Part.LineSegment(origin, endpoint)
-    idx_line = sketch.addGeometry(line, True)
-    sketch.addConstraint(Sketcher.Constraint('Block', idx_line))
-    circle = Part.Circle()
-    circle.Center = endpoint
-    idx_circle = sketch.addGeometry(circle, False)
-    sketch.addConstraint(Sketcher.Constraint('Radius', idx_circle, radius))
 
-def find_partial_regular_edge_runs(polygon, length_tol=1e-3, angle_tol=1.5):
-    from math import degrees, acos
-    runs = []
-    edges = polygon['edges']
-    n = len(edges)
+    # OPTIMIZATION: Cache geometry access (single API call)
+    geometry = sketch.Geometry
 
-    def unit(vec):
-        dx, dy = vec
-        mag = math.hypot(dx, dy)
-        return (dx / mag, dy / mag) if mag > 0 else (0, 0)
+    # OPTIMIZATION: Build all centerlines first, then add in single batch
+    centerlines = []
+    for data in all_data:
+        geo_idx = data['geo_idx']
+        # Read center NOW from cached geometry list
+        geo = geometry[geo_idx]
+        endpoint = geo.Center
+        line = Part.LineSegment(origin, endpoint)
+        centerlines.append(line)
 
-    def vector_angle(u, v):
-        ux, uy = unit(u)
-        vx, vy = unit(v)
-        dot = max(min(ux * vx + uy * vy, 1.0), -1.0)
-        return degrees(acos(dot))
+    # Add all centerlines in single batch call
+    # Returns tuple of indices when adding multiple geometries
+    centerline_indices = sketch.addGeometry(centerlines, True)
 
-    i = 0
-    while i < n - 2:
-        run = [edges[i]]
-        base_len = calculate_edge_length(edges[i])
-        v1 = (edges[i]['end'][0] - edges[i]['start'][0], edges[i]['end'][1] - edges[i]['start'][1])
-        j = i + 1
-        angles, lengths = [], [base_len]
+    # Convert tuple to list for consistent indexing
+    centerline_indices = list(centerline_indices)
 
-        while j < n:
-            curr = edges[j]
-            curr_len = calculate_edge_length(curr)
-            if abs(curr_len - base_len) > length_tol:
-                break
-            v2 = (curr['end'][0] - curr['start'][0], curr['end'][1] - curr['start'][1])
-            angle = vector_angle(v1, v2)
-            if len(angles) == 0 or abs(angle - angles[-1]) <= angle_tol:
-                angles.append(angle)
-                lengths.append(curr_len)
-                run.append(curr)
-                v1 = v2
-                j += 1
-            else:
-                break
+    # Step 2: Native point-on-point constraints
+    sketch.detectMissingPointOnPointConstraints()
+    sketch.makeMissingPointOnPointCoincident()
 
-        if len(run) >= 3:
-            avg_len = sum(lengths) / len(lengths)
-            avg_angle = sum(angles) / len(angles) if angles else 0
-            runs.append({'edges': run, 'length': avg_len, 'angle': avg_angle, 'count': len(run)})
-            i = j
-        else:
-            i += 1
+    # Step 3: Batch add radius constraints
+    radius_constraints = []
+    for data in all_data:
+        radius_constraints.append(
+            Sketcher.Constraint('Radius', data['geo_idx'], data['radius'])
+        )
 
-    return runs
+    if radius_constraints:
+        sketch.addConstraint(radius_constraints)
 
-def fit_arc_by_3_points_from_chain(run):
-    conn = defaultdict(list)
-    for edge in run['edges']:
-        s, e = edge['start'], edge['end']
-        conn[s].append(e)
-        conn[e].append(s)
-    endpoints = [v for v, nbrs in conn.items() if len(nbrs) == 1]
-    start = endpoints[0] if len(endpoints) == 2 else list(conn.keys())[0]
-    path = []
-    visited = set()
-    current = start
-    while current and current not in visited:
-        path.append(current)
-        visited.add(current)
-        neighbors = [n for n in conn[current] if n not in visited]
-        current = neighbors[0] if neighbors else None
-    if len(path) < 3:
-        raise ValueError("Not enough vertices to define an arc")
-    return path[0], path[len(path) // 2], path[-1]
-
-def process_equilateral_polygons(sketch, polygons):
-    equi = analyze_equilateral(polygons)
-    used = set()
-    for poly in equi:
-        center, radius = best_fit_circle(poly['vertices'])
-        if center and radius:
-            add_circumcircle_with_constraints(sketch, center, radius)
-            App.Console.PrintMessage(f"Added circumcircle at ({center[0]:.4f}, {center[1]:.4f}), radius={radius:.4f}\n")
-            used.update(id(e) for e in poly['edges'])
+    # Step 4: Recompute
     sketch.recompute()
-    return equi, used
 
-def draw_partial_arcs(sketch, polygons, equi):
-    used = set()
-    for i, poly in enumerate(polygons):
-        if poly not in equi:
-            partials = find_partial_regular_edge_runs(poly)
-            if partials:
-                App.Console.PrintMessage(f"Polygon {i+1} contains {len(partials)} partial regular edge runs:\n")
-                for j, run in enumerate(partials):
-                    App.Console.PrintMessage(
-                        f"  Run {j+1}: {run['count']} edges, avg. length = {run['length']:.4f}, avg. angle = {run['angle']:.2f}°\n"
-                    )
-                    try:
-                        start_pt, mid_pt, end_pt = fit_arc_by_3_points_from_chain(run)
+    # Step 5: Add ALL center constraints at once (no batching needed)
+    # PointPos 3 = center for circles/arcs, PointPos 2 = end for lines
+    center_constraints = []
+    for i, data in enumerate(all_data):
+        geo_idx = data['geo_idx']
+        line_idx = centerline_indices[i]
+        center_constraints.append(
+            Sketcher.Constraint('Coincident', geo_idx, 3, line_idx, 2)
+        )
 
-                        # Create vectors directly
-                        start = App.Vector(*start_pt, 0)
-                        mid = App.Vector(*mid_pt, 0)
-                        end = App.Vector(*end_pt, 0)
+    if center_constraints:
+        try:
+            sketch.addConstraint(center_constraints)
+            sketch.solve()
+            center_constraints_added = len(center_constraints)
+        except Exception as e:
+            App.Console.PrintWarning(f"Center constraints failed: {e}\n")
+            center_constraints_added = 0
 
-                        arc = Part.Arc(start, mid, end)
-                        idx_arc = sketch.addGeometry(arc, False)
-                        used.update(id(e) for e in run['edges'])
-                        App.Console.PrintMessage(f"  DEBUG: Flagged edge IDs as used: {[id(e) for e in run['edges']]}\n")
+    # Step 6: Batch add block constraints on center lines (AFTER center constraints)
+    block_constraints = []
+    for idx_line in centerline_indices:
+        block_constraints.append(Sketcher.Constraint('Block', idx_line))
 
-                        # Estimate center from 3 points
-                        center, radius = best_fit_circle([start_pt, mid_pt, end_pt])
-                        if center:
-                            origin = App.Vector(0, 0, 0)
-                            endpoint = App.Vector(*center, 0)
-                            center_line = Part.LineSegment(origin, endpoint)
-                            idx_line = sketch.addGeometry(center_line, True)
-                            sketch.addConstraint(Sketcher.Constraint('Block', idx_line))
-                            sketch.addConstraint(Sketcher.Constraint('Radius', idx_arc, radius))
+    if block_constraints:
+        sketch.addConstraint(block_constraints)
 
-                        App.Console.PrintMessage(
-                            f"  ➤ Arc added: {start_pt} → {end_pt} via {mid_pt}, radius={radius:.4f}\n"
-                        )
+    elapsed = time.time() - phase_start
+    App.Console.PrintMessage(
+        f"Arc/Circle constraints: {len(centerline_indices)} centerlines, "
+        f"{len(radius_constraints)} radius, {len(block_constraints)} block"
+    )
+    if center_constraints_added > 0:
+        App.Console.PrintMessage(f", {center_constraints_added} center")
+    App.Console.PrintMessage(f" ({elapsed:.4f}s)\n")
 
-                    except Exception as e:
-                        App.Console.PrintError(f"  ✖ Failed to create arc: {e}\n")
-    return used
 
-def draw_colinear_lines(sketch, runs):
-    used = set()
-    for i, run in enumerate(runs):
-        pts = [run[0]['start']] + [e['end'] for e in run]
-        line = Part.LineSegment(App.Vector(*pts[0], 0), App.Vector(*pts[-1], 0))
-        sketch.addGeometry(line, False)
-        used.update(id(e) for e in run)
-        print(f"[INFO] ➤ Colinear run {i+1}: {len(run)} segments → line from {pts[0]} to {pts[-1]}")
-    sketch.recompute()
-    return used
+def find_colinear_runs(sequences, angle_tol=1.0, min_run=2):
+    """
+    Find runs of colinear line segments in sequences.
+    Only processes items where edge['used_by'] is None.
+    Returns list of runs, where each run is a list of items with traversal direction.
 
-# Updated find_colinear_edge_runs function that uses existing graph and only processes unused edges
-def find_colinear_edge_runs(unused_edges, graph, edge_lookup, angle_tol=1e-2, min_run=2):
+    TOLERANCE CONCERN:
+    The angle_tol parameter (default 1.0 degree) determines how strictly edges must
+    be aligned to be considered colinear. For mesh-derived geometry with noise:
+    - Too strict (e.g., 0.1°): Misses legitimately colinear segments with minor noise
+    - Too loose (e.g., 5.0°): May incorrectly combine segments with intentional curves
+
+    Current default of 1.0° appears conservative in testing but may need adjustment
+    based on mesh quality. Consider making this user-configurable or adaptive in future.
+    """
     from math import atan2, degrees
 
-    def compute_angle(e):
-        dx = e['end'][0] - e['start'][0]
-        dy = e['end'][1] - e['start'][1]
+    def compute_angle_from_traversal(item):
+        """Compute angle based on traversal direction (from -> to)"""
+        from_pt = item['from']
+        to_pt = item['to']
+        dx = to_pt[0] - from_pt[0]
+        dy = to_pt[1] - from_pt[1]
         return degrees(atan2(dy, dx))
 
-    def get_edge_between_vertices(v1, v2):
-        """Get edge between two vertices using existing lookup"""
-        return edge_lookup.get((v1, v2)) or edge_lookup.get((v2, v1))
-
     runs = []
-    used_edge_ids = set()
+    used_edges = set()  # Track EDGES (not items) already used in a run
 
-    for start_edge in unused_edges:
-        # Skip if already used or not a line
-        if id(start_edge) in used_edge_ids or start_edge['type'] != 'line':
+    for sequence in sequences:
+        # Filter to only unused line segments
+        unused_items = [item for item in sequence
+                       if item['edge']['used_by'] is None
+                       and item['edge']['type'] == 'line'
+                       and id(item['edge']) not in used_edges]
+
+        if len(unused_items) < min_run:
             continue
 
-        # Start a new run with this edge
-        run = [start_edge]
-        used_edge_ids.add(id(start_edge))
-        base_angle = compute_angle(start_edge)
+        # Find colinear runs within this sequence
+        i = 0
+        while i < len(unused_items):
+            run = [unused_items[i]]
+            used_edges.add(id(unused_items[i]['edge']))
+            base_angle = compute_angle_from_traversal(unused_items[i])
 
-        # Try to extend the run in both directions from start_edge
-        for start_vertex in [start_edge['start'], start_edge['end']]:
-            current_vertex = start_vertex
-            current_edge = start_edge
+            # Extend run while edges are colinear AND connected
+            j = i + 1
+            while j < len(unused_items):
+                item = unused_items[j]
 
-            # Follow the chain as far as possible
-            while True:
-                # Find connected vertices from current vertex
-                connected_vertices = graph.get(current_vertex, [])
+                # Check connectivity: current end must match next start
+                if run[-1]['to'] != item['from']:
+                    break
 
-                next_edge = None
-                next_vertex = None
+                angle = compute_angle_from_traversal(item)
 
-                # Check each connected vertex for a colinear edge
-                for candidate_vertex in connected_vertices:
-                    if candidate_vertex == current_vertex:
-                        continue
+                # Normalize angle difference to [-180, 180]
+                angle_diff = (angle - base_angle + 180) % 360 - 180
 
-                    # Get the edge between current and candidate vertex
-                    candidate_edge = get_edge_between_vertices(current_vertex, candidate_vertex)
-
-                    # Check if this edge qualifies
-                    if (candidate_edge and
-                        id(candidate_edge) not in used_edge_ids and
-                        candidate_edge['type'] == 'line' and
-                        abs(compute_angle(candidate_edge) - base_angle) <= angle_tol):
-
-                        next_edge = candidate_edge
-                        next_vertex = candidate_vertex
-                        break
-
-                # If we found a connecting colinear edge, add it to the run
-                if next_edge:
-                    run.append(next_edge)
-                    used_edge_ids.add(id(next_edge))
-                    current_vertex = next_vertex
-                    current_edge = next_edge
+                if abs(angle_diff) <= angle_tol:
+                    run.append(item)
+                    used_edges.add(id(item['edge']))
+                    j += 1
                 else:
-                    break  # No more colinear edges in this direction
+                    break
 
-        # Only keep runs with minimum length
-        if len(run) >= min_run:
-            runs.append(run)
-        else:
-            # Remove from used set if run is too short
-            for edge in run:
-                used_edge_ids.discard(id(edge))
+            # Keep run if it meets minimum length
+            if len(run) >= min_run:
+                runs.append(run)
+                i = j
+            else:
+                # Remove from used set if run is too short
+                for item in run:
+                    used_edges.discard(id(item['edge']))
+                i += 1
 
     return runs
 
-def find_spline_runs(unused_edges, graph, edge_lookup, global_used_edge_ids, angle_threshold=15.0, min_run=4):
+def create_line_from_colinear_run(sketch, run):
     """
-    FIXED VERSION: Detect smooth spline-like edge runs from unused edges.
-    Now takes global_used_edge_ids to prevent accessing edges used by arcs/circles.
+    Create a single line segment from a colinear run.
+    Marks edges as used by 'colinear' phase.
+    Returns the new geometry index.
+    """
+    # Build ordered vertex path
+    vertices = [run[0]['from']]
+    for item in run:
+        vertices.append(item['to'])
+
+    # Create line from first to last vertex
+    start_pt = App.Vector(vertices[0][0], vertices[0][1], 0)
+    end_pt = App.Vector(vertices[-1][0], vertices[-1][1], 0)
+
+    line = Part.LineSegment(start_pt, end_pt)
+    idx_line = sketch.addGeometry(line, False)
+
+    # Mark edges as used
+    for item in run:
+        item['edge']['used_by'] = 'colinear'
+
+    return idx_line
+
+def process_colinear_runs(sketch, sequences):
+    """
+    Process sequences to find and simplify colinear runs.
+    Returns count of lines created.
+    """
+    phase_start = time.time()
+
+    runs = find_colinear_runs(sequences)
+
+    lines_created = 0
+    edges_simplified = 0
+
+    for run in runs:
+        idx = create_line_from_colinear_run(sketch, run)
+        lines_created += 1
+        edges_simplified += len(run)
+
+    elapsed = time.time() - phase_start
+    App.Console.PrintMessage(f"Lines: {lines_created} created, {edges_simplified} edges ({elapsed:.4f}s)\n")
+
+    return lines_created
+
+def find_spline_runs(graph, edge_lookup, angle_threshold=15.0, min_run=4):
+    """
+    Find smooth curved runs suitable for B-spline interpolation by walking the graph.
+    Only follows edges where edge['used_by'] is None.
+
+    ANGLE THRESHOLD:
+    The angle_threshold (default 15.0 degrees) determines maximum angle change
+    between consecutive edges to be considered a smooth curve. Sharp angles
+    indicate corners that should break the spline into separate segments.
     """
     from math import atan2, degrees, sqrt
 
-    def compute_edge_vector(edge):
-        """Get normalized direction vector for an edge"""
-        dx = edge['end'][0] - edge['start'][0]
-        dy = edge['end'][1] - edge['start'][1]
+    def compute_edge_vector(item):
+        """Get normalized direction vector based on traversal direction"""
+        from_pt = item['from']
+        to_pt = item['to']
+        dx = to_pt[0] - from_pt[0]
+        dy = to_pt[1] - from_pt[1]
         length = sqrt(dx*dx + dy*dy)
         if length > 0:
             return (dx/length, dy/length)
@@ -426,554 +698,389 @@ def find_spline_runs(unused_edges, graph, edge_lookup, global_used_edge_ids, ang
         angle_rad = atan2(abs(cross), dot)
         return degrees(angle_rad)
 
-    def get_edge_between_vertices(v1, v2):
-        """Get edge between two vertices using existing lookup"""
-        return edge_lookup.get((v1, v2)) or edge_lookup.get((v2, v1))
+    def get_edge_item(v1, v2):
+        """Get edge with traversal direction from vertex v1 to v2"""
+        edge = edge_lookup.get((v1, v2)) or edge_lookup.get((v2, v1))
+        if not edge:
+            return None
+        # Create item with correct traversal direction
+        return {
+            'edge': edge,
+            'from': v1,
+            'to': v2
+        }
 
-    def build_connected_chain(start_edge, local_used_edges):
-        """Build a connected chain starting from an edge"""
-        chain = [start_edge]
-        local_used_edges.add(id(start_edge))
+    def walk_smooth_run_bidirectional(start_vertex, first_neighbor, used_edges):
+        """
+        Walk graph in BOTH directions from the starting edge to build complete run.
+        This ensures we capture smooth edges both before and after our starting point.
+        """
+        # First, walk forward from start_vertex -> first_neighbor
+        forward_run = []
+        prev_vertex = start_vertex
+        curr_vertex = first_neighbor
 
-        # Extend chain in both directions from start_edge
-        for start_vertex in [start_edge['start'], start_edge['end']]:
-            current_vertex = start_vertex
-            current_edge = start_edge
+        while True:
+            # Get edge from prev to curr
+            item = get_edge_item(prev_vertex, curr_vertex)
+            if not item:
+                break
 
-            # Follow chain as far as possible in this direction
-            while True:
-                connected_vertices = graph.get(current_vertex, [])
+            edge = item['edge']
 
-                next_edge = None
-                next_vertex = None
+            # Check if edge is unused and is a line
+            if edge['used_by'] is not None or edge['type'] != 'line':
+                break
 
-                # Find next unused edge connected to current vertex
-                for candidate_vertex in connected_vertices:
-                    if candidate_vertex == current_vertex:
-                        continue
+            # Check if already used in this phase
+            if id(edge) in used_edges:
+                break
 
-                    candidate_edge = get_edge_between_vertices(current_vertex, candidate_vertex)
+            # Check angular smoothness if we have previous edge
+            if len(forward_run) > 0:
+                v1 = compute_edge_vector(forward_run[-1])
+                v2 = compute_edge_vector(item)
+                angle_change = angle_between_vectors(v1, v2)
 
-                    # FIXED: Check against BOTH global used edges AND local spline used edges
-                    if (candidate_edge and
-                        id(candidate_edge) not in global_used_edge_ids and  # Not used by arcs/circles
-                        id(candidate_edge) not in local_used_edges and     # Not used by this spline run
-                        candidate_edge['type'] == 'line'):
+                if angle_change > angle_threshold:
+                    break  # Sharp corner - end run
 
-                        next_edge = candidate_edge
-                        next_vertex = candidate_vertex
+            # Add to run
+            forward_run.append(item)
+            used_edges.add(id(edge))
+
+            # Find next vertex - check all neighbors for smoothest continuation
+            neighbors = [n for n in graph.get(curr_vertex, []) if n != prev_vertex]
+            if not neighbors:
+                break
+
+            # If multiple neighbors, find the one with smoothest angle
+            best_neighbor = None
+            best_angle = float('inf')
+
+            for neighbor in neighbors:
+                candidate_item = get_edge_item(curr_vertex, neighbor)
+                if not candidate_item:
+                    continue
+
+                candidate_edge = candidate_item['edge']
+
+                # Skip if not usable
+                if (candidate_edge['used_by'] is not None or
+                    candidate_edge['type'] != 'line' or
+                    id(candidate_edge) in used_edges):
+                    continue
+
+                # Calculate angle change
+                v1 = compute_edge_vector(item)
+                v2 = compute_edge_vector(candidate_item)
+                angle_change = angle_between_vectors(v1, v2)
+
+                # Keep if smoothest and within threshold
+                if angle_change < best_angle and angle_change <= angle_threshold:
+                    best_angle = angle_change
+                    best_neighbor = neighbor
+
+            if best_neighbor is None:
+                break
+
+            prev_vertex = curr_vertex
+            curr_vertex = best_neighbor
+
+        # Now walk backward from start_vertex (in the opposite direction)
+        backward_run = []
+        prev_vertex = first_neighbor  # Coming from the first_neighbor direction
+        curr_vertex = start_vertex
+
+        # Find neighbors of start_vertex (excluding first_neighbor which we already walked)
+        neighbors = [n for n in graph.get(start_vertex, []) if n != first_neighbor]
+
+        if neighbors:
+            # Find smoothest backward continuation
+            best_neighbor = None
+            best_angle = float('inf')
+
+            # Need to check angle relative to the first forward edge (if exists)
+            for neighbor in neighbors:
+                candidate_item = get_edge_item(curr_vertex, neighbor)
+                if not candidate_item:
+                    continue
+
+                candidate_edge = candidate_item['edge']
+
+                # Skip if not usable
+                if (candidate_edge['used_by'] is not None or
+                    candidate_edge['type'] != 'line' or
+                    id(candidate_edge) in used_edges):
+                    continue
+
+                # Calculate angle change relative to first forward edge
+                if forward_run:
+                    # Reverse the candidate vector since we're going backward
+                    v1_reverse = compute_edge_vector(candidate_item)
+                    v1 = (-v1_reverse[0], -v1_reverse[1])  # Reverse direction
+                    v2 = compute_edge_vector(forward_run[0])
+                    angle_change = angle_between_vectors(v1, v2)
+
+                    if angle_change < best_angle and angle_change <= angle_threshold:
+                        best_angle = angle_change
+                        best_neighbor = neighbor
+                else:
+                    # No forward run, just take first valid neighbor
+                    best_neighbor = neighbor
+                    break
+
+            # Walk backward if we found a valid start
+            if best_neighbor is not None:
+                curr_vertex = best_neighbor
+                prev_vertex = start_vertex
+
+                while True:
+                    # Get edge from prev to curr (going backward from start_vertex)
+                    item = get_edge_item(prev_vertex, curr_vertex)
+                    if not item:
                         break
 
-                if next_edge:
-                    # Add to appropriate end of chain based on direction
-                    if current_vertex == start_edge['start']:
-                        chain.insert(0, next_edge)  # Add to beginning
-                    else:
-                        chain.append(next_edge)  # Add to end
+                    edge = item['edge']
 
-                    local_used_edges.add(id(next_edge))
-                    current_vertex = next_vertex
-                    current_edge = next_edge
-                else:
-                    break  # No more connected edges
+                    if edge['used_by'] is not None or edge['type'] != 'line':
+                        break
 
-        return chain
+                    if id(edge) in used_edges:
+                        break
 
-    def analyze_angular_progression(chain):
-        """Analyze chain for smooth angular progression"""
-        if len(chain) < 2:
-            return False, []
+                    # Check smoothness relative to previous backward edge
+                    if len(backward_run) > 0:
+                        v1 = compute_edge_vector(backward_run[-1])
+                        v2 = compute_edge_vector(item)
+                        angle_change = angle_between_vectors(v1, v2)
 
-        break_points = []
-        vectors = []
+                        if angle_change > angle_threshold:
+                            break
 
-        # Calculate direction vectors for each edge
-        for edge in chain:
-            vectors.append(compute_edge_vector(edge))
+                    backward_run.append(item)
+                    used_edges.add(id(edge))
 
-        # Check angular changes between consecutive edges
-        for i in range(len(vectors) - 1):
-            angle_change = angle_between_vectors(vectors[i], vectors[i + 1])
+                    # Find next vertex in backward direction
+                    neighbors = [n for n in graph.get(curr_vertex, []) if n != prev_vertex]
+                    if not neighbors:
+                        break
 
-            if angle_change > angle_threshold:
-                break_points.append(i + 1)
+                    best_neighbor = None
+                    best_angle = float('inf')
 
-        return len(break_points) == 0, break_points
+                    for neighbor in neighbors:
+                        candidate_item = get_edge_item(curr_vertex, neighbor)
+                        if not candidate_item:
+                            continue
 
-    def split_chain_at_breaks(chain, break_points):
-        """Split a chain into sub-chains at sharp angle points"""
-        if not break_points:
-            return [chain]
+                        candidate_edge = candidate_item['edge']
 
-        sub_chains = []
-        start_idx = 0
+                        if (candidate_edge['used_by'] is not None or
+                            candidate_edge['type'] != 'line' or
+                            id(candidate_edge) in used_edges):
+                            continue
 
-        for break_idx in break_points:
-            if break_idx - start_idx >= min_run:
-                sub_chains.append(chain[start_idx:break_idx])
-            start_idx = break_idx
+                        v1 = compute_edge_vector(item)
+                        v2 = compute_edge_vector(candidate_item)
+                        angle_change = angle_between_vectors(v1, v2)
 
-        # Add final segment
-        if len(chain) - start_idx >= min_run:
-            sub_chains.append(chain[start_idx:])
+                        if angle_change < best_angle and angle_change <= angle_threshold:
+                            best_angle = angle_change
+                            best_neighbor = neighbor
 
-        return sub_chains
+                    if best_neighbor is None:
+                        break
 
-    # Main detection logic
+                    prev_vertex = curr_vertex
+                    curr_vertex = best_neighbor
+
+        # Combine: backward_run (reversed with swapped from/to) + forward_run
+        # When reversing backward_run, we need to swap from/to in each item
+        for item in backward_run:
+            item['from'], item['to'] = item['to'], item['from']
+
+        backward_run.reverse()
+        complete_run = backward_run + forward_run
+
+        return complete_run
+
     spline_runs = []
-    local_used_edge_ids = set()  # Track edges used by spline runs only
+    used_edges = set()  # Track edges already used in splines
 
-    for start_edge in unused_edges:
-        # Skip if already processed or not a line segment
-        if id(start_edge) in local_used_edge_ids or start_edge['type'] != 'line':
-            continue
+    # Walk graph to find smooth runs
+    for start_vertex in graph:
+        for first_neighbor in graph.get(start_vertex, []):
+            # Get edge between start and first neighbor
+            item = get_edge_item(start_vertex, first_neighbor)
+            if not item:
+                continue
 
-        # Build connected chain starting from this edge
-        chain = build_connected_chain(start_edge, local_used_edge_ids)
+            edge = item['edge']
 
-        if len(chain) >= min_run:
-            # Analyze for smooth angular progression
-            is_smooth, break_points = analyze_angular_progression(chain)
+            # Skip if already used, not a line, or not unused
+            if (id(edge) in used_edges or
+                edge['used_by'] is not None or
+                edge['type'] != 'line'):
+                continue
 
-            if is_smooth:
-                # Entire chain is smooth
-                spline_runs.append(chain)
-            elif break_points:
-                # Split chain at sharp angles and keep smooth segments
-                sub_chains = split_chain_at_breaks(chain, break_points)
-                spline_runs.extend(sub_chains)
-        else:
-            # Chain too short, remove edges from used set
-            for edge in chain:
-                local_used_edge_ids.discard(id(edge))
+            # Walk smooth run from this starting edge (bidirectional)
+            run = walk_smooth_run_bidirectional(start_vertex, first_neighbor, used_edges)
+
+            # Keep run if it meets minimum length
+            if len(run) >= min_run:
+                spline_runs.append(run)
+            else:
+                # Remove from used set if run is too short
+                for item in run:
+                    used_edges.discard(id(item['edge']))
 
     return spline_runs
 
-def extract_ordered_vertices_from_spline_run(spline_run):
+def create_spline_from_run(sketch, run):
     """
-    Extract ordered vertices from a spline run to create interpolation points.
-    Returns list of (x, y) coordinates in correct order.
+    Create B-spline from a smooth curved run.
+    Marks edges as used by 'spline' phase.
+    Returns the new geometry index.
     """
-    if not spline_run:
-        return []
+    # Build ordered vertex path
+    vertices = [run[0]['from']]
+    for item in run:
+        vertices.append(item['to'])
 
-    # Build connectivity for this run
-    from collections import defaultdict
-    connections = defaultdict(list)
+    # Convert to FreeCAD vectors
+    vectors = [App.Vector(x, y, 0) for x, y in vertices]
 
-    for edge in spline_run:
-        start, end = edge['start'], edge['end']
-        connections[start].append(end)
-        connections[end].append(start)
+    # Create interpolating B-spline (degree 3, non-periodic)
+    spline = Part.BSplineCurve()
+    spline.interpolate(vectors, False)  # False = not periodic
 
-    # Find endpoints (vertices with only one connection)
-    endpoints = [v for v, neighbors in connections.items() if len(neighbors) == 1]
+    # Add to sketch
+    idx_spline = sketch.addGeometry(spline, False)
 
-    if len(endpoints) != 2:
-        # Fallback: use first edge's vertices and all end vertices
-        vertices = [spline_run[0]['start']]
-        for edge in spline_run:
-            vertices.append(edge['end'])
-        return vertices
+    # Mark edges as used
+    for item in run:
+        item['edge']['used_by'] = 'spline'
 
-    # Traverse from one endpoint to the other
-    start_vertex = endpoints[0]
-    vertices = [start_vertex]
-    current = start_vertex
-    visited = {start_vertex}
+    return idx_spline
 
-    while True:
-        neighbors = [v for v in connections[current] if v not in visited]
-        if not neighbors:
-            break
-
-        next_vertex = neighbors[0]
-        vertices.append(next_vertex)
-        visited.add(next_vertex)
-        current = next_vertex
-
-    return vertices
-
-def draw_splines(sketch, spline_runs):
+def process_spline_runs(sketch, graph, edge_lookup):
     """
-    Create B-spline geometry for detected spline runs.
-    Returns set of edge IDs that were used.
+    Process graph to find and create B-splines from smooth curves.
+    Returns count of splines created.
     """
-    used = set()
+    phase_start = time.time()
 
-    for i, run in enumerate(spline_runs):
+    runs = find_spline_runs(graph, edge_lookup)
+
+    splines_created = 0
+    edges_interpolated = 0
+
+    for run in runs:
         try:
-            # Extract ordered vertices
-            vertices = extract_ordered_vertices_from_spline_run(run)
-
-            if len(vertices) < 2:
-                App.Console.PrintError(f"Spline run {i+1}: insufficient vertices\n")
-                continue
-
-            # Convert to FreeCAD vectors
-            vectors = [App.Vector(x, y, 0) for x, y in vertices]
-
-            # Create interpolating B-spline (degree 3, non-periodic)
-            spline = Part.BSplineCurve()
-            spline.interpolate(vectors, False)  # False = not periodic
-
-            # Add to sketch
-            sketch.addGeometry(spline, False)
-
-            # Track used edges
-            used.update(id(e) for e in run)
-
-            App.Console.PrintMessage(
-                f"Spline {i+1}: {len(run)} edges → B-spline through {len(vertices)} points\n"
-            )
-
+            idx = create_spline_from_run(sketch, run)
+            splines_created += 1
+            edges_interpolated += len(run)
         except Exception as e:
-            App.Console.PrintError(f"Failed to create spline {i+1}: {e}\n")
+            App.Console.PrintError(f"Failed to create spline: {e}\n")
 
-    return used
+    elapsed = time.time() - phase_start
+    App.Console.PrintMessage(f"Splines: {splines_created} created, {edges_interpolated} edges ({elapsed:.4f}s)\n")
 
-def toggle_remaining_construction_to_normal(sketch, final_unused_edges):
+    return splines_created
+
+def toggle_unused_to_normal(sketch, edges):
     """
     Toggle remaining unused construction edges to normal geometry.
-    These are edges that didn't fit any pattern but are part of the final profile.
+    These are edges that didn't fit any pattern (arc/line/spline) but are
+    part of the final profile.
     """
-    if not final_unused_edges:
-        App.Console.PrintMessage("No unused edges to toggle.\n")
-        return 0
-
-    # We need to find which sketch geometry indices correspond to our unused edges
-    # This requires matching edge coordinates to sketch geometry
+    phase_start = time.time()
 
     toggled_count = 0
-    tolerance = 1e-6
 
-    for unused_edge in final_unused_edges:
-        # Find the corresponding geometry index in the sketch
-        for i, geo in enumerate(sketch.Geometry):
-            if hasattr(geo, 'TypeId') and geo.TypeId == 'Part::GeomLineSegment':
-                # Check if this geometry matches our unused edge
-                geo_start = (geo.StartPoint.x, geo.StartPoint.y)
-                geo_end = (geo.EndPoint.x, geo.EndPoint.y)
+    for edge in edges:
+        # Only process edges that are still unused
+        if edge['used_by'] is not None:
+            continue
 
-                edge_start = unused_edge['start']
-                edge_end = unused_edge['end']
+        geo_idx = edge['geo_idx']
 
-                # Check if coordinates match (either direction)
-                if ((abs(geo_start[0] - edge_start[0]) < tolerance and
-                     abs(geo_start[1] - edge_start[1]) < tolerance and
-                     abs(geo_end[0] - edge_end[0]) < tolerance and
-                     abs(geo_end[1] - edge_end[1]) < tolerance) or
-                    (abs(geo_start[0] - edge_end[0]) < tolerance and
-                     abs(geo_start[1] - edge_end[1]) < tolerance and
-                     abs(geo_end[0] - edge_start[0]) < tolerance and
-                     abs(geo_end[1] - edge_start[1]) < tolerance)):
+        # Check if it's currently construction geometry and set to normal
+        try:
+            if sketch.getConstruction(geo_idx):
+                sketch.setConstruction(geo_idx, False)  # Faster than toggleConstruction
+                toggled_count += 1
+        except Exception as e:
+            App.Console.PrintWarning(f"Failed to toggle geometry {geo_idx}: {e}\n")
 
-                    # Check if it's currently construction geometry
-                    if sketch.getConstruction(i):
-                        # Toggle to normal geometry
-                        sketch.toggleConstruction(i)
-                        toggled_count += 1
-                        App.Console.PrintMessage(f"Toggled Geom{i} from construction to normal\n")
-                        break
+    elapsed = time.time() - phase_start
+    App.Console.PrintMessage(f"Toggled: {toggled_count} unused edges ({elapsed:.4f}s)\n")
 
-    App.Console.PrintMessage(f"Toggled {toggled_count} unused construction edges to normal geometry\n")
     return toggled_count
 
-def add_coincident_constraints_to_endpoints(sketch):
-    """
-    Add coincident constraints to unconstrained endpoints that are at the same location.
-    Simplified version of SketcherWireDoctor constraint logic for integration.
-    """
-    import math
-    from collections import defaultdict
-
-    TOLERANCE = 5e-6  # 5 micrometers tolerance
-
-    def get_all_endpoints(sketch):
-        """Collect all geometry endpoints with their coordinates."""
-        endpoints = []
-
-        for geo_idx, geometry in enumerate(sketch.Geometry):
-            if not hasattr(geometry, 'TypeId'):
-                continue
-
-            # Skip construction geometry - only constrain normal geometry
-            if sketch.getConstruction(geo_idx):
-                continue
-
-            try:
-                if geometry.TypeId == 'Part::GeomLineSegment':
-                    # Add start and end points
-                    start = sketch.getPoint(geo_idx, 1)
-                    end = sketch.getPoint(geo_idx, 2)
-                    endpoints.append({
-                        'vertex': (geo_idx, 1),
-                        'coordinate': (start.x, start.y),
-                        'geo_type': 'Line'
-                    })
-                    endpoints.append({
-                        'vertex': (geo_idx, 2),
-                        'coordinate': (end.x, end.y),
-                        'geo_type': 'Line'
-                    })
-
-                elif geometry.TypeId == 'Part::GeomArcOfCircle':
-                    # Add start and end points (not center)
-                    start = sketch.getPoint(geo_idx, 1)
-                    end = sketch.getPoint(geo_idx, 2)
-                    endpoints.append({
-                        'vertex': (geo_idx, 1),
-                        'coordinate': (start.x, start.y),
-                        'geo_type': 'Arc'
-                    })
-                    endpoints.append({
-                        'vertex': (geo_idx, 2),
-                        'coordinate': (end.x, end.y),
-                        'geo_type': 'Arc'
-                    })
-
-                elif geometry.TypeId == 'Part::GeomBSplineCurve':
-                    # Add start and end points of B-splines
-                    start = sketch.getPoint(geo_idx, 1)
-                    end = sketch.getPoint(geo_idx, 2)
-                    endpoints.append({
-                        'vertex': (geo_idx, 1),
-                        'coordinate': (start.x, start.y),
-                        'geo_type': 'BSpline'
-                    })
-                    endpoints.append({
-                        'vertex': (geo_idx, 2),
-                        'coordinate': (end.x, end.y),
-                        'geo_type': 'BSpline'
-                    })
-
-            except Exception:
-                continue  # Skip if can't get points
-
-        return endpoints
-
-    def constraint_exists(sketch, v1, v2):
-        """Check if a coincident constraint already exists between two vertices."""
-        for constraint in sketch.Constraints:
-            if constraint.Type == "Coincident":
-                existing_v1 = (constraint.First, constraint.FirstPos)
-                existing_v2 = (constraint.Second, constraint.SecondPos)
-                if (existing_v1 == v1 and existing_v2 == v2) or (existing_v1 == v2 and existing_v2 == v1):
-                    return True
-        return False
-
-    def group_endpoints_by_location(endpoints):
-        """Group endpoints that are at the same location."""
-        location_groups = []
-        processed = set()
-
-        for i, endpoint in enumerate(endpoints):
-            if i in processed:
-                continue
-
-            coord = endpoint['coordinate']
-            group = [endpoint]
-            processed.add(i)
-
-            # Find other endpoints at the same location
-            for j, other_endpoint in enumerate(endpoints):
-                if j in processed:
-                    continue
-
-                other_coord = other_endpoint['coordinate']
-                distance = math.sqrt((coord[0] - other_coord[0])**2 + (coord[1] - other_coord[1])**2)
-
-                if distance <= TOLERANCE:
-                    group.append(other_endpoint)
-                    processed.add(j)
-
-            # Only keep groups with multiple endpoints
-            if len(group) > 1:
-                location_groups.append(group)
-
-        return location_groups
-
-    # Main constraint addition logic
-    try:
-        endpoints = get_all_endpoints(sketch)
-        location_groups = group_endpoints_by_location(endpoints)
-
-        constraints_added = 0
-
-        for group in location_groups:
-            # Use first endpoint as anchor
-            anchor = group[0]
-            anchor_vertex = anchor['vertex']
-
-            # Constrain all other endpoints to the anchor
-            for endpoint in group[1:]:
-                vertex = endpoint['vertex']
-
-                # Don't constrain geometry to itself
-                if vertex[0] == anchor_vertex[0]:
-                    continue
-
-                # Check if constraint already exists
-                if constraint_exists(sketch, vertex, anchor_vertex):
-                    continue
-
-                # Add coincident constraint
-                try:
-                    sketch.addConstraint(Sketcher.Constraint(
-                        'Coincident',
-                        vertex[0], vertex[1],
-                        anchor_vertex[0], anchor_vertex[1]
-                    ))
-                    constraints_added += 1
-
-                    App.Console.PrintMessage(
-                        f"Added coincident constraint: {endpoint['geo_type']} endpoint → {anchor['geo_type']} endpoint\n"
-                    )
-
-                except Exception as e:
-                    App.Console.PrintError(f"Failed to add constraint: {e}\n")
-
-        if constraints_added > 0:
-            App.Console.PrintMessage(f"Added {constraints_added} coincident constraints to endpoints\n")
-            # Trigger solver
-            sketch.solve()
-        else:
-            App.Console.PrintMessage("No endpoint constraints needed - all endpoints properly constrained\n")
-
-        return constraints_added
-
-    except Exception as e:
-        App.Console.PrintError(f"Error adding endpoint constraints: {e}\n")
-        return 0
-
-def log_unused_edge_stats(unused_edges):
-    App.Console.PrintMessage("\n=== RESIDUAL EDGE LENGTH STATISTICS ===\n")
-    log_initial_edge_stats(unused_edges)
-    App.Console.PrintMessage("\n=== END OF RESIDUAL EDGE LENGTH STATISTICS ===\n")
-
-def log_summary(total_edges, polygons, edges_used, unused_edges, equi_count, duration):
-    App.Console.PrintMessage("\n=== MACRO SUMMARY ===\n")
-    App.Console.PrintMessage(f"Total edges in sketch: {total_edges}\n")
-    App.Console.PrintMessage(f"Closed polygons detected: {len(polygons)}\n")
-    for i, p in enumerate(polygons):
-        App.Console.PrintMessage(f"  Polygon {i+1}: {len(p['edges'])} edges\n")
-    App.Console.PrintMessage(f"Edges used in polygons: {edges_used}\n")
-    App.Console.PrintMessage(f"Edges not in any polygon: {unused_edges}\n")
-    App.Console.PrintMessage(f"Equilateral polygons found: {equi_count}\n")
-    App.Console.PrintMessage(f"Total execution time: {duration:.4f} seconds\n")
-
-# Updated main function with spline detection
-
-def final_sketcher_main():
-    sketch = get_open_sketch()
-    if not sketch:
-        App.Console.PrintError("No sketch open.\n")
-        return
-
-    sketch.Document.openTransaction("SketchPolygonsToCircles")
+def main():
+    """Main execution."""
     start_time = time.time()
 
+    sketch = get_open_sketch()
+
+    if not sketch:
+        App.Console.PrintError("ERROR: No sketch is currently open for editing.\n")
+        return
+
+    App.Console.PrintMessage("\n" + "="*70 + "\n")
+    App.Console.PrintMessage(f"SketchReProfile v{__version__}\n")
+    App.Console.PrintMessage("="*70 + "\n")
+    App.Console.PrintMessage(f"Sketch: {sketch.Label} ({len(sketch.Geometry)} edges)\n")
+    App.Console.PrintMessage("="*70 + "\n")
+
+    sketch.Document.openTransaction("SketchReProfile")
+
     try:
-        # Extract and report initial edge stats
+        # Step 1: Extract and build graph
         edges = extract_edge_data(sketch)
-        log_initial_geometry_stats(edges)
-
-        # Preprocessing - build connectivity graph
         find_connected_vertices(edges)
-        graph, lookup = build_graph(edges)
-        polygons = detect_polygons(graph, lookup)
+        graph, edge_lookup = build_graph(edges)
 
-        # Analyze equilateral polygons and track used edges
-        equi, used_from_equi = process_equilateral_polygons(sketch, polygons)
+        # Step 2: Find sequences
+        sequences = walk_graph_find_sequences(graph, edge_lookup)
 
-        # Analyze partial edge runs and track used edges
-        used_from_arcs = draw_partial_arcs(sketch, polygons, equi)
+        # Step 3: Detect and create circles (geometry only, collect data)
+        circle_edges, circle_data = detect_and_create_circles(sketch, sequences, graph, edge_lookup)
 
-        # Combine IDs of edges used so far
-        used_edge_ids = used_from_equi.union(used_from_arcs)
+        # Step 4: Process arcs (geometry only, collect data)
+        used_geo_indices, arc_data = process_circular_runs(sketch, sequences)
 
-        # Filter out edges that were already used
-        unused_edges = [e for e in edges if id(e) not in used_edge_ids]
+        # Step 5: Process colinear runs
+        lines_created = process_colinear_runs(sketch, sequences)
 
-        # Detect and draw colinear lines from remaining unused edges
-        colinear_runs = find_colinear_edge_runs(unused_edges, graph, lookup)
-        used_from_colinear = draw_colinear_lines(sketch, colinear_runs)
+        # Step 6: Process splines
+        splines_created = process_spline_runs(sketch, graph, edge_lookup)
 
-        # Update used edges
-        used_edge_ids = used_edge_ids.union(used_from_colinear)
+        # Step 7: Toggle unused edges
+        toggled_count = toggle_unused_to_normal(sketch, edges)
 
-        # Filter edges again for spline detection
-        unused_edges_for_splines = [e for e in edges if id(e) not in used_edge_ids]
+        # Step 8: Apply all arc/circle constraints in batch
+        apply_arc_circle_constraints(sketch, circle_data, arc_data)
 
-        # ==> DEBUG CHECK <==
-        App.Console.PrintMessage(f"\n=== CRITICAL DEBUG CHECK ===\n")
-        App.Console.PrintMessage(f"Total edges: {len(edges)}\n")
-        App.Console.PrintMessage(f"Used edge IDs: {len(used_edge_ids)}\n")
-        App.Console.PrintMessage(f"Unused edges for splines: {len(unused_edges_for_splines)}\n")
+        # Step 9: Add endpoint constraints
+        add_coincident_constraints_to_endpoints(sketch)
 
-        unused_edge_ids = [id(e) for e in unused_edges_for_splines]
-        overlap = set(unused_edge_ids) & used_edge_ids
-        App.Console.PrintMessage(f"OVERLAP (should be empty): {len(overlap)} edges\n")
+        # Summary
+        elapsed = time.time() - start_time
 
-        if overlap:
-            App.Console.PrintMessage(f"🚨 BUG FOUND: {len(overlap)} edges are in both used and unused sets!\n")
-        else:
-            App.Console.PrintMessage(f"✅ No overlap - filtering appears correct\n")
-
-        # FIXED: Pass global used edge IDs to spline detection
-        spline_runs = find_spline_runs(unused_edges_for_splines, graph, lookup, used_edge_ids)
-        used_from_splines = draw_splines(sketch, spline_runs)
-
-        # Debug: Check edge accounting
-        total_spline_edges = sum(len(run) for run in spline_runs)
-        App.Console.PrintMessage(f"DEBUG: Spline runs claim to use {total_spline_edges} edges\n")
-        App.Console.PrintMessage(f"DEBUG: Available unused edges: {len(unused_edges_for_splines)}\n")
-
-        # Final used edge count
-        used_edge_ids = used_edge_ids.union(used_from_splines)
-
-        # Filter out edges that were not used in any generated geometry
-        final_unused_edges = [e for e in edges if id(e) not in used_edge_ids]
-
-        # Toggle remaining unused construction edges to normal geometry
-        App.Console.PrintMessage(f"\n=== TOGGLING UNUSED EDGES ===\n")
-        toggled_count = toggle_remaining_construction_to_normal(sketch, final_unused_edges)
-
-        # Update final unused count after toggling
-        final_unused_count = len(final_unused_edges) - toggled_count
-
-        # Log stats specifically for unused edges (before toggling)
-        if final_unused_edges:
-            log_unused_edge_stats(final_unused_edges)
-
-        # NEW: Add coincident constraints to endpoints
-        App.Console.PrintMessage(f"\n=== ADDING ENDPOINT CONSTRAINTS ===\n")
-        constraints_added = add_coincident_constraints_to_endpoints(sketch)
-
-        # Enhanced summary log
-        total_edges = len(edges)
-        edges_used = len(used_edge_ids)
-        equi_count = len(equi)
-        spline_count = len(spline_runs)
-        duration = time.time() - start_time
-
-        App.Console.PrintMessage("\n=== MACRO SUMMARY ===\n")
-        App.Console.PrintMessage(f"Total edges in sketch: {total_edges}\n")
-        App.Console.PrintMessage(f"Closed polygons detected: {len(polygons)}\n")
-        App.Console.PrintMessage(f"Equilateral polygons found: {equi_count}\n")
-        App.Console.PrintMessage(f"Spline runs detected: {spline_count}\n")
-        App.Console.PrintMessage(f"Colinear runs simplified: {len(colinear_runs)}\n")
-        App.Console.PrintMessage(f"Construction edges toggled to normal: {toggled_count}\n")
-        App.Console.PrintMessage(f"Endpoint constraints added: {constraints_added}\n")
-        App.Console.PrintMessage(f"Edges used in geometry: {edges_used}\n")
-        App.Console.PrintMessage(f"Edges remaining unused: {final_unused_count}\n")
-        App.Console.PrintMessage(f"Total execution time: {duration:.4f} seconds\n")
+        App.Console.PrintMessage("="*70 + "\n")
+        App.Console.PrintMessage(f"Complete! Total time: {elapsed:.4f}s\n")
+        App.Console.PrintMessage("="*70 + "\n\n")
 
         sketch.Document.commitTransaction()
 
     except Exception as e:
         sketch.Document.abortTransaction()
-        App.Console.PrintError(f"Macro aborted due to error: {e}\n")
+        App.Console.PrintError(f"ERROR: Macro aborted due to error: {e}\n")
+        import traceback
+        App.Console.PrintError(traceback.format_exc())
 
 if __name__ == "__main__":
-    final_sketcher_main()
+    main()
