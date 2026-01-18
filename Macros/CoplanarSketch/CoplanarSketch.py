@@ -1,14 +1,12 @@
-# ============================================================================
-# CoplanarSketch Macro - Version 05
-# ============================================================================
-# Optimized sketch creation from coplanar edges with fast constraint addition
-#
-# Version 05 changes:
-# - Added fast coincident constraint generation using FreeCAD's built-in
-#   detectMissingPointOnPointConstraints() and makeMissingPointOnPointCoincident()
-# - Can add 500+ constraints per second using batch mode
-# - Constraints added automatically after sketch geometry creation
-# ============================================================================
+# -*- coding: utf-8 -*-
+# FreeCAD Macro
+# Name: CoplanarSketch
+# Author: DesignWeaver3D
+# Version: 3.1.0
+# Date: 2026-01-18
+# FreeCAD Version: 1.0.2
+# Description: Creates sketches from coplanar edges of tessellated solid objects that result from mesh import & conversion.
+# License: GPL‑3.0‑or‑later
 
 import FreeCAD
 import FreeCADGui
