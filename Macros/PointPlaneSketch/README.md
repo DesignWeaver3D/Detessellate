@@ -4,6 +4,10 @@ A FreeCAD macro for creating datum planes and sketches from mesh point data. It 
 
 <img width="128" height="128" alt="PointPlaneSketch" src="https://github.com/user-attachments/assets/4ed28d6d-6908-47f5-bf3a-f589f030016a" />
 
+📺 Click the image below to watch the demo video on YouTube
+
+[![Watch the demo video](https://img.youtube.com/vi/jcQCEt7tGA4/maxresdefault.jpg)](https://www.youtube.com/watch?v=jcQCEt7tGA4)
+
 ## What it does
 
 - Fits planes to noisy point clouds using RANSAC.
