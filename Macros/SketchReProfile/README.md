@@ -27,14 +27,6 @@ This macro is bundled with the Detessellate Workbench, but can also be manually 
 1. Place `SketchReProfile.py` in your FreeCAD macros directory  
 2. Restart FreeCAD or refresh the macro list
 
-### 🧪 Testing Status
-
-Initial release under a new versioning system.  
-**Only tested on Windows with FreeCAD v1.0.2** — Linux/macOS testers welcome.
-
-## License
-
-This project is licensed under the [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html).  
-You are free to use, modify, and redistribute this macro under the terms of the GPLv3.
-
-© NSUBB (aka DesignWeaver3D)
+## 📜 Changelog
+- **v2.0.0** (2026-01-18) - Massive optimization to quickly handle > 500 edge sketches in less 1 sec.
+- **v1.0.0** (2025-11-29) - Initial concept. Stable for sketches < 150 edges. 
