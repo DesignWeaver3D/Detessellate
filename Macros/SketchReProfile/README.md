@@ -29,4 +29,4 @@ This macro is bundled with the Detessellate Workbench, but can also be manually 
 
 ## 📜 Changelog
 - **v2.0.0** (2026-01-18) - Massive optimization to quickly handle > 500 edge sketches in less 1 sec.
-- **v1.0.0** (2025-01-04) - Initial concept. Stable for sketches < 150 edges. 
+- **v1.0.0** (2025-11-29) - Initial concept. Stable for sketches < 150 edges. 
