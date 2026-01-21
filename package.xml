@@ -5,9 +5,9 @@
 
   <description>FreeCAD workbench of tools to reverse engineer meshes  </description>
 
-  <version>0.3.0</version>
+  <version>0.3.1</version>
 
-  <date>2026-01-18</date>
+  <date>2026-01-20</date>
 
   <maintainer email="designweaver3d@gmail.com">DesignWeaver3D</maintainer>
 
