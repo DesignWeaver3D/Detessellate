@@ -28,7 +28,7 @@ class SketchReProfileCommand:
                 import SketchReProfile
 
             # Call the main function
-            SketchReProfile.final_sketcher_main()
+            SketchReProfile.main()
 
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error running SketchReProfile: {e}\n")

@@ -136,7 +136,7 @@ class CreateSketchToolbarCommand:
             else:
                 import SketchReProfile
 
-            SketchReProfile.final_sketcher_main()
+            SketchReProfile.main()
 
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error running SketchReProfile: {e}\n")
