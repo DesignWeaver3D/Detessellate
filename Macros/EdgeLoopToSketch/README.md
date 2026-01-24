@@ -11,6 +11,7 @@ When working with imported STEP files or existing nonparametric 3D geometry, you
 - Creating profiles for new features based on existing geometry
 - Converting 3D edge loops to editable 2D sketches
 - Extracting reference geometry for design modifications
+- Avoids dependency on original geometry (like SubShapeBinder approach)
 
 ## Features
 
@@ -25,12 +26,16 @@ When working with imported STEP files or existing nonparametric 3D geometry, you
 
 ### Basic Workflow
 
-1. **Select coplanar edges** from a 3D object (typically using [EdgeLoopSelector](../EdgeLoopSelector) to select complete loops)
+1. **Select a face, an arc/circle/spline, or coplanar edges** from a 3D object (typically using [EdgeLoopSelector](../EdgeLoopSelector) to select complete loops)
 2. **Run the macro**: `Macro → Macros... → EdgeLoopToSketch → Execute`
 3. **Choose destination**: Standalone sketch, new Body, or existing Body
 4. **Result**: Parametric sketch with preserved curve types
 
 ### Selection Requirements
+
+**One or more coplanar faces**
+- All faces must be from the same object
+- Macro validates coplanarity automatically
 
 **For multiple edges:**
 - Select 2 or more coplanar edges
@@ -64,12 +69,7 @@ When working with imported STEP files or existing nonparametric 3D geometry, you
 
 ### Curve Type Detection
 
-The macro analyzes each edge's geometry type and creates appropriate sketch elements:
-
-- **Line edges** → Sketch line segments
-- **Full circles** → Sketch circles (center + radius)
-- **Circular arcs** → Sketch arcs (3-point definition)
-- **B-spline curves** → Sketch B-splines (preserves poles, knots, degree)
+Utilizes DraftGeomUtils.orientEdge method from Draft workbench to convert the 3D edges to appropriate sketch geometry.
 
 ### Coplanarity Validation
 
@@ -118,7 +118,7 @@ This two-step workflow makes it easy to extract and re-parametrize complex geome
 
 - **Coplanar edges only**: All selected edges must lie on the same plane
 - **Single object**: All edges must be from the same FreeCAD object
-- **Supported curve types**: Lines, circles, arcs, B-splines (other types converted to lines)
+- **Supported curve types**: Lines, circles, arcs, ellipses  B-splines (other types converted to lines)
 - **3D B-splines**: Non-planar B-splines cannot be converted (error shown)
 
 ## Requirements
@@ -155,19 +155,13 @@ This two-step workflow makes it easy to extract and re-parametrize complex geome
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## Changelog
+## 📜 Changelog
 
-- **Version 2.0.0** (2025-12-08) - Fix flipping arcs. Added centerpoint, radius, and reference distance constraints to created sketch.
-- **Version 1.0.0** (2025-12-07): Initial release
+- **v3.0.0** (2026-1-23) - Refactor to use DraftGeomUtils.orientEdge to support additional edge types for sketch creation.
+- **v2.0.0** (2025-12-08) - Fix flipping arcs. Added centerpoint, radius, and reference distance constraints to created sketch.
+- **v1.0.0** (2025-12-07): Initial release
   - Preserves curve types (lines, arcs, circles, B-splines)
   - Coplanarity validation
   - Single circle/arc/planar B-spline support
   - Standalone and Body sketch placement options
   - Automatic coincident constraints
-
-
-## Related Tools
-
-- **[EdgeLoopSelector](../EdgeLoopSelector)** - Select complete edge loops for conversion
-- **[CoplanarSketch](../CoplanarSketch)** - Create construction line sketches from tessellated geometry
-- **[SketchReProfile](../SketchReProfile)** - Trace parametric geometry over construction lines
