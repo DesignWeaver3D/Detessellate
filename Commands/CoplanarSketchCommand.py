@@ -12,7 +12,7 @@ class CoplanarSketchCommand:
         return {
             'Pixmap': str(icon_path),
             'MenuText': 'Coplanar Sketch',
-            'ToolTip': 'Create sketches coplanar to selected faces'
+            'ToolTip': 'Create sketches from selected coplanar edges or faces from a tessellated solid.'
         }
 
     def Activated(self):
@@ -35,4 +35,5 @@ class CoplanarSketchCommand:
             traceback.print_exc()
 
     def IsActive(self):
-        return True
+        # Only active when a document is
+        return FreeCAD.ActiveDocument is not None

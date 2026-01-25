@@ -12,7 +12,7 @@ class ReconstructSolidCommand:
         return {
             'Pixmap': str(icon_path),
             'MenuText': 'Reconstruct Solid',
-            'ToolTip': 'Reconstruct solid from mesh or sketches'
+            'ToolTip': 'Reconstruct a simple solid to change its geometric origin'
         }
 
     def Activated(self):
@@ -36,4 +36,5 @@ class ReconstructSolidCommand:
             traceback.print_exc()
 
     def IsActive(self):
-        return True  # Adjust if it needs specific conditions
+        # Only active when a document is
+        return FreeCAD.ActiveDocument is not None

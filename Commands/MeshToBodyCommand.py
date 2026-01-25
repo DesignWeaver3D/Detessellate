@@ -12,7 +12,7 @@ class MeshToBodyCommand:
         return {
             'Pixmap': str(icon_path),
             'MenuText': 'Mesh To Body',
-            'ToolTip': 'Convert mesh to parametric body'
+            'ToolTip': 'Convert meshes to solid body'
         }
 
     def Activated(self):
@@ -36,4 +36,5 @@ class MeshToBodyCommand:
             traceback.print_exc()
 
     def IsActive(self):
-        return True
+        # Only active when a document is
+        return FreeCAD.ActiveDocument is not None

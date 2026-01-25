@@ -36,6 +36,10 @@ class SketchReProfileCommand:
             traceback.print_exc()
 
     def IsActive(self):
+        # Only active when a document is
+        return FreeCAD.ActiveDocument is not None
+
+        '''
         # Active when a sketch is being edited
         try:
             doc = FreeCADGui.activeDocument()
@@ -54,3 +58,4 @@ class SketchReProfileCommand:
             return False
         except:
             return False
+        ''''

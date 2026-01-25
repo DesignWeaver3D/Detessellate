@@ -12,7 +12,7 @@ class SketcherWireDoctorCommand:
         return {
             'Pixmap': str(icon_path),
             'MenuText': 'Sketcher Wire Doctor',
-            'ToolTip': 'Fix sketch wire issues'
+            'ToolTip': 'Fix sketch wire not closed issues'
         }
 
     def Activated(self):
@@ -35,5 +35,5 @@ class SketcherWireDoctorCommand:
             traceback.print_exc()
 
     def IsActive(self):
-        # Active when a sketch is being edited
-        return True #FreeCADGui.activeDocument() is not None and FreeCADGui.ActiveDocument.getInEdit() is not None
+        # Only active when a document is
+        return FreeCAD.ActiveDocument is not None

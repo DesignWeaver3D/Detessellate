@@ -12,7 +12,7 @@ class PointPlaneSketchCommand:
         return {
             'Pixmap': str(icon_path),
             'MenuText': 'Point Plane Sketch',
-            'ToolTip': 'Create sketch from point and plane'
+            'ToolTip': 'Create sketch from points and ther derived plane'
         }
 
     def Activated(self):
@@ -36,4 +36,5 @@ class PointPlaneSketchCommand:
             traceback.print_exc()
 
     def IsActive(self):
-        return True  # Adjust if it needs specific conditions
+        # Only active when a document is
+        return FreeCAD.ActiveDocument is not None

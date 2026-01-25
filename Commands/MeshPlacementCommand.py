@@ -32,4 +32,5 @@ class MeshPlacementCommand:
             traceback.print_exc()
 
     def IsActive(self):
-        return True
+        # Only active when a document is
+        return FreeCAD.ActiveDocument is not None

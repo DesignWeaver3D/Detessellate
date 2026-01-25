@@ -36,4 +36,5 @@ class VarSetUpdateCommand:
             traceback.print_exc()
 
     def IsActive(self):
-        return True  # Adjust if it needs specific conditions
+        # Only active when a document is
+        return FreeCAD.ActiveDocument is not None

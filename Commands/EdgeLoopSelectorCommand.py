@@ -12,7 +12,7 @@ class EdgeLoopSelectorCommand:
         return {
             'Pixmap': str(icon_path),
             'MenuText': 'Edge Loop Selector',
-            'ToolTip': 'Select connected edge loops'
+            'ToolTip': 'Select connected edge loops from sketches or faces'
         }
 
     def Activated(self):
@@ -36,4 +36,5 @@ class EdgeLoopSelectorCommand:
             traceback.print_exc()
 
     def IsActive(self):
-        return True  # Adjust if it needs specific conditions
+        # Only active when a document is
+        return FreeCAD.ActiveDocument is not None
