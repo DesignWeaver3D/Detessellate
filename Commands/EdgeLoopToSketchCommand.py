@@ -12,7 +12,7 @@ class EdgeLoopToSketchCommand:
         return {
             'Pixmap': str(icon_path),
             'MenuText': 'Edge Loop to Sketch',
-            'ToolTip': 'Convert selected edge loops to parametric sketch'
+            'ToolTip': 'Convert selected coplanar faces or edges to parametric sketch'
         }
 
     def Activated(self):
@@ -35,14 +35,5 @@ class EdgeLoopToSketchCommand:
             traceback.print_exc()
 
     def IsActive(self):
-        # Only active when edges are selected
-        selection = FreeCADGui.Selection.getSelectionEx()
-        if not selection:
-            return False
-        
-        # Check if any edges are selected
-        for sel in selection:
-            if any(name.startswith("Edge") for name in sel.SubElementNames):
-                return True
-        
-        return False
+        # Only active when a document is
+        return FreeCAD.ActiveDocument is not None
