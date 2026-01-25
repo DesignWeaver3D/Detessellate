@@ -54,6 +54,7 @@ Install via **FreeCAD Addon Manager** by adding the Detessellate Repository to t
 - 🎯 Integration with FreeCAD Addon Manager
 
 ## 📜 Changelog
+- **v0.3.3** (2026-01-24) - Edited commands so that macro buttons are grayed out if no active document.
 - **v0.3.2** (2026-01-23) - EdgeLoopToSketch refactored to support additional edge geometry types by utilizing DraftGeomUtils.orientEdge.
 - **v0.3.1** (2026-01-04) - Bug fix in commands for SketchReProfile.
 - **v0.3.0** (2026-01-04) - Massive optimizations of of CoplanarSketch & SketchReProfile macros for better handling of larger edge counts!
