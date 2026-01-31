@@ -2,6 +2,8 @@
 
 **ConstrainAllPointOnPoint** is a FreeCAD macro that automatically adds coincident constraints to all overlapping vertices in a sketch.
 
+<img width="128" height="128" alt="ConstrainAllPointOnPoint" src="https://github.com/user-attachments/assets/9d359aa9-5027-4e1f-b349-1d1f51a7f6f4" />
+
 ### 🔍 Features
 
 - **One-Click Operation**: No dialogs, no manual selection, transaction-safe with rollback
