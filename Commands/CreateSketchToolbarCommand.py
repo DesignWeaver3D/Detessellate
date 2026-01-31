@@ -38,6 +38,7 @@ class CreateSketchToolbarCommand:
 
             # Add buttons
             self.add_sketch_reprofile_button(custom_toolbar)
+            self.add_constrain_all_pointonpoint_button(custom_toolbar)
             self.add_sketcher_wiredoctor_button(custom_toolbar)
 
             # Connect to workbench changes to show/hide toolbar
@@ -103,6 +104,26 @@ class CreateSketchToolbarCommand:
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error adding SketchReProfile button: {e}\n")
 
+    def add_constrain_all_pointonpoint_button(self, toolbar):
+        """Add ConstrainAllPointOnPoint button that directly calls the macro"""
+        try:
+            macro_path = self.wb_path / "Macros" / "ConstrainAllPointOnPoint"
+            icon_path = macro_path / "ConstrainAllPointOnPoint.svg"
+            icon = QtGui.QIcon(str(icon_path))
+
+            action = QtGui.QAction(icon, "Constrain All Point-On-Point", toolbar)
+            action.setToolTip(
+                "<b>Constrain All Point-On-Point</b><br><br>"
+                "Automatically add missing coincident constraints<br><br>"
+                "<i>Detessellate_ConstrainAllPointOnPoint</i>"
+            )
+            action.triggered.connect(lambda: self.run_constrain_all_pointonpoint(macro_path))
+
+            toolbar.addAction(action)
+
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"Error adding ConstrainAllPointOnPoint button: {e}\n")
+
     def add_sketcher_wiredoctor_button(self, toolbar):
         """Add SketcherWireDoctor button that directly calls the macro"""
         try:
@@ -140,6 +161,26 @@ class CreateSketchToolbarCommand:
 
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error running SketchReProfile: {e}\n")
+            import traceback
+            traceback.print_exc()
+
+    def run_constrain_all_pointonpoint(self, macro_path: Path) -> None:
+        """Directly run the ConstrainAllPointOnPoint macro"""
+        try:
+            if str(macro_path) not in sys.path:
+                sys.path.append(str(macro_path))
+
+            import importlib
+            if 'ConstrainAllPointOnPoint' in sys.modules:
+                import ConstrainAllPointOnPoint
+                importlib.reload(ConstrainAllPointOnPoint)
+            else:
+                import ConstrainAllPointOnPoint
+
+            ConstrainAllPointOnPoint.main()
+
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"Error running ConstrainAllPointOnPoint: {e}\n")
             import traceback
             traceback.print_exc()
 
