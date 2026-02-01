@@ -30,9 +30,9 @@ FreeCAD Forum: https://forum.freecad.org/viewtopic.php?t=101467
 - <img width="25" height="25" alt="VarSetUpdateIcon" src="https://github.com/user-attachments/assets/9634b68f-6d81-4f1b-a367-122271b6bdc5" /> [VarSet-Update](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/VarSet-Update/README.md) – Update variable sets properties
 
 ### Sketcher Tools
-- <img width="25" height="25" alt="SketchReProfileIcon" src="https://github.com/user-attachments/assets/b21b52fa-843c-4c4d-8b63-4600f9488f41" /> [SketchReProfile](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/SketchReProfile/README.md) – Rebuild normal geometry profiles from construction sketches  
-- <img width="25" height="25" alt="SketcherWireDoctorIcon" src="https://github.com/user-attachments/assets/21fd3989-5f19-4127-a680-0e17d17534ec" /> [SketcherWireDoctor](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/SketcherWireDoctor/README.md) – Repair and clean sketch wires
+- <img width="25" height="25" alt="SketchReProfileIcon" src="https://github.com/user-attachments/assets/b21b52fa-843c-4c4d-8b63-4600f9488f41" /> [SketchReProfile](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/SketchReProfile/README.md) – Rebuild normal geometry profiles from construction sketches
 - <img width="25" height="25" alt="ConstrainAllPointOnPoint" src="https://github.com/user-attachments/assets/9d359aa9-5027-4e1f-b349-1d1f51a7f6f4" /> [ConstrainAllPointOnPoint](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/ConstrainAllPointOnPoint/README.md) – Automatically adds coincident constraints to all overlapping vertices in a sketch
+- <img width="25" height="25" alt="SketcherWireDoctorIcon" src="https://github.com/user-attachments/assets/21fd3989-5f19-4127-a680-0e17d17534ec" /> [SketcherWireDoctor](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/SketcherWireDoctor/README.md) – Repair and clean sketch wires
 
 ### PartDesign Tools
 - <img width="25" height="25" alt="TopomatchSelectorIcon" src="https://github.com/user-attachments/assets/9bc7beca-cde8-40ee-b50c-679865858a58" /> [TopoMatchSelector](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/TopoMatchSelector/README.md) – Match and select topology from earlier body features  
