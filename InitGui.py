@@ -15,7 +15,6 @@ command_specs = [
     ("Detessellate_ReconstructSolid", "Commands.ReconstructSolidCommand", "ReconstructSolidCommand", "Detessellate Utilities", True),
     ("Detessellate_TopoMatchSelector", "Commands.TopoMatchSelectorCommand", "TopoMatchSelectorCommand", "Detessellate Utilities", False),  # Menu only
     ("Detessellate_VarSetUpdate", "Commands.VarSetUpdateCommand", "VarSetUpdateCommand", "Detessellate Utilities", True),
-    ("Detessellate_ConstrainAllPointOnPoint", "Commands.ConstrainAllPointOnPointCommand", "ConstrainAllPointOnPointCommand", "Detessellate Sketch", False),  # Menu only (on custom toolbar)
     ("CreateSketchToolbar", "Commands.CreateSketchToolbarCommand", "CreateSketchToolbarCommand", "Detessellate Sketch", False),  # Menu only
     ("CreatePartDesignToolbar", "Commands.CreatePartDesignToolbarCommand", "CreatePartDesignToolbarCommand", "Detessellate Utilities", False),  # Menu only
     ("CreateGlobalToolbar", "Commands.CreateGlobalToolbarCommand", "CreateGlobalToolbarCommand", "Detessellate Utilities", False),  # Menu only
