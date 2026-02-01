@@ -60,6 +60,7 @@ Install via **FreeCAD Addon Manager** by adding the Detessellate Repository to t
 - 🎯 Integration with FreeCAD Addon Manager
 
 ## 📜 Changelog
+- **v0.4.1** (2026-01-31) - Fixed ConstrainAllPointOnPoint default tolerance to 50 microns
 - **v0.4.0** (2026-01-31) - Added ConstrainAllPointOnPoint macro
 - **v0.3.3** (2026-01-24) - Edited commands so that macro buttons are grayed out if no active document.
 - **v0.3.2** (2026-01-23) - EdgeLoopToSketch refactored to support additional edge geometry types by utilizing DraftGeomUtils.orientEdge.
