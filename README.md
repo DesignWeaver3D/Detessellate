@@ -1,34 +1,40 @@
-# Detessellate  
-FreeCAD workbench of tools to reverse engineer meshes  
+# Detessellate   
+Detessellate is a collection of FreeCAD macros that introduce an **algorithm-assisted workflow** for reverse engineering imported geometry including mesh models (STL, OBJ, 3MF), point cloud data, and non-parametric STEP solids.  
 
 <img width="128" height="128" alt="Detessellate" src="https://github.com/user-attachments/assets/0c7ede91-acdf-4160-bc04-fc37f76c0e3c" />
-
-FreeCAD Forum: https://forum.freecad.org/viewtopic.php?t=101467
-
-Detessellate is a collection of FreeCAD macros that introduce an **algorithm-assisted workflow** for reverse engineering mesh models such as imported STL, OBJ, or 3MF files.  
 
 📺 Click the image below to watch the demo video on YouTube
 
 [![Watch the demo video](https://img.youtube.com/vi/QLw4me9nutA/maxresdefault.jpg)](https://www.youtube.com/watch?v=QLw4me9nutA)
 
-## ✨ Workflow
-1. Use **MeshPlacement** and **MeshToBody** to align and convert meshes to solids.  
-2. Use **CoplanarSketch** to generate construction sketches for reconstructive solid features.  
-3. Manually sketch or use **SketchReProfile** to automatically convert construction sketches to cleaner geometry. 
-    - Potentially use **SketcherWireDoctor** (edge case only) to repair sketch errors prior to 3D feature creation.
-4. Finish features using either **Part** or **PartDesign** workbenches as desired.  
+FreeCAD Forum: https://forum.freecad.org/viewtopic.php?t=101467
+
+## 🎯 Use Cases
+- **Mesh Reverse Engineering**: Convert STL/OBJ/3MF meshes to parametric CAD models
+- **Point Cloud Processing**: Generate sketches from scanned point cloud data
+- **STEP Reparametrization**: Rebuild imported STEP files with sketch-based features
+- **Sketch Optimization**: Clean up and constrain sketch geometry
+
+*See individual macro documentation for detailed workflows.*
 
 ## 📦 Included Macros
+
+### General Tools
 - <img width="25" height="25" alt="MeshPlacementIcon" src="https://github.com/user-attachments/assets/57233128-99af-42cd-b23f-17bc44b23b97" /> [MeshPlacement](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/MeshPlacement/README.md) – recenter and align meshes to origin 
 - <img width="25" height="25" alt="MeshToBodyIcon" src="https://github.com/user-attachments/assets/5ead9567-3c8c-40a1-a8f5-066e9259917e" /> [MeshToBody](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/MeshToBody/README.md) – convert meshes into solids and bodies  
 - <img width="25" height="25" alt="CoplanarSketch" src="https://github.com/user-attachments/assets/a941d04a-1707-400b-bd9c-d0751c8ea021" /> [CoplanarSketch](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/CoplanarSketch/README.md) – Generate construction sketches from coplanar edges on tessellated solids  
-- <img width="25" height="25" alt="SketchReProfileIcon" src="https://github.com/user-attachments/assets/b21b52fa-843c-4c4d-8b63-4600f9488f41" /> [SketchReProfile](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/SketchReProfile/README.md) – Rebuild normal geometry profiles from construction sketches  
-- <img width="25" height="25" alt="SketcherWireDoctorIcon" src="https://github.com/user-attachments/assets/21fd3989-5f19-4127-a680-0e17d17534ec" /> [SketcherWireDoctor](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/SketcherWireDoctor/README.md) – Repair and clean sketch wires  
+- <img width="25" height="25" alt="PointPlaneSketch" src="https://github.com/user-attachments/assets/4ed28d6d-6908-47f5-bf3a-f589f030016a" /> [PointPlaneSketch](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/PointPlaneSketch/README.md) - Generate sketches from selected points of a PointsObject.
 - <img width="25" height="25" alt="EdgeLoopSelectorIcon" src="https://github.com/user-attachments/assets/e2de31f8-bf12-46f7-b5eb-5a7271ec598b" /> [EdgeLoopSelector](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/EdgeLoopSelector/README.md) – Select and process edge loops
 - <img width="25" height="25" alt="EdgeLoopToSketch" src="https://github.com/user-attachments/assets/2ed2553e-633c-4be4-aacc-32f5d4691915" /> [EdgeLoopToSketch](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/EdgeLoopToSketch/README.md) - Generate sketches from selected coplanar 3D edges, preserving edge type.
-- <img width="25" height="25" alt="PointPlaneSketch" src="https://github.com/user-attachments/assets/4ed28d6d-6908-47f5-bf3a-f589f030016a" /> [PointPlaneSketch](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/PointPlaneSketch/README.md) - Generate sketches from selected points of a PointsObject.
 - <img width="25" height="25" alt="ReconstructSolid" src="https://github.com/user-attachments/assets/4ee570fd-bbea-452f-95af-8e8e17ed9ac9" /> [ReconstructSolid](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/ReconstructSolid/README.md) - Rebuild a non-parametric solid from the underlying faces of the selected solid.
-- <img width="25" height="25" alt="VarSetUpdateIcon" src="https://github.com/user-attachments/assets/9634b68f-6d81-4f1b-a367-122271b6bdc5" /> [VarSet-Update](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/VarSet-Update/README.md) – Update variable sets properties  
+- <img width="25" height="25" alt="VarSetUpdateIcon" src="https://github.com/user-attachments/assets/9634b68f-6d81-4f1b-a367-122271b6bdc5" /> [VarSet-Update](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/VarSet-Update/README.md) – Update variable sets properties
+
+### Sketcher Tools
+- <img width="25" height="25" alt="SketchReProfileIcon" src="https://github.com/user-attachments/assets/b21b52fa-843c-4c4d-8b63-4600f9488f41" /> [SketchReProfile](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/SketchReProfile/README.md) – Rebuild normal geometry profiles from construction sketches  
+- <img width="25" height="25" alt="SketcherWireDoctorIcon" src="https://github.com/user-attachments/assets/21fd3989-5f19-4127-a680-0e17d17534ec" /> [SketcherWireDoctor](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/SketcherWireDoctor/README.md) – Repair and clean sketch wires
+- <img width="25" height="25" alt="ConstrainAllPointOnPoint" src="https://github.com/user-attachments/assets/9d359aa9-5027-4e1f-b349-1d1f51a7f6f4" /> [ConstrainAllPointOnPoint](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/ConstrainAllPointOnPoint/README.md) – Automatically adds coincident constraints to all overlapping vertices in a sketch
+
+### PartDesign Tools
 - <img width="25" height="25" alt="TopomatchSelectorIcon" src="https://github.com/user-attachments/assets/9bc7beca-cde8-40ee-b50c-679865858a58" /> [TopoMatchSelector](https://github.com/DesignWeaver3D/Detessellate/blob/main/Macros/TopoMatchSelector/README.md) – Match and select topology from earlier body features  
 
 > Some of these macros are included for convenience and are not strictly part of the Detessellate workflow.
