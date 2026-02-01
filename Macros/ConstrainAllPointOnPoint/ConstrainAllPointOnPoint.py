@@ -14,8 +14,6 @@
 # - Transaction-safe with rollback protection
 # - NO REDUNDANT CONSTRAINTS: Full transitive closure checking
 #
-# Default tolerance: 100µm (0.0001m) - manufacturing tolerance range
-#
 # Usage:
 #   1. Open a sketch in edit mode (double-click the sketch)
 #   2. Run this macro - it executes immediately with no dialogs
@@ -28,9 +26,18 @@ import math
 import time
 from collections import defaultdict, deque
 
-# Tolerance threshold
-DEFAULT_TOLERANCE = 100e-6  # 100 micrometers
+# ============================================================================
+# CONFIGURATION - Adjust this value for your precision needs
+# ============================================================================
+# Tolerance for grouping vertices:
+#   Ultra-precision (aerospace/medical): 5e-3 to 13e-3   (5-13 µm)
+#   High-precision/Tight tolerance:     25e-3            (25 µm)
+#   Standard CNC:                       50e-3 to 130e-3  (50-130 µm)
+#   3D printing (FDM):                 200e-3 to 500e-3  (200-500 µm)
 
+DEFAULT_TOLERANCE = 50e-3  # 50 micrometers (Standard CNC)
+
+# ============================================================================
 
 def format_distance(distance_m):
     """Format distance for human-readable display."""
