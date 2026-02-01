@@ -7,7 +7,7 @@
 ### 🔍 Features
 
 - **One-Click Operation**: No dialogs, no manual selection, transaction-safe with rollback
-- **Tolerance-Based Grouping**: Configurable precision (default 100µm manufacturing tolerance)
+- **Tolerance-Based Grouping**: Configurable precision (default 50µm manufacturing tolerance)
 - **Smart B-spline Handling**: Excludes B-spline endpoints (managed via construction circles)
   - **Control Point Filtering**: Only constrains construction circles at actual curve endpoints
   - **InternalAlignment Awareness**: Respects FreeCAD's internal geometric relationships
@@ -32,7 +32,7 @@ This macro is bundled with the Detessellate Workbench, but can also be manually 
 ### 🔧 How It Works
 
 1. **Vertex Collection**: Gathers all vertices from sketch geometry (construction and normal)
-2. **Proximity Grouping**: Groups vertices within tolerance (default 100µm)
+2. **Proximity Grouping**: Groups vertices within tolerance (default 50µm)
 3. **Intelligent Filtering**: 
    - Excludes B-spline endpoints (Pos1, Pos2) - managed via construction circles
    - Excludes control point circles not at curve endpoints
