@@ -222,10 +222,30 @@ class GeometryAnalyzer:
 
     def _collect_geometry(self) -> None:
         """Collect all geometry and separate normal vs construction."""
+        # Internal geometry (indices 0, 1, 2, ...)
         for i, geo in enumerate(self.sketch.Geometry):
             self.all_geometry.append((i, geo))
             if not self.sketch.getConstruction(i):
                 self.normal_geometry.append((i, geo))
+
+        # External geometry (indices -3, -4, -5, ...)
+        # ExternalGeometry returns (SketchObject, ('EdgeN',)) tuples — unwrap to get actual geometry
+        for j, item in enumerate(self.sketch.ExternalGeometry):
+            source_obj, edge_refs = item
+            for k, edge_name in enumerate(edge_refs):
+                ext_idx = -(j + k + 3)
+                try:
+                    edge_num = int(edge_name.replace('Edge', '')) - 1
+                    geo = source_obj.Shape.Edges[edge_num].Curve
+                except Exception:
+                    continue
+                self.all_geometry.append((ext_idx, geo))
+                try:
+                    is_construction = self.sketch.getConstruction(ext_idx)
+                except Exception:
+                    is_construction = True
+                if not is_construction:
+                    self.normal_geometry.append((ext_idx, geo))
 
     def _collect_constraints(self) -> None:
         """Collect constraints."""

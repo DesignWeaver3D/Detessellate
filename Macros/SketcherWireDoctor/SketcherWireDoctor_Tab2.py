@@ -61,49 +61,89 @@ def get_geometry_endpoints(geometry, geo_idx, sketch):
     """Get geometry endpoints using solver coordinates with enhanced error handling."""
     try:
         if hasattr(geometry, 'TypeId'):
-            if geometry.TypeId in ['Part::GeomLineSegment', 'Part::GeomArcOfCircle', 
-                                 'Part::GeomArcOfEllipse', 'Part::GeomArcOfHyperbola', 
-                                 'Part::GeomArcOfParabola', 'Part::GeomBSplineCurve']:
+            # Map external raw types to their segment/arc equivalents for endpoint lookup
+            external_type_map = {
+                'Part::GeomLine':      'Part::GeomLineSegment',
+                'Part::GeomCircle':    'Part::GeomArcOfCircle',
+                'Part::GeomEllipse':   'Part::GeomArcOfEllipse',
+                'Part::GeomHyperbola': 'Part::GeomArcOfHyperbola',
+                'Part::GeomParabola':  'Part::GeomArcOfParabola',
+            }
+            effective_type = external_type_map.get(geometry.TypeId, geometry.TypeId)
+
+            if effective_type in ['Part::GeomLineSegment', 'Part::GeomArcOfCircle',
+                                   'Part::GeomArcOfEllipse', 'Part::GeomArcOfHyperbola',
+                                   'Part::GeomArcOfParabola', 'Part::GeomBSplineCurve']:
                 start_point = sketch.getPoint(geo_idx, 1)
                 end_point = sketch.getPoint(geo_idx, 2)
                 return (start_point.x, start_point.y), (end_point.x, end_point.y)
-            elif geometry.TypeId == 'Part::GeomCircle':
-                # For circles, check if it's a full circle or arc
+
+            elif effective_type == 'Part::GeomCircle':
+                # Full circle — check if start == end
                 try:
                     start_point = sketch.getPoint(geo_idx, 1)
                     end_point = sketch.getPoint(geo_idx, 2)
-                    
-                    # If start == end, it's a full circle (no meaningful endpoints)
-                    start_dist = math.sqrt((start_point.x - end_point.x)**2 + (start_point.y - end_point.y)**2)
+                    start_dist = math.sqrt((start_point.x - end_point.x)**2 +
+                                           (start_point.y - end_point.y)**2)
                     if start_dist < 1e-10:
-                        return None, None  # Full circle, no endpoints to compare
+                        return None, None
                     else:
                         return (start_point.x, start_point.y), (end_point.x, end_point.y)
                 except:
                     return None, None
-            elif geometry.TypeId == 'Part::GeomPoint':
+
+            elif effective_type == 'Part::GeomPoint':
                 point = sketch.getPoint(geo_idx, 1)
-                return (point.x, point.y), (point.x, point.y)  # Same point for start/end
+                return (point.x, point.y), (point.x, point.y)
+
     except Exception as e:
         return None, None
-    
+
     return None, None
+
+def normalize_type(geo, geo_idx, sketch):
+    """Normalize TypeId — external geometry uses base curve types instead of segment/arc types."""
+    type_id = geo.TypeId if hasattr(geo, 'TypeId') else type(geo).__name__
+
+    # External geometry reports base curve types; map to internal segment/arc equivalents
+    # For curve types that can be either full or partial, use getPoint to distinguish
+    if type_id == 'Part::GeomLine':
+        return 'Part::GeomLineSegment'
+
+    if type_id in ('Part::GeomCircle', 'Part::GeomEllipse',
+                   'Part::GeomHyperbola', 'Part::GeomParabola'):
+        # Check if partial (arc) or full via getPoint distance
+        arc_map = {
+            'Part::GeomCircle':    'Part::GeomArcOfCircle',
+            'Part::GeomEllipse':   'Part::GeomArcOfEllipse',
+            'Part::GeomHyperbola': 'Part::GeomArcOfHyperbola',
+            'Part::GeomParabola':  'Part::GeomArcOfParabola',
+        }
+        try:
+            p1 = sketch.getPoint(geo_idx, 1)
+            p2 = sketch.getPoint(geo_idx, 2)
+            dist = math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2)
+            if dist > 1e-10:
+                return arc_map[type_id]
+        except Exception:
+            pass
+
+    return type_id
 
 def are_geometries_duplicate_with_tolerance(geo1_data, geo2_data, sketch):
     """Enhanced duplicate checking with tolerance support."""
     geo1_idx, geometry1 = geo1_data
     geo2_idx, geometry2 = geo2_data
-    
-    # Must be same geometry type
-    if not (hasattr(geometry1, 'TypeId') and hasattr(geometry2, 'TypeId')):
-        return False, 0.0, "different_types"
-    
-    if geometry1.TypeId != geometry2.TypeId:
-        return False, 0.0, "different_types"
-    
-    # Skip if same geometry
+
     if geo1_idx == geo2_idx:
         return False, 0.0, "same_geometry"
+
+    # Normalize types before comparing so external GeomCircle-arcs match GeomArcOfCircle
+    type1 = normalize_type(geometry1, geo1_idx, sketch)
+    type2 = normalize_type(geometry2, geo2_idx, sketch)
+
+    if type1 != type2:
+        return False, 0.0, "different_types"
     
     # Get endpoints for both geometries
     start1, end1 = get_geometry_endpoints(geometry1, geo1_idx, sketch)
@@ -159,7 +199,8 @@ def find_duplicate_geometry(analyzer):
                 
         if len(group) > 1:
             # Sort by constraint count (ascending) to recommend least constrained for deletion
-            group.sort(key=lambda x: x['constraints'])
+            group.sort(key=lambda x: (0 if x['geo_idx'] < 0 else 1, x['constraints']), reverse=False)
+
             duplicates.append(group)
             checked.add(geo_idx1)
                 
@@ -274,22 +315,26 @@ def delete_recommended_duplicates(widget):
     try:
         sketch = widget.analyzer.sketch
         if not sketch:
+            print("DEBUG: no sketch")
             return
-        
-        # Get duplicate groups from analysis data
+
         duplicates_data = find_duplicate_geometry(widget.analyzer)
+
         if not duplicates_data:
+            print("DEBUG: no duplicates found")
             return
-        
-        sketch.Document.openTransaction("Delete All Recommended Duplicates")
-        
-        # Collect indices of recommended items (skip first item in each group)
+
         indices_to_delete = []
         for group in duplicates_data:
-            # Skip the first item (recommended to keep) and delete the rest
-            for duplicate_item in group[1:]:  # Skip index 0 (recommended to keep)
+
+            for duplicate_item in group[1:]:
+
                 indices_to_delete.append(duplicate_item['geo_idx'])
+
+
         
+        sketch.Document.openTransaction("Delete All Recommended Duplicates")
+
         if not indices_to_delete:
             sketch.Document.abortTransaction()
             return
@@ -300,12 +345,15 @@ def delete_recommended_duplicates(widget):
         # Delete geometries
         deleted_count = 0
         for geo_idx in indices_to_delete:
+            if geo_idx < 0:
+                print(f"WARNING: attempted to delete external geometry {geo_idx}, skipping")
+                continue
             try:
                 sketch.delGeometry(geo_idx)
                 deleted_count += 1
                 
             except Exception as e:
-                pass
+
         
         sketch.Document.commitTransaction()
         
