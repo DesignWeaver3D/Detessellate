@@ -60,6 +60,7 @@ Install via **FreeCAD Addon Manager** by adding the Detessellate Repository to t
 - 🎯 Integration with FreeCAD Addon Manager
 
 ## 📜 Changelog
+- **v0.4.2** (2026-04-01) - SketcherWireDoctor updated to v1.0.0, adding support for normal external geometry.
 - **v0.4.1** (2026-01-31) - Fixed ConstrainAllPointOnPoint default tolerance to 50 microns
 - **v0.4.0** (2026-01-31) - Added ConstrainAllPointOnPoint macro
 - **v0.3.3** (2026-01-24) - Edited commands so that macro buttons are grayed out if no active document.
