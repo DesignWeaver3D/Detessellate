@@ -39,6 +39,6 @@ This macro is bundled with the Detessellate Workbench, but can also be manually 
 - FreeCAD 1.0.1+ (tested on Windows 11)
 - Active sketch in edit mode
 
-## History
-
+## 📜 Changelog
+- **v1.0.0** (2026-04-01) - Added support for external geometry for duplicate detection & repair for FreeCAD v1.1. 
 - v250728-1915: Initial commit.
