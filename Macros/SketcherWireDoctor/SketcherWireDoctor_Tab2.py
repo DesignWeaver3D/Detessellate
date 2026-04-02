@@ -353,7 +353,7 @@ def delete_recommended_duplicates(widget):
                 deleted_count += 1
                 
             except Exception as e:
-
+                pass
         
         sketch.Document.commitTransaction()
         
