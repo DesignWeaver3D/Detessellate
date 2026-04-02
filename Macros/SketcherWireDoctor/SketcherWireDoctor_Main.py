@@ -17,8 +17,7 @@ A comprehensive tool for analyzing and fixing wire closure issues in FreeCAD ske
 Identifies zero-length lines, duplicate geometry, non-coincident vertices, and
 problematic intersections.
 
-Author: Original implementation refactored for best practices
-Version: 0.72 (Minimal debug messages)
+v1.0.0 - 2026-4-1 Updated to support external geometry as normal geometry
 """
 
 import math
