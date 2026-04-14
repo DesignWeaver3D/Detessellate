@@ -53,7 +53,7 @@ standalone = 'no'
     >https://github.com/DesignWeaver3D/Detessellate/issues</url>
   <url
     type = 'readme'
-    >https://raw.githubusercontent.com/DesignWeaver3D/Detessellate/refs/heads/main/Resources/Documents/Overview.md</url>
+    >https://raw.githubusercontent.com/DesignWeaver3D/Detessellate/refs/heads/addon-manager-restructure/Resources/Documents/Overview.md</url>
   <!--[ Content ]――――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
   <content>
     <workbench>
