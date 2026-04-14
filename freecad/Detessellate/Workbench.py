@@ -23,15 +23,11 @@ class DetessellateWorkbench(FreeCADGui.Workbench):
         sketch_cmds = [
             "Detessellate_CoplanarSketch",
             "Detessellate_PointPlaneSketch",
-            "Detessellate_SketchReProfile",
-            "Detessellate_ConstrainAllPointOnPoint",
-            "Detessellate_SketcherWireDoctor",
         ]
         utility_cmds = [
             "Detessellate_EdgeLoopSelector",
             "Detessellate_EdgeLoopToSketch",
             "Detessellate_ReconstructSolid",
-            "Detessellate_TopoMatchSelector",
             "Detessellate_VarSetUpdate",
         ]
 
@@ -39,7 +35,12 @@ class DetessellateWorkbench(FreeCADGui.Workbench):
         self.appendToolbar("Detessellate Sketch", sketch_cmds)
         self.appendToolbar("Detessellate Utilities", utility_cmds)
 
-        all_cmds = mesh_cmds + sketch_cmds + utility_cmds
+        all_cmds = mesh_cmds + sketch_cmds + utility_cmds + [
+            "Detessellate_TopoMatchSelector",
+            "Detessellate_SketchReProfile",
+            "Detessellate_ConstrainAllPointOnPoint",
+            "Detessellate_SketcherWireDoctor",
+        ]
         self.appendMenu("Detessellate", all_cmds)
 
     def Activated(self):
