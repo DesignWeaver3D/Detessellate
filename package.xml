@@ -1,36 +1,63 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
-<package format="1" xmlns="https://wiki.freecad.org/Package_Metadata">
-
-  <name>Detessellate</name>
-
-  <description>FreeCAD workbench of tools to reverse engineer meshes  </description>
-
+<?xml
+version = '1.0'
+encoding = 'UTF-8'
+standalone = 'no'
+?>
+<!-- SPDX-License-Identifier: LGPL-2.1-or-later -->
+<!-- SPDX-FileNotice: Part of the Detessellate addon. -->
+<package
+  format = '1'
+  xmlns = 'https://wiki.freecad.org/Package_Metadata'
+  >
+  <!--[ Versions ]―――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
+  <freecadmin>1.1.0</freecadmin>
+  <pythonmin>3.11</pythonmin>
   <version>0.4.2</version>
-
   <date>2026-04-01</date>
-
-  <maintainer email="designweaver3d@gmail.com">DesignWeaver3D</maintainer>
-
-  <license file="LICENSE">GPL-3.0</license>
-
-  <url branch="main" type="repository">https://github.com/DesignWeaver3D/Detessellate</url>
-
-  <url type="readme">https://github.com/DesignWeaver3D/Detessellate/raw/main/README.md</url>
-
-  <url type="discussion">https://forum.freecad.org/viewtopic.php?t=101467</url>
-
-  <icon>Resources/icons/Detessellate.svg</icon>
-
+  <!--[ Dependencies ]―――――――――――――――――――――――――――――――――――――――――――――――――――――-->
+  <depend
+    version_gte = '2.4.0'
+    type = 'python'
+    >numpy</depend>
+  <depend
+    type = 'internal'
+    >draft</depend>
+  <!--[ Info ]―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
+  <description>FreeCAD workbench of tools to reverse engineer meshes</description>
+  <name>Detessellate</name>
+  <!--[ Tags ]―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
+  <tag>Mesh</tag>
+  <tag>Reverse-Engineering</tag>
+  <tag>Sketch</tag>
+  <tag>Selection</tag>
+  <!--[ Maintainers ]――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
+  <maintainer
+    email = 'designweaver3d@gmail.com'
+    >DesignWeaver3D</maintainer>
+  <!--[ Licenses ]―――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
+  <license
+    file = 'LICENSE-CODE'
+    >LGPL-2.1-or-later</license>
+  <!--[ Icon ]―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
+  <icon>freecad/Detessellate/Resources/Icons/Detessellate.svg</icon>
+  <!--[ Urls ]―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
+  <url
+    type = 'discussion'
+    >https://forum.freecad.org/viewtopic.php?t=101467</url>
+  <url
+    branch = 'main'
+    type = 'repository'
+    >https://github.com/DesignWeaver3D/Detessellate</url>
+  <url
+    type = 'bugtracker'
+    >https://github.com/DesignWeaver3D/Detessellate/issues</url>
+  <url
+    type = 'readme'
+    >https://raw.githubusercontent.com/DesignWeaver3D/Detessellate/refs/heads/main/Resources/Documents/Overview.md</url>
+  <!--[ Content ]――――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
   <content>
     <workbench>
-      <freecadmin>1.0.2</freecadmin>
-      <tag>Mesh</tag>
-      <tag>Reverse-Engineering</tag>
-      <tag>Sketch</tag>
-      <tag>Selection</tag>
       <classname>DetessellateWorkbench</classname>
-      <subdirectory>./</subdirectory>
     </workbench>
   </content>
-
 </package>

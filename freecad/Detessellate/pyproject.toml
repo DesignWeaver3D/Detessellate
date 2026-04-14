@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileNotice: Part of the Detessellate addon.
+
+[project]
+version = '0.0.0' # No need to update
+name = 'Addon'    # these two properties.
+
+requires-python = '>=3.11'
+
+dependencies = [
+    'freecad-stubs>=1.0.21',
+    'shiboken6>=6.10.2',
+    'pyside6>=6.9.2',
+    'numpy>=2.4.3'
+]
