@@ -447,7 +447,7 @@ class CreateSketchToolbarCommand:
     def _add_button(self, toolbar, icon_name, label, tooltip, callback):
         try:
             icon = QtGui.QIcon(asIcon(icon_name))
-            action = QtWidgets.QAction(icon, label, toolbar)
+            action = QtGui.QAction(icon, label, toolbar)
             action.setToolTip(tooltip)
             action.triggered.connect(callback)
             toolbar.addAction(action)
@@ -534,7 +534,7 @@ class CreatePartDesignToolbarCommand:
     def _add_topomatch_button(self, toolbar):
         try:
             mw = FreeCADGui.getMainWindow()
-            for action in mw.findChildren(QtWidgets.QAction):
+            for action in mw.findChildren(QtGui.QAction):
                 if action.objectName() == "Detessellate_TopoMatchSelector" or \
                    action.data() == "Detessellate_TopoMatchSelector" or \
                    action.text() == "Topo Match Selector":
@@ -611,7 +611,7 @@ class CreateGlobalToolbarCommand:
     def _add_command_button(self, toolbar, command_name):
         try:
             mw = FreeCADGui.getMainWindow()
-            for action in mw.findChildren(QtWidgets.QAction):
+            for action in mw.findChildren(QtGui.QAction):
                 if action.objectName() == command_name:
                     toolbar.addAction(action)
                     return
