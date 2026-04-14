@@ -1,16 +1,20 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileNotice: Part of the Detessellate addon.
+
 from pathlib import Path
 import sys
 
 import FreeCAD
 import FreeCADGui
+from freecad.Detessellate.Misc.Resources import asIcon
+
 
 class ReconstructSolidCommand:
     base_path: Path = Path(__file__).parent.parent / "Macros/ReconstructSolid"
 
     def GetResources(self):
-        icon_path = self.base_path / "ReconstructSolid.svg"
         return {
-            'Pixmap': str(icon_path),
+            'Pixmap': asIcon('ReconstructSolid'),
             'MenuText': 'Reconstruct Solid',
             'ToolTip': 'Reconstruct a simple solid to change its geometric origin'
         }
@@ -27,14 +31,10 @@ class ReconstructSolidCommand:
             else:
                 import ReconstructSolid
 
-            # The macro will execute on import or call the appropriate function
-            # Adjust based on how ReconstructSolid.py is structured
-
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error running ReconstructSolid: {e}\n")
             import traceback
             traceback.print_exc()
 
     def IsActive(self):
-        # Only active when a document is
         return FreeCAD.ActiveDocument is not None

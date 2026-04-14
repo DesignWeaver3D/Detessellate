@@ -1,16 +1,20 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileNotice: Part of the Detessellate addon.
+
 from pathlib import Path
 import sys
 
 import FreeCAD
 import FreeCADGui
+from freecad.Detessellate.Misc.Resources import asIcon
+
 
 class VarSetUpdateCommand:
     base_path: Path = Path(__file__).parent.parent / "Macros/VarSet-Update"
 
     def GetResources(self):
-        icon_path = self.base_path / "VarSetUpdate.svg"
         return {
-            'Pixmap': str(icon_path),
+            'Pixmap': asIcon('VarSetUpdate'),
             'MenuText': 'VarSet Update',
             'ToolTip': 'Update VarSet Properties'
         }
@@ -21,14 +25,11 @@ class VarSetUpdateCommand:
 
         try:
             import importlib
-            if 'VarSetUpdate' in sys.modules:  # Note: Python converts hyphens to underscores in module names
+            if 'VarSetUpdate' in sys.modules:
                 import VarSetUpdate
                 importlib.reload(VarSetUpdate)
             else:
                 import VarSetUpdate
-
-            # The macro will execute on import or call the appropriate function
-            # Adjust based on how VarSetUpdate.py is structured
 
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error running VarSet Update: {e}\n")
@@ -36,5 +37,4 @@ class VarSetUpdateCommand:
             traceback.print_exc()
 
     def IsActive(self):
-        # Only active when a document is
         return FreeCAD.ActiveDocument is not None

@@ -1,16 +1,20 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileNotice: Part of the Detessellate addon.
+
 from pathlib import Path
 import sys
 
 import FreeCAD
 import FreeCADGui
+from freecad.Detessellate.Misc.Resources import asIcon
+
 
 class MeshToBodyCommand:
     base_path: Path = Path(__file__).parent.parent / "Macros/MeshToBody"
 
     def GetResources(self):
-        icon_path = self.base_path / "MeshToBody.svg"
         return {
-            'Pixmap': str(icon_path),
+            'Pixmap': asIcon('MeshToBody'),
             'MenuText': 'Mesh To Body',
             'ToolTip': 'Convert meshes to solid body'
         }
@@ -27,7 +31,6 @@ class MeshToBodyCommand:
             else:
                 import MeshToBody
 
-            # Call the function directly
             MeshToBody.run_unified_macro(auto_mode=True)
 
         except Exception as e:
@@ -36,5 +39,4 @@ class MeshToBodyCommand:
             traceback.print_exc()
 
     def IsActive(self):
-        # Only active when a document is
         return FreeCAD.ActiveDocument is not None

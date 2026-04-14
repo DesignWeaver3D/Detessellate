@@ -1,18 +1,22 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileNotice: Part of the Detessellate addon.
+
 from pathlib import Path
 import sys
 
 import FreeCAD
 import FreeCADGui
+from freecad.Detessellate.Misc.Resources import asIcon
+
 
 class PointPlaneSketchCommand:
     base_path: Path = Path(__file__).parent.parent / "Macros/PointPlaneSketch"
 
     def GetResources(self):
-        icon_path = self.base_path / "PointPlaneSketch.svg"
         return {
-            'Pixmap': str(icon_path),
+            'Pixmap': asIcon('PointPlaneSketch'),
             'MenuText': 'Point Plane Sketch',
-            'ToolTip': 'Create sketch from points and ther derived plane'
+            'ToolTip': 'Create sketch from points and their derived plane'
         }
 
     def Activated(self):
@@ -27,7 +31,6 @@ class PointPlaneSketchCommand:
             else:
                 import PointPlaneSketch
 
-            # Execute the show function from the macro
             PointPlaneSketch.show_point_cloud_plane_sketch()
 
         except Exception as e:
@@ -36,5 +39,4 @@ class PointPlaneSketchCommand:
             traceback.print_exc()
 
     def IsActive(self):
-        # Only active when a document is
         return FreeCAD.ActiveDocument is not None

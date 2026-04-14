@@ -1,16 +1,20 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileNotice: Part of the Detessellate addon.
+
 from pathlib import Path
 import sys
 
 import FreeCAD
 import FreeCADGui
+from freecad.Detessellate.Misc.Resources import asIcon
+
 
 class TopoMatchSelectorCommand:
     base_path: Path = Path(__file__).parent.parent / "Macros/TopoMatchSelector"
 
     def GetResources(self):
-        icon_path = self.base_path / "TopoMatchSelector.svg"
         return {
-            'Pixmap': str(icon_path),
+            'Pixmap': asIcon('TopoMatchSelector'),
             'MenuText': 'Topo Match Selector',
             'ToolTip': 'Select topology matching elements'
         }
@@ -27,7 +31,6 @@ class TopoMatchSelectorCommand:
             else:
                 import TopoMatchSelector
 
-            # Call the function that creates the docker
             TopoMatchSelector.create_topo_match_selector()
 
         except Exception as e:
@@ -36,5 +39,4 @@ class TopoMatchSelectorCommand:
             traceback.print_exc()
 
     def IsActive(self):
-        # Only active when a document is
         return FreeCAD.ActiveDocument is not None

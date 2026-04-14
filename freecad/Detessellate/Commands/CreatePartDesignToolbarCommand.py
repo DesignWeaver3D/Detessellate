@@ -1,9 +1,12 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileNotice: Part of the Detessellate addon.
+
 from pathlib import Path
 import sys
 
 import FreeCAD
 import FreeCADGui
-from PySide import QtGui, QtCore
+from PySide6 import QtGui, QtCore
 
 class CreatePartDesignToolbarCommand:
     wb_path: Path = Path(__file__).parent.parent

@@ -1,16 +1,20 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileNotice: Part of the Detessellate addon.
+
 from pathlib import Path
 import sys
 
 import FreeCAD
 import FreeCADGui
+from freecad.Detessellate.Misc.Resources import asIcon
+
 
 class EdgeLoopToSketchCommand:
     base_path: Path = Path(__file__).parent.parent / "Macros/EdgeLoopToSketch"
 
     def GetResources(self):
-        icon_path = self.base_path / "EdgeLoopToSketch.svg"
         return {
-            'Pixmap': str(icon_path),
+            'Pixmap': asIcon('EdgeLoopToSketch'),
             'MenuText': 'Edge Loop to Sketch',
             'ToolTip': 'Convert selected coplanar faces or edges to parametric sketch'
         }
@@ -27,13 +31,10 @@ class EdgeLoopToSketchCommand:
             else:
                 import EdgeLoopToSketch
 
-            # The macro executes on import via edge_loop_to_sketch() call at end
-
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error running EdgeLoopToSketch: {e}\n")
             import traceback
             traceback.print_exc()
 
     def IsActive(self):
-        # Only active when a document is
         return FreeCAD.ActiveDocument is not None

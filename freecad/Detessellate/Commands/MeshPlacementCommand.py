@@ -1,16 +1,20 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileNotice: Part of the Detessellate addon.
+
 from pathlib import Path
-import  sys
+import sys
 
 import FreeCAD
 import FreeCADGui
+from freecad.Detessellate.Misc.Resources import asIcon
+
 
 class MeshPlacementCommand:
     base_path: Path = Path(__file__).parent.parent / "Macros/MeshPlacement"
 
     def GetResources(self):
-        icon_path = self.base_path / "MeshPlacement.svg"
         return {
-            'Pixmap': str(icon_path),
+            'Pixmap': asIcon('MeshPlacement'),
             'MenuText': 'Mesh Placement',
             'ToolTip': 'Center and align meshes at origin'
         }
@@ -19,7 +23,6 @@ class MeshPlacementCommand:
         if str(self.base_path) not in sys.path:
             sys.path.append(str(self.base_path))
         try:
-            # Force reload if already imported
             import importlib
             if 'MeshPlacement' in sys.modules:
                 import MeshPlacement
@@ -32,5 +35,4 @@ class MeshPlacementCommand:
             traceback.print_exc()
 
     def IsActive(self):
-        # Only active when a document is
         return FreeCAD.ActiveDocument is not None

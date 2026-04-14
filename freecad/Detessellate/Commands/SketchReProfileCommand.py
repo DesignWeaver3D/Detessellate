@@ -1,16 +1,20 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileNotice: Part of the Detessellate addon.
+
 from pathlib import Path
 import sys
 
 import FreeCAD
 import FreeCADGui
+from freecad.Detessellate.Misc.Resources import asIcon
+
 
 class SketchReProfileCommand:
     base_path: Path = Path(__file__).parent.parent / "Macros/SketchReProfile"
 
     def GetResources(self):
-        icon_path = self.base_path / "SketchReProfile.svg"
         return {
-            'Pixmap': str(icon_path),
+            'Pixmap': asIcon('SketchReProfile'),
             'MenuText': 'Sketch ReProfile',
             'ToolTip': 'Reprocess sketch profiles - converts construction lines to circles, arcs, and splines'
         }
@@ -27,7 +31,6 @@ class SketchReProfileCommand:
             else:
                 import SketchReProfile
 
-            # Call the main function
             SketchReProfile.main()
 
         except Exception as e:
@@ -36,26 +39,4 @@ class SketchReProfileCommand:
             traceback.print_exc()
 
     def IsActive(self):
-        # Only active when a document is
         return FreeCAD.ActiveDocument is not None
-
-        '''
-        # Active when a sketch is being edited
-        try:
-            doc = FreeCADGui.activeDocument()
-            if doc is None:
-                return False
-
-            edit_obj = doc.getInEdit()
-            if edit_obj is None:
-                return False
-
-            # Check if it's a sketch object
-            if hasattr(edit_obj, 'Object'):
-                obj = edit_obj.Object
-                return hasattr(obj, 'TypeId') and 'Sketch' in obj.TypeId
-
-            return False
-        except:
-            return False
-        ''''

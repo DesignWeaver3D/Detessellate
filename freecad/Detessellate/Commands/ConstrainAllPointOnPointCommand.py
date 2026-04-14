@@ -1,17 +1,20 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileNotice: Part of the Detessellate addon.
+
 from pathlib import Path
 import sys
 
 import FreeCAD
 import FreeCADGui
+from freecad.Detessellate.Misc.Resources import asIcon
 
 
 class ConstrainAllPointOnPointCommand:
     base_path: Path = Path(__file__).parent.parent / "Macros/ConstrainAllPointOnPoint"
 
     def GetResources(self):
-        icon_path = self.base_path / "ConstrainAllPointOnPoint.svg"
         return {
-            'Pixmap': str(icon_path),
+            'Pixmap': asIcon('ConstrainAllPointOnPoint'),
             'MenuText': 'Constrain All Point-On-Point',
             'ToolTip': 'Automatically add missing coincident constraints using built-in FreeCAD detection'
         }
@@ -28,7 +31,6 @@ class ConstrainAllPointOnPointCommand:
             else:
                 import ConstrainAllPointOnPoint
 
-            # Call the main function
             ConstrainAllPointOnPoint.main()
 
         except Exception as e:
@@ -37,21 +39,16 @@ class ConstrainAllPointOnPointCommand:
             traceback.print_exc()
 
     def IsActive(self):
-        # Active when a sketch is being edited
         try:
             doc = FreeCADGui.activeDocument()
             if doc is None:
                 return False
-
             edit_obj = doc.getInEdit()
             if edit_obj is None:
                 return False
-
-            # Check if it's a sketch object
             if hasattr(edit_obj, 'Object'):
                 obj = edit_obj.Object
                 return hasattr(obj, 'TypeId') and 'Sketch' in obj.TypeId
-
             return False
         except:
             return False
