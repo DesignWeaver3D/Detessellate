@@ -1,3 +1,13 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileCopyrightText: 2024 DesignWeaver3D
+# SPDX-FileNotice: Part of the Detessellate addon.
+import FreeCAD as App
+import FreeCADGui as Gui
+import Part, Sketcher
+import time
+import math
+from collections import defaultdict
+
 __version__ = "2.0.0"
 __date__ = "2025-01-18"
 __author__ = "DesignWeaver3D"
@@ -13,13 +23,6 @@ PREREQUISITES:
 - Sketch must be open in edit mode
 - Geometry should be construction mode (recommended workflow)
 """
-
-import FreeCAD as App
-import FreeCADGui as Gui
-import Part, Sketcher
-import time
-import math
-from collections import defaultdict
 
 def get_open_sketch():
     """Get the currently open sketch for editing."""

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileCopyrightText: 2024 DesignWeaver3D
+# SPDX-FileNotice: Part of the Detessellate addon.
 # ============================================================================
 # TAB3: Non-Coincident Vertex Analysis and Constraint Addition v73
 # ============================================================================
@@ -578,7 +581,7 @@ def populate_tab3_list(widget):
             main_text = f"Group {i}: ({coord[0]:.3f}, {coord[1]:.3f}) - {len(eligible_vertices)} eligible vertices"
             
             try:
-                from PySide import QtGui, QtCore
+                from PySide6 import QtGui, QtCore
                 item = QtGui.QListWidgetItem(main_text)
                 
                 # Make group item bold using Qt font
@@ -805,7 +808,7 @@ def coincident_selected_vertices(widget):
 
 def setup_coincident_tab(widget):
     """Setup the non-coincident vertices tab."""
-    from PySide import QtGui, QtCore
+    from PySide6 import QtGui, QtCore
     
     tab = QtGui.QWidget()
     layout = QtGui.QVBoxLayout(tab)

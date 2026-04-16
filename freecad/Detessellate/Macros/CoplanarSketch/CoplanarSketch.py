@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileCopyrightText: 2024 DesignWeaver3D
+# SPDX-FileNotice: Part of the Detessellate addon.
 # FreeCAD Macro
 # Name: CoplanarSketch
 # Author: DesignWeaver3D
@@ -6,15 +9,14 @@
 # Date: 2026-01-18
 # FreeCAD Version: 1.0.2
 # Description: Creates sketches from coplanar edges of tessellated solid objects that result from mesh import & conversion.
-# License: GPL‑3.0‑or‑later
 
 import FreeCAD
 import FreeCADGui
 import Part
 import Sketcher
 import PartDesign
-from PySide.QtWidgets import QDockWidget, QWidget, QVBoxLayout, QPushButton, QTextEdit, QLabel, QInputDialog, QLineEdit
-from PySide.QtCore import Qt
+from PySide6.QtWidgets import QDockWidget, QWidget, QVBoxLayout, QPushButton, QTextEdit, QLabel, QInputDialog, QLineEdit
+from PySide6.QtCore import Qt
 import time
 import random
 

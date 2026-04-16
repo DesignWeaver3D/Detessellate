@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileCopyrightText: 2024 DesignWeaver3D
+# SPDX-FileNotice: Part of the Detessellate addon.
 """
 ***************************************************************************
 *   FreeCAD Addon Manager Macro                                           *
 *   Name:        MeshPlacement                                            *
 *   Author:      DesignWeaver3D (formerly NSUBB)                          *
-*   License:     GNU GPL v3.0                                             *
 *   Version:     1.1.0                                                    *
 *   Date:        2025-12-11                                               *
 *   FreeCAD:     1.0.2 or later                                           *
@@ -19,17 +21,13 @@
 ***************************************************************************
 """
 
-__title__   = "MeshPlacement"
 __author__  = "DesignWeaver3D (formerly NSUBB)"
-__license__ = "GNU GPL v3.0"
 __version__ = "1.1.0"
 __date__    = "2025-12-11"
-__FreeCAD__ = "1.0.2 or later"
-__url__     = "https://github.com/DesignWeaver3D/MeshPlacement"
 __doc__     = "A FreeCAD macro to position selected meshes or parts at the global origin using bounding box alignment."
 
 import FreeCAD, FreeCADGui
-from PySide import QtGui, QtCore
+from PySide6 import QtGui, QtCore
 
 class MeshPlacementDock(QtGui.QDockWidget):
     def __init__(self):

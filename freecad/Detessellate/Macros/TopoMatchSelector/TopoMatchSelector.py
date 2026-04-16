@@ -1,6 +1,9 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileCopyrightText: 2024 DesignWeaver3D
+# SPDX-FileNotice: Part of the Detessellate addon.
 import FreeCAD as App
 import FreeCADGui as Gui
-from PySide import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 import Part
 import math
 from typing import List, Dict, Tuple, Optional, Any

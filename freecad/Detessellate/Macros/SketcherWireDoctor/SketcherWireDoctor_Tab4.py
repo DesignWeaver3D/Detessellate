@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileCopyrightText: 2024 DesignWeaver3D
+# SPDX-FileNotice: Part of the Detessellate addon.
 """
 SketcherWireDoctor - Tab4: Wire Topology Analysis (Phased Approach)
 
@@ -15,7 +18,7 @@ Version: 1.0 (Phased approach implementation)
 
 import FreeCAD as App
 import Part
-from PySide import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 from typing import Any, List, Dict, Tuple, Set, Optional
 from collections import defaultdict
 from dataclasses import dataclass
@@ -1528,7 +1531,7 @@ def find_problematic_intersections(analyzer: Any) -> List[Dict[str, Any]]:
 
 def setup_intersections_tab(widget):
     """Setup the wire topology analysis tab with grouped issue categories."""
-    from PySide import QtGui, QtCore
+    from PySide6 import QtGui, QtCore
 
     tab = QtGui.QWidget()
     layout = QtGui.QVBoxLayout(tab)

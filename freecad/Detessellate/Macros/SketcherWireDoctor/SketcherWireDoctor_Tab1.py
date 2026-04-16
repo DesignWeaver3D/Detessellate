@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileCopyrightText: 2024 DesignWeaver3D
+# SPDX-FileNotice: Part of the Detessellate addon.
 """
 SketcherWireDoctor - Tab1: Zero-Length Lines
 
@@ -9,7 +12,7 @@ Version: 0.71 (Face-based area calculation with universal geometry support)
 """
 
 import FreeCAD as App
-from PySide import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 from typing import Any, List, Dict
 
 

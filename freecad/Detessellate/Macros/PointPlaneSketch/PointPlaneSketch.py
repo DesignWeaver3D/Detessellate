@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileCopyrightText: 2024 DesignWeaver3D
+# SPDX-FileNotice: Part of the Detessellate addon.
 """
 Point Cloud Plane Sketch - FreeCAD Macro
 
@@ -22,8 +25,8 @@ import traceback
 
 # Third-party
 import numpy as np
-from PySide import QtCore, QtGui
-from PySide.QtWidgets import (QDockWidget, QWidget, QVBoxLayout, QHBoxLayout, 
+from PySide6 import QtCore, QtGui
+from PySide6.QtWidgets import (QDockWidget, QWidget, QVBoxLayout, QHBoxLayout, 
                                QPushButton, QLabel, QDoubleSpinBox, QInputDialog, 
                                QMessageBox, QTextEdit)
 

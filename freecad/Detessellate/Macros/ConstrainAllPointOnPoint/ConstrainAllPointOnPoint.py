@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileCopyrightText: 2024 DesignWeaver3D
+# SPDX-FileNotice: Part of the Detessellate addon.
 # ============================================================================
 # Constrain All Point-On-Point - Robust 1-Click Solution
 # ============================================================================
@@ -77,7 +80,7 @@ def get_sketch():
             pass
 
     if not sketch:
-        from PySide import QtGui
+        from PySide6 import QtGui
         QtGui.QMessageBox.warning(None, "No Active Sketch",
             "Please open a sketch in edit mode first.\n\n"
             "Double-click a sketch to enter edit mode, then run this macro.")

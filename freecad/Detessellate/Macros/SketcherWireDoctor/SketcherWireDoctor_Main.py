@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileCopyrightText: 2024 DesignWeaver3D
+# SPDX-FileNotice: Part of the Detessellate addon.
 """
 SketcherWireDoctor - FreeCAD Sketcher Analysis Tool - Main Module
 
@@ -28,7 +31,7 @@ import FreeCAD as App
 import FreeCADGui as Gui
 import Part
 import Sketcher
-from PySide import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 
 
 # Constants

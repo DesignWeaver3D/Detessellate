@@ -1,3 +1,15 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileCopyrightText: 2024 DesignWeaver3D
+# SPDX-FileNotice: Part of the Detessellate addon.
+import FreeCAD
+import FreeCADGui
+import Part
+import Sketcher
+import time
+from PySide6.QtWidgets import QInputDialog, QMessageBox
+import DraftGeomUtils
+from collections import Counter
+
 __version__ = "3.0.0"
 __date__ = "2026-01-23"
 __author__ = "DesignWeaver3D"
@@ -23,15 +35,6 @@ __author__ = "DesignWeaver3D"
 #   - Support for face and edge selection
 #   - Performance timing (excludes user dialog time)
 #
-
-import FreeCAD
-import FreeCADGui
-import Part
-import Sketcher
-import time
-from PySide.QtWidgets import QInputDialog, QMessageBox
-import DraftGeomUtils
-from collections import Counter
 
 def edge_loop_to_sketch():
     """

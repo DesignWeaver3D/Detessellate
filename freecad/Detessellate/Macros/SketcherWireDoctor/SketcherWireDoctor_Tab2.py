@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileCopyrightText: 2024 DesignWeaver3D
+# SPDX-FileNotice: Part of the Detessellate addon.
 # ============================================================================
 # TAB2: Duplicate Edge Detection with Tolerance v75
 # ============================================================================
@@ -11,7 +14,7 @@ import FreeCAD as App
 import Sketcher
 import math
 from typing import List, Tuple, Dict, Any
-from PySide import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 
 # Tolerance thresholds - same as Tab3 for consistency
 NEAR_COINCIDENT_THRESHOLD = 5e-6    # 5 micrometers - tight tolerance
@@ -279,7 +282,7 @@ def delete_selected_duplicates(widget):
         duplicates_to_delete = []
         for item in selected_items:
             try:
-                from PySide import QtCore
+                from PySide6 import QtCore
                 data = item.data(QtCore.Qt.UserRole)
                 if data and data.get('type') == 'geometry':
                     duplicates_to_delete.append(data['data'])

@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileCopyrightText: 2024 DesignWeaver3D
+# SPDX-FileNotice: Part of the Detessellate addon.
 """
 MeshToBody Macro for FreeCAD
 ----------------------------
 Version: 2.0.1
 Date:    2025-11-18
 Author:  NSUBB (DesignWeaver3D)
-License: GPL-3.0-or-later
 Repository: https://github.com/NSUBB/MeshToBody
 Forum Thread: https://forum.freecad.org/viewtopic.php?t=101189
 
@@ -18,7 +20,7 @@ import FreeCADGui
 import Mesh
 import Part
 import PartDesign
-from PySide import QtGui, QtCore
+from PySide6 import QtGui, QtCore
 import time
 import sys
 

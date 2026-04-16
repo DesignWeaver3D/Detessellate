@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileCopyrightText: 2024 DesignWeaver3D
+# SPDX-FileNotice: Part of the Detessellate addon.
 """
 ReconstructSolid - Rebuilds selected solid with geometric origin reset to match placement.
 Useful for imported STEP files with embedded origin offsets.

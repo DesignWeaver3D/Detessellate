@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileCopyrightText: 2024 DesignWeaver3D
+# SPDX-FileNotice: Part of the Detessellate addon.
 # Update VarSet labels :
 # 0. Oops, you want to change a variable name in VarSet :(
 # 1. Execute VarSetUpdate macro from the Macro > Macros... dialog.
@@ -6,30 +9,18 @@
 # 4. Click Update button.
 # 5. Voila !
 
-__Name__ = "VarSet Update"
-__Comment__ = "This macro updates the name or other attribute of a VarSet property (variable) via backup and recreation of the property."
+import FreeCAD
+from PySide6 import QtGui
+import re
+
 __Author__ = "Mathias L., NSUBB"
 __Version__ = "0.3.15"
 __Date__ = "2025-11-22"
-__License__ = "GNU GPL v3.0"
-__Web__ = "https://github.com/NSUBB/VarSet-Update"
-__Wiki__ = " "
-__Icon__ = "VarSetUpdate.svg"
-__IconW__ = " "
-__Help__ = "After launch, select the VarSet, then the Property from the dropdowns, change attributes, click Update. Repeat for additional changes. Close when finished."
-__Status__ = "Beta"
-__Requires__ = "freecad 1.0"
-__Communication__ = "https://github.com/NSUBB/VarSet-Update/issues"
-__Files__ = "VarSetUpdate_v0.3.14.FCMacro, VarSetUpdate.svg"
 
 # v0.1 3/26/2025 Original version by Mathias L. posted to https://github.com/FreeCAD/FreeCAD/issues/16222#issuecomment-2754714033
 # v0.3.14 4/24/2025 Modified by NSUBB (FreeCAD Forum user DesignWeaver) to add many additional features.
 # v0.3.15 2025-11-22 Modified by OldBeard to solve the problem of replace being applied on partial matches and to add some mare property tyepes
 # v0.3.16 2025-12-23 Modified by OldBeard & DesignWeaver3D. Add data type conversion when changing property type. Fixed display of Current Value for unitless properties that don't have user_string attribute.
-
-import FreeCAD
-from PySide import QtGui
-import re
 
 class UpdateVarSetDialog(QtGui.QDialog):
     def __init__(self):
