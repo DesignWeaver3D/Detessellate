@@ -10,7 +10,7 @@
 # 5. Voila !
 
 import FreeCAD
-from PySide6 import QtGui
+from PySide6 import QtCore, QtWidgets
 import re
 
 __Author__ = "Mathias L., NSUBB"
@@ -22,72 +22,72 @@ __Date__ = "2025-11-22"
 # v0.3.15 2025-11-22 Modified by OldBeard to solve the problem of replace being applied on partial matches and to add some mare property tyepes
 # v0.3.16 2025-12-23 Modified by OldBeard & DesignWeaver3D. Add data type conversion when changing property type. Fixed display of Current Value for unitless properties that don't have user_string attribute.
 
-class UpdateVarSetDialog(QtGui.QDialog):
+class UpdateVarSetDialog(QtWidgets.QDialog):
     def __init__(self):
         super(UpdateVarSetDialog, self).__init__()
 
         self.setWindowTitle("Update a variable in VarSet")
 
         # Labels and input widgets
-        self.search_name_label = QtGui.QLabel("Select VarSet:")
-        self.search_name_input = QtGui.QComboBox()
-        self.varset_label_display = QtGui.QLabel("")  # Label for VarSet
-        self.varset_label_display.setAlignment(QtGui.Qt.AlignCenter)
+        self.search_name_label = QtWidgets.QLabel("Select VarSet:")
+        self.search_name_input = QtWidgets.QComboBox()
+        self.varset_label_display = QtWidgets.QLabel("")  # Label for VarSet
+        self.varset_label_display.setAlignment(QtCore.Qt.AlignCenter)
         self.varset_label_display.setStyleSheet("color: #EE5F00; font-style: italic;") # Orange color for VarSet display name (Label)
         font = self.varset_label_display.font()
         font.setItalic(True)
         self.varset_label_display.setFont(font)
 
-        self.old_name_label = QtGui.QLabel("Select Variable to Modify:")
-        self.old_name_input = QtGui.QComboBox()
+        self.old_name_label = QtWidgets.QLabel("Select Variable to Modify:")
+        self.old_name_input = QtWidgets.QComboBox()
         
         # UserString horizontal layout
-        self.user_string_label = QtGui.QLabel("Current Value:")
+        self.user_string_label = QtWidgets.QLabel("Current Value:")
         self.user_string_label.setStyleSheet("font-weight: bold;")
-        self.user_string_label.setAlignment(QtGui.Qt.AlignLeft)  # Align left within the horizontal layout
+        self.user_string_label.setAlignment(QtCore.Qt.AlignLeft)  # Align left within the horizontal layout
 
-        self.user_string_value = QtGui.QLabel("")  # Value label for UserString
+        self.user_string_value = QtWidgets.QLabel("")  # Value label for UserString
         #self.user_string_value.setStyleSheet("color: white;")
-        self.user_string_value.setAlignment(QtGui.Qt.AlignRight)  # Align right within the horizontal layout
+        self.user_string_value.setAlignment(QtCore.Qt.AlignRight)  # Align right within the horizontal layout
 
-        self.user_string_layout = QtGui.QHBoxLayout()  # Create a horizontal layout
+        self.user_string_layout = QtWidgets.QHBoxLayout()  # Create a horizontal layout
         self.user_string_layout.addWidget(self.user_string_label)
         self.user_string_layout.addWidget(self.user_string_value)
 
         # ExpressionEngine horizontal layout
-        self.expression_engine_label = QtGui.QLabel("Current Expression:")
+        self.expression_engine_label = QtWidgets.QLabel("Current Expression:")
         self.expression_engine_label.setStyleSheet("font-weight: bold;")
-        self.expression_engine_label.setAlignment(QtGui.Qt.AlignLeft)
+        self.expression_engine_label.setAlignment(QtCore.Qt.AlignLeft)
 
-        self.expression_engine_value = QtGui.QLabel("")  # Value label for ExpressionEngine
+        self.expression_engine_value = QtWidgets.QLabel("")  # Value label for ExpressionEngine
         self.expression_engine_value.setStyleSheet("color: #4AA5FF;") # Blue text color for expression to match appearance with FreeCAD GUI
-        self.expression_engine_value.setAlignment(QtGui.Qt.AlignRight)
+        self.expression_engine_value.setAlignment(QtCore.Qt.AlignRight)
 
-        self.expression_engine_layout = QtGui.QHBoxLayout()  # Create a horizontal layout
+        self.expression_engine_layout = QtWidgets.QHBoxLayout()  # Create a horizontal layout
         self.expression_engine_layout.addWidget(self.expression_engine_label)
         self.expression_engine_layout.addWidget(self.expression_engine_value)
 
 
-        self.new_name_label = QtGui.QLabel("New name:")
-        self.new_name_input = QtGui.QLineEdit()
+        self.new_name_label = QtWidgets.QLabel("New name:")
+        self.new_name_input = QtWidgets.QLineEdit()
 
-        self.property_type_label = QtGui.QLabel("Property Type:")
-        self.property_type_input = QtGui.QComboBox()
+        self.property_type_label = QtWidgets.QLabel("Property Type:")
+        self.property_type_input = QtWidgets.QComboBox()
 
-        self.tooltip_label = QtGui.QLabel("New Tool Tip:")
-        self.tooltip_input = QtGui.QLineEdit()
+        self.tooltip_label = QtWidgets.QLabel("New Tool Tip:")
+        self.tooltip_input = QtWidgets.QLineEdit()
 
-        self.group_name_label = QtGui.QLabel("Destination Group:")
-        self.group_name_input = QtGui.QLineEdit()
+        self.group_name_label = QtWidgets.QLabel("Destination Group:")
+        self.group_name_input = QtWidgets.QLineEdit()
         self.group_name_input.setText("Base")
 
-        self.update_button = QtGui.QPushButton("Update")
-        self.cancel_button = QtGui.QPushButton("Close")
-        self.results_text = QtGui.QTextEdit("Warning!\nReplacing a property name may break existing relationships.\n")
+        self.update_button = QtWidgets.QPushButton("Update")
+        self.cancel_button = QtWidgets.QPushButton("Close")
+        self.results_text = QtWidgets.QTextEdit("Warning!\nReplacing a property name may break existing relationships.\n")
         self.results_text.setReadOnly(True)
 
         # Layout
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.search_name_label)
         layout.addWidget(self.search_name_input)
         layout.addWidget(self.varset_label_display)
@@ -282,13 +282,13 @@ class UpdateVarSetDialog(QtGui.QDialog):
 
     def show_conversion_popup(self, old_value, target_type):
         """Show a popup to prompt the user for a new value during conversion."""
-        popup = QtGui.QInputDialog(self)
+        popup = QtWidgets.QInputDialog(self)
         popup.setWindowTitle("Unit Mismatch")
         popup.setLabelText(f"Converting to {target_type}\nOld Value: {old_value}\n\nEnter New Value:")
         popup.setTextValue(str(old_value))  # Prepopulate with the old value as a suggestion
 
         # Show popup and get user input
-        if popup.exec() == QtGui.QDialog.Accepted:
+        if popup.exec() == QtWidgets.QDialog.Accepted:
             user_input = popup.textValue()
             try:
                 # Validate the input based on the target type
@@ -312,7 +312,7 @@ class UpdateVarSetDialog(QtGui.QDialog):
                 else:
                     raise ValueError(f"Unsupported target type: {target_type}")
             except ValueError as e:
-                QtGui.QMessageBox.warning(self, "Invalid Input", f"Error: {e}\nPlease try again.")
+                QtWidgets.QMessageBox.warning(self, "Invalid Input", f"Error: {e}\nPlease try again.")
                 return None  # Return None to indicate invalid input
         else:
             return None  # Return None if the user cancels the popup
@@ -322,7 +322,7 @@ class UpdateVarSetDialog(QtGui.QDialog):
         """Update ExpressionEngine entries for all objects to replace old_name with new_name."""
         doc = FreeCAD.ActiveDocument
         if doc is None:
-            QtGui.QMessageBox.warning(self, "Error", "No active document found.")
+            QtWidgets.QMessageBox.warning(self, "Error", "No active document found.")
             return
 
         updated_count = 0
@@ -349,12 +349,12 @@ class UpdateVarSetDialog(QtGui.QDialog):
         new_name = self.new_name_input.text().strip()
 
         if not search_name or not old_name or not new_name:
-            QtGui.QMessageBox.warning(self, "Error", "Please enter all required fields.")
+            QtWidgets.QMessageBox.warning(self, "Error", "Please enter all required fields.")
             return
 
         doc = FreeCAD.ActiveDocument
         if doc is None:
-            QtGui.QMessageBox.warning(self, "Error", "No active document found.")
+            QtWidgets.QMessageBox.warning(self, "Error", "No active document found.")
             return
 
         self.results_text.clear()
@@ -447,15 +447,15 @@ class UpdateVarSetDialog(QtGui.QDialog):
             error_message = f"Error: {e}"
             self.results_text.append(error_message)
             try:
-                QtGui.QMessageBox.warning(self, "Error", error_message)
+                QtWidgets.QMessageBox.warning(self, "Error", error_message)
             except Exception as inner_e:
                 self.results_text.append(f"Failed to show error dialog: {inner_e}")
 
 
 # Run the dialog
-app = QtGui.QApplication.instance()
+app = QtWidgets.QApplication.instance()
 if not app:
-    app = QtGui.QApplication([])
+    app = QtWidgets.QApplication([])
 
 dialog = UpdateVarSetDialog()
 dialog.exec()

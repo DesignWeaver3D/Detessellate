@@ -25,10 +25,11 @@ import traceback
 
 # Third-party
 import numpy as np
-from PySide6 import QtCore, QtGui
-from PySide6.QtWidgets import (QDockWidget, QWidget, QVBoxLayout, QHBoxLayout, 
-                               QPushButton, QLabel, QDoubleSpinBox, QInputDialog, 
-                               QMessageBox, QTextEdit)
+from PySide6 import QtCore
+from PySide6.QtWidgets import (QApplication, QDockWidget, QDoubleSpinBox,
+                               QHBoxLayout, QInputDialog, QLabel, QLineEdit,
+                               QMessageBox, QPushButton, QTextEdit, QToolButton,
+                               QVBoxLayout, QWidget)
 
 # FreeCAD
 import FreeCAD as App
@@ -592,7 +593,7 @@ class SketchCreator:
         body_names = [o.Name for o in doc.Objects if o.isDerivedFrom("PartDesign::Body")]
         options = ["<Standalone (Part Workbench)>", "<Create New Body (PartDesign)>"] + body_names
 
-        item, ok = QtGui.QInputDialog.getItem(
+        item, ok = QInputDialog.getItem(
             Gui.getMainWindow(),
             "Sketch Destination",
             "Choose where to create the datum plane and sketch:",
@@ -799,7 +800,7 @@ class PointCloudPlaneWidget(QWidget):
         # Profile distance
         profile_dist_layout = QHBoxLayout()
         profile_dist_layout.addWidget(QLabel("Offset Distance (mm):"))
-        self.profile_distance_edit = QtGui.QLineEdit()
+        self.profile_distance_edit = QLineEdit()
         self.profile_distance_edit.setText("5.0")
         self.profile_distance_edit.setMinimumWidth(80)
         self.profile_distance_edit.setMaximumWidth(100)
@@ -810,7 +811,7 @@ class PointCloudPlaneWidget(QWidget):
         # Profile tolerance
         profile_tol_layout = QHBoxLayout()
         profile_tol_layout.addWidget(QLabel("Tolerance (mm):"))
-        self.profile_tolerance_edit = QtGui.QLineEdit()
+        self.profile_tolerance_edit = QLineEdit()
         self.profile_tolerance_edit.setText("0.1")
         self.profile_tolerance_edit.setMinimumWidth(80)
         self.profile_tolerance_edit.setMaximumWidth(100)
@@ -869,7 +870,7 @@ class PointCloudPlaneWidget(QWidget):
     
     def _create_color_button(self, color, index):
         """Create a single color button."""
-        button = QtGui.QToolButton()
+        button = QToolButton()
         min_w, min_h, max_w, max_h = Config.COLOR_BUTTON_SIZE
         button.setMinimumSize(min_w, min_h)
         button.setMaximumSize(max_w, max_h)
@@ -1059,7 +1060,7 @@ class PointCloudPlaneWidget(QWidget):
         
         # Show immediate feedback
         self.info_display.append("Collecting vertex data, please wait...")
-        QtGui.QApplication.processEvents()  # Force UI update
+        QApplication.processEvents()  # Force UI update
         
         # Use QTimer to defer actual collection so message can display
         QtCore.QTimer.singleShot(100, self._initialize_from_selection)

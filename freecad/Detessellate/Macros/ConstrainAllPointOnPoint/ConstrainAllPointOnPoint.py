@@ -80,8 +80,8 @@ def get_sketch():
             pass
 
     if not sketch:
-        from PySide6 import QtGui
-        QtGui.QMessageBox.warning(None, "No Active Sketch",
+        from PySide6 import QtWidgets
+        QtWidgets.QMessageBox.warning(None, "No Active Sketch",
             "Please open a sketch in edit mode first.\n\n"
             "Double-click a sketch to enter edit mode, then run this macro.")
         return None

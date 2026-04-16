@@ -12,7 +12,7 @@ Version: 0.71 (Face-based area calculation with universal geometry support)
 """
 
 import FreeCAD as App
-from PySide6 import QtCore, QtGui
+from PySide6 import QtCore, QtWidgets
 from typing import Any, List, Dict
 
 
@@ -55,14 +55,14 @@ def find_zero_length_lines(analyzer: Any) -> List[Dict[str, Any]]:
 
 def setup_zero_length_tab(widget: Any) -> None:
     """Setup the zero-length lines tab."""
-    tab = QtGui.QWidget()
-    layout = QtGui.QVBoxLayout(tab)
+    tab = QtWidgets.QWidget()
+    layout = QtWidgets.QVBoxLayout(tab)
 
-    widget.zero_length_list = QtGui.QListWidget()
+    widget.zero_length_list = QtWidgets.QListWidget()
     widget.zero_length_list.itemEntered.connect(widget._on_hover)
     layout.addWidget(widget.zero_length_list)
 
-    delete_all_btn = QtGui.QPushButton("Delete All Zero-Length Lines")
+    delete_all_btn = QtWidgets.QPushButton("Delete All Zero-Length Lines")
     delete_all_btn.clicked.connect(lambda: delete_all_zero_length(widget))
     layout.addWidget(delete_all_btn)
 
@@ -76,7 +76,7 @@ def populate_zero_length_list(widget: Any) -> None:
     for item in widget.analysis_data.zero_length:
         geo_name = get_geometry_name(item['geo_idx'], item['geometry'])
         construction_tag = " (Construction)" if item.get('is_construction', False) else ""
-        list_item = QtGui.QListWidgetItem(f"{geo_name}: Length {item['length']:.6f}{construction_tag}")
+        list_item = QtWidgets.QListWidgetItem(f"{geo_name}: Length {item['length']:.6f}{construction_tag}")
         list_item.setData(QtCore.Qt.UserRole, item['geo_idx'])
         widget.zero_length_list.addItem(list_item)
 

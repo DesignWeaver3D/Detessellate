@@ -581,8 +581,8 @@ def populate_tab3_list(widget):
             main_text = f"Group {i}: ({coord[0]:.3f}, {coord[1]:.3f}) - {len(eligible_vertices)} eligible vertices"
             
             try:
-                from PySide6 import QtGui, QtCore
-                item = QtGui.QListWidgetItem(main_text)
+                from PySide6 import QtCore, QtGui, QtWidgets
+                item = QtWidgets.QListWidgetItem(main_text)
                 
                 # Make group item bold using Qt font
                 bold_font = QtGui.QFont()
@@ -667,7 +667,7 @@ def populate_tab3_list(widget):
                     if vertex_data['is_construction']:
                         detail_text += " 🔧"
                     
-                    detail_item = QtGui.QListWidgetItem(detail_text)
+                    detail_item = QtWidgets.QListWidgetItem(detail_text)
                     
                     # Store geometry index for highlighting compatibility
                     detail_item.setData(QtCore.Qt.UserRole, {
@@ -680,7 +680,7 @@ def populate_tab3_list(widget):
             except Exception as e:
                 # Fallback: just add text without fancy UI
                 try:
-                    item = QtGui.QListWidgetItem(main_text)
+                    item = QtWidgets.QListWidgetItem(main_text)
                     widget.coincident_list.addItem(item)
                 except:
                     pass
@@ -808,24 +808,24 @@ def coincident_selected_vertices(widget):
 
 def setup_coincident_tab(widget):
     """Setup the non-coincident vertices tab."""
-    from PySide6 import QtGui, QtCore
+    from PySide6 import QtCore, QtGui, QtWidgets
     
-    tab = QtGui.QWidget()
-    layout = QtGui.QVBoxLayout(tab)
+    tab = QtWidgets.QWidget()
+    layout = QtWidgets.QVBoxLayout(tab)
     
-    widget.coincident_list = QtGui.QListWidget()
+    widget.coincident_list = QtWidgets.QListWidget()
     widget.coincident_list.itemEntered.connect(widget._on_hover)
     widget.coincident_list.itemClicked.connect(widget._on_coincident_selected)
     layout.addWidget(widget.coincident_list)
     
     # Buttons
-    button_layout = QtGui.QHBoxLayout()
+    button_layout = QtWidgets.QHBoxLayout()
     
-    coincident_all_btn = QtGui.QPushButton("Coincident All")
+    coincident_all_btn = QtWidgets.QPushButton("Coincident All")
     coincident_all_btn.clicked.connect(lambda: coincident_all_vertices_button_callback(widget))
     button_layout.addWidget(coincident_all_btn)
     
-    coincident_selected_btn = QtGui.QPushButton("Coincident Selected")
+    coincident_selected_btn = QtWidgets.QPushButton("Coincident Selected")
     coincident_selected_btn.clicked.connect(lambda: coincident_selected_vertices(widget))
     button_layout.addWidget(coincident_selected_btn)
     

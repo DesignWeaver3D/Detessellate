@@ -14,7 +14,7 @@ import FreeCAD as App
 import Sketcher
 import math
 from typing import List, Tuple, Dict, Any
-from PySide6 import QtCore, QtGui
+from PySide6 import QtCore, QtWidgets
 
 # Tolerance thresholds - same as Tab3 for consistency
 NEAR_COINCIDENT_THRESHOLD = 5e-6    # 5 micrometers - tight tolerance
@@ -227,7 +227,7 @@ def populate_duplicate_list(widget):
         
         for group_idx, group in enumerate(duplicates):
             # Add group header
-            header_item = QtGui.QListWidgetItem(f"--- Duplicate Group {group_idx + 1} ---")
+            header_item = QtWidgets.QListWidgetItem(f"--- Duplicate Group {group_idx + 1} ---")
             header_item.setData(QtCore.Qt.UserRole, {'type': 'header'})
             widget.duplicate_list.addItem(header_item)
             
@@ -239,7 +239,7 @@ def populate_duplicate_list(widget):
                 geo_name = get_geometry_name(geo_idx, geometry)
                 recommended = " [RECOMMENDED]" if item == group[0] else ""
                 
-                list_item = QtGui.QListWidgetItem(
+                list_item = QtWidgets.QListWidgetItem(
                     f"  {geo_name} (constraints: {constraints}){recommended}")
                 list_item.setData(QtCore.Qt.UserRole, {
                     'type': 'geometry', 
@@ -368,22 +368,22 @@ def delete_recommended_duplicates(widget):
 
 def setup_duplicate_tab(widget):
     """Setup the duplicate geometry tab UI."""
-    tab = QtGui.QWidget()
-    layout = QtGui.QVBoxLayout(tab)
+    tab = QtWidgets.QWidget()
+    layout = QtWidgets.QVBoxLayout(tab)
 
-    widget.duplicate_list = QtGui.QListWidget()
+    widget.duplicate_list = QtWidgets.QListWidget()
     widget.duplicate_list.itemEntered.connect(widget._on_hover)
     widget.duplicate_list.itemClicked.connect(widget._on_duplicate_selected)
     layout.addWidget(widget.duplicate_list)
 
     # Button layouts
-    button_layout1 = QtGui.QHBoxLayout()
-    delete_all_btn = QtGui.QPushButton("Delete All Recommended")
+    button_layout1 = QtWidgets.QHBoxLayout()
+    delete_all_btn = QtWidgets.QPushButton("Delete All Recommended")
     delete_all_btn.clicked.connect(lambda: delete_recommended_duplicates(widget))
     button_layout1.addWidget(delete_all_btn)
 
-    button_layout2 = QtGui.QHBoxLayout()
-    delete_selected_btn = QtGui.QPushButton("Delete Selected")
+    button_layout2 = QtWidgets.QHBoxLayout()
+    delete_selected_btn = QtWidgets.QPushButton("Delete Selected")
     delete_selected_btn.clicked.connect(lambda: delete_selected_duplicates(widget))
     button_layout2.addWidget(delete_selected_btn)
 

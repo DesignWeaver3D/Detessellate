@@ -3,7 +3,7 @@
 # SPDX-FileNotice: Part of the Detessellate addon.
 import FreeCAD as App
 import FreeCADGui as Gui
-from PySide6 import QtCore, QtGui
+from PySide6 import QtCore, QtGui, QtWidgets
 import Part
 import math
 from typing import List, Dict, Tuple, Optional, Any
@@ -424,7 +424,7 @@ class SelectionObserver:
             self.tracker.update_selection(None)
 
 
-class TopoMatchSelectorWidget(QtGui.QWidget):
+class TopoMatchSelectorWidget(QtWidgets.QWidget):
     """Main widget for the TopoMatchSelector docker."""
 
     def __init__(self):
@@ -438,33 +438,33 @@ class TopoMatchSelectorWidget(QtGui.QWidget):
 
     def setup_ui(self):
         """Setup the user interface."""
-        layout = QtGui.QVBoxLayout(self)
+        layout = QtWidgets.QVBoxLayout(self)
 
         # Selection info
-        self.selection_label = QtGui.QLabel("No selection")
+        self.selection_label = QtWidgets.QLabel("No selection")
         self.selection_label.setWordWrap(True)
         layout.addWidget(self.selection_label)
 
         # Exact matches section
-        exact_label = QtGui.QLabel("Exact Matches:")
+        exact_label = QtWidgets.QLabel("Exact Matches:")
         exact_label.setFont(QtGui.QFont("", -1, QtGui.QFont.Bold))
         layout.addWidget(exact_label)
 
-        self.exact_list = QtGui.QListWidget()
+        self.exact_list = QtWidgets.QListWidget()
         self.exact_list.setMaximumHeight(150)
         layout.addWidget(self.exact_list)
 
         # Similar matches section
-        similar_label = QtGui.QLabel("Similar Matches:")
+        similar_label = QtWidgets.QLabel("Similar Matches:")
         similar_label.setFont(QtGui.QFont("", -1, QtGui.QFont.Bold))
         layout.addWidget(similar_label)
 
-        self.similar_list = QtGui.QListWidget()
+        self.similar_list = QtWidgets.QListWidget()
         self.similar_list.setMaximumHeight(150)
         layout.addWidget(self.similar_list)
 
         # Status / Log messages - now a QTextBrowser for selectable text
-        self.status_browser = QtGui.QTextBrowser()
+        self.status_browser = QtWidgets.QTextBrowser()
         self.status_browser.setReadOnly(True)
         self.status_browser.setAcceptRichText(False) # For plain text
         self.status_browser.setMinimumHeight(50) # Give it some space
@@ -664,7 +664,7 @@ class TopoMatchSelectorWidget(QtGui.QWidget):
             item_name = match['name']
             item_text = f"{feature_label}.{item_name}"
 
-            item = QtGui.QListWidgetItem(item_text)
+            item = QtWidgets.QListWidgetItem(item_text)
             item.setData(QtCore.Qt.UserRole, {
                 'object': match['feature'].Name,
                 'sub_name': item_name
@@ -677,7 +677,7 @@ class TopoMatchSelectorWidget(QtGui.QWidget):
         event.accept()
 
 
-class TopoMatchSelectorDockWidget(QtGui.QDockWidget):
+class TopoMatchSelectorDockWidget(QtWidgets.QDockWidget):
     """Docker widget for the TopoMatchSelector macro."""
 
     def __init__(self):
@@ -690,9 +690,9 @@ class TopoMatchSelectorDockWidget(QtGui.QDockWidget):
         self.setWidget(self.main_widget)
 
         # Set dock properties
-        self.setFeatures(QtGui.QDockWidget.DockWidgetMovable |
-                        QtGui.QDockWidget.DockWidgetFloatable |
-                        QtGui.QDockWidget.DockWidgetClosable)
+        self.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable |
+                        QtWidgets.QDockWidget.DockWidgetFloatable |
+                        QtWidgets.QDockWidget.DockWidgetClosable)
         self.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea |
                             QtCore.Qt.RightDockWidgetArea)
 
@@ -705,7 +705,7 @@ def create_topo_match_selector():
     """Create and show the TopoMatchSelector docker."""
     # Remove existing docker if it exists
     main_window = Gui.getMainWindow()
-    existing_dock = main_window.findChild(QtGui.QDockWidget, "TopoMatchSelector")
+    existing_dock = main_window.findChild(QtWidgets.QDockWidget, "TopoMatchSelector")
     if existing_dock:
         existing_dock.close()
         existing_dock.deleteLater()

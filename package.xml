@@ -19,10 +19,7 @@ standalone = 'no'
     version_gte = '2.4.0'
     type = 'python'
     >numpy</depend>
-  <depend
-    type = 'internal'
-    >draft</depend>
-  <!--[ Info ]―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
+<!--[ Info ]―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
   <description>FreeCAD workbench of tools to reverse engineer meshes</description>
   <name>Detessellate</name>
   <!--[ Tags ]―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->

@@ -31,7 +31,7 @@ import FreeCAD as App
 import FreeCADGui as Gui
 import Part
 import Sketcher
-from PySide6 import QtCore, QtGui
+from PySide6 import QtCore, QtGui, QtWidgets
 
 
 # Constants
@@ -509,7 +509,7 @@ class SketchAnalysisData:
         self.problematic = analyzer.find_problematic_intersections()
 
 
-class SketcherWireDoctorWidget(QtGui.QWidget):
+class SketcherWireDoctorWidget(QtWidgets.QWidget):
     """Main widget for the SketcherWireDoctor docker."""
 
     def __init__(self):
@@ -525,19 +525,19 @@ class SketcherWireDoctorWidget(QtGui.QWidget):
 
     def _setup_ui(self) -> None:
         """Setup the user interface."""
-        layout = QtGui.QVBoxLayout(self)
+        layout = QtWidgets.QVBoxLayout(self)
 
         # Status label
-        self.status_label = QtGui.QLabel("Initializing...")
+        self.status_label = QtWidgets.QLabel("Initializing...")
         layout.addWidget(self.status_label)
 
         # Analyze button
-        self.analyze_button = QtGui.QPushButton("Re-Analyze Sketch")
+        self.analyze_button = QtWidgets.QPushButton("Re-Analyze Sketch")
         self.analyze_button.clicked.connect(self.analyze_sketch)
         layout.addWidget(self.analyze_button)
 
         # Create tabs
-        self.tab_widget = QtGui.QTabWidget()
+        self.tab_widget = QtWidgets.QTabWidget()
         layout.addWidget(self.tab_widget)
 
         self._setup_tabs()
@@ -628,10 +628,10 @@ class SketcherWireDoctorWidget(QtGui.QWidget):
 
     def _setup_missing_tab(self, tab_name: str) -> None:
         """Setup a placeholder tab for missing modules."""
-        tab = QtGui.QWidget()
-        layout = QtGui.QVBoxLayout(tab)
+        tab = QtWidgets.QWidget()
+        layout = QtWidgets.QVBoxLayout(tab)
         
-        label = QtGui.QLabel(f"Module not found for {tab_name}\n\n"
+        label = QtWidgets.QLabel(f"Module not found for {tab_name}\n\n"
                            f"Please ensure SketcherWireDoctor_Tab files are installed.")
         label.setAlignment(QtCore.Qt.AlignCenter)
         label.setStyleSheet("color: red; font-weight: bold;")
@@ -657,10 +657,10 @@ class SketcherWireDoctorWidget(QtGui.QWidget):
                 except Exception:
                     pass
 
-    def _setup_color_selector(self, layout: QtGui.QVBoxLayout) -> None:
+    def _setup_color_selector(self, layout: QtWidgets.QVBoxLayout) -> None:
         """Setup color selection widget."""
-        color_box = QtGui.QHBoxLayout()
-        label = QtGui.QLabel("Highlight Color:")
+        color_box = QtWidgets.QHBoxLayout()
+        label = QtWidgets.QLabel("Highlight Color:")
         color_box.addWidget(label)
 
         self.color_buttons = []
@@ -673,9 +673,9 @@ class SketcherWireDoctorWidget(QtGui.QWidget):
         color_box.addStretch()
         layout.addLayout(color_box)
 
-    def _create_color_button(self, color: Tuple[float, float, float], index: int) -> QtGui.QToolButton:
+    def _create_color_button(self, color: Tuple[float, float, float], index: int) -> QtWidgets.QToolButton:
         """Create a single color button."""
-        button = QtGui.QToolButton()
+        button = QtWidgets.QToolButton()
         min_w, min_h, max_w, max_h = Config.COLOR_BUTTON_SIZE
         button.setMinimumSize(min_w, min_h)
         button.setMaximumSize(max_w, max_h)
@@ -685,7 +685,7 @@ class SketcherWireDoctorWidget(QtGui.QWidget):
 
         return button
 
-    def _update_color_button_style(self, button: QtGui.QToolButton, color: Tuple[float, float, float],
+    def _update_color_button_style(self, button: QtWidgets.QToolButton, color: Tuple[float, float, float],
                                   is_selected: bool) -> None:
         """Update the style of a color button."""
         rgb = f"rgb({int(color[0]*255)}, {int(color[1]*255)}, {int(color[2]*255)})"
@@ -780,7 +780,7 @@ class SketcherWireDoctorWidget(QtGui.QWidget):
             pass
 
     # Unified hover handler
-    def _on_hover(self, item: QtGui.QListWidgetItem) -> None:
+    def _on_hover(self, item: QtWidgets.QListWidgetItem) -> None:
         """Unified hover handler for all list items."""
         if not self.highlighter:
             return
@@ -873,17 +873,17 @@ class SketcherWireDoctorWidget(QtGui.QWidget):
         # Let the event continue to be processed normally
         return False
 
-    def _on_hover_exit(self, item: QtGui.QListWidgetItem) -> None:
+    def _on_hover_exit(self, item: QtWidgets.QListWidgetItem) -> None:
         """Clear highlights when mouse exits any list item."""
         if self.highlighter:
             self.highlighter.clear_highlights()
 
     # Selection handlers
-    def _on_duplicate_selected(self, item: QtGui.QListWidgetItem) -> None:
+    def _on_duplicate_selected(self, item: QtWidgets.QListWidgetItem) -> None:
         """Handle selection of duplicate item."""
         self._on_hover(item)
 
-    def _on_coincident_selected(self, item: QtGui.QListWidgetItem) -> None:
+    def _on_coincident_selected(self, item: QtWidgets.QListWidgetItem) -> None:
         """Handle selection of coincident item."""
         data = item.data(QtCore.Qt.UserRole)
         if data and self.highlighter:
@@ -894,7 +894,7 @@ class SketcherWireDoctorWidget(QtGui.QWidget):
                 if vertex_data['vertices']:
                     self.highlighter.highlight_geometry(vertex_data['vertices'][0][0])
 
-    def _on_intersection_selected(self, item: QtGui.QListWidgetItem) -> None:
+    def _on_intersection_selected(self, item: QtWidgets.QListWidgetItem) -> None:
         """Handle selection of intersection item."""
         self._on_hover(item)
 
@@ -942,7 +942,7 @@ class SketcherWireDoctorWidget(QtGui.QWidget):
         event.accept()
 
 
-class SketcherWireDoctorDockWidget(QtGui.QDockWidget):
+class SketcherWireDoctorDockWidget(QtWidgets.QDockWidget):
     """Docker widget for the SketcherWireDoctor macro."""
 
     def __init__(self):
@@ -955,9 +955,9 @@ class SketcherWireDoctorDockWidget(QtGui.QDockWidget):
         self.setWindowTitle("SketcherWireDoctor")
         self.setObjectName("SketcherWireDoctor")
 
-        self.setFeatures(QtGui.QDockWidget.DockWidgetMovable |
-                        QtGui.QDockWidget.DockWidgetFloatable |
-                        QtGui.QDockWidget.DockWidgetClosable)
+        self.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable |
+                        QtWidgets.QDockWidget.DockWidgetFloatable |
+                        QtWidgets.QDockWidget.DockWidgetClosable)
         self.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea |
                             QtCore.Qt.RightDockWidgetArea)
 
@@ -997,21 +997,21 @@ class DockWidgetManager:
             DockWidgetManager._cleanup_single_dock(dock, main_window)
 
         sketcher_wire_doctor_dock = None
-        QtGui.QApplication.processEvents()  # Force Qt to process pending deletions
+        QtWidgets.QApplication.processEvents()  # Force Qt to process pending deletions
 
     @staticmethod
-    def _find_existing_docks(main_window: QtGui.QMainWindow) -> List[QtGui.QDockWidget]:
+    def _find_existing_docks(main_window: QtWidgets.QMainWindow) -> List[QtWidgets.QDockWidget]:
         """Find all existing SketcherWireDoctor dock widgets."""
         existing_docks = []
 
         # Find by window title and object name
-        for dock in main_window.findChildren(QtGui.QDockWidget):
+        for dock in main_window.findChildren(QtWidgets.QDockWidget):
             if (dock.windowTitle() in ["SketcherWireDoctor", "SketcherWireDoctor v0.71"] or
                 dock.objectName() == "SketcherWireDoctor"):
                 existing_docks.append(dock)
 
         # Find by widget type
-        for dock in main_window.findChildren(QtGui.QDockWidget):
+        for dock in main_window.findChildren(QtWidgets.QDockWidget):
             widget = dock.widget()
             if widget and isinstance(widget, SketcherWireDoctorWidget):
                 if dock not in existing_docks:
@@ -1020,15 +1020,15 @@ class DockWidgetManager:
         return existing_docks
 
     @staticmethod
-    def _find_parent_dock(widget: QtGui.QWidget) -> Optional[QtGui.QDockWidget]:
+    def _find_parent_dock(widget: QtWidgets.QWidget) -> Optional[QtWidgets.QDockWidget]:
         """Find the parent dock widget of a given widget."""
         parent_dock = widget.parent()
-        while parent_dock and not isinstance(parent_dock, QtGui.QDockWidget):
+        while parent_dock and not isinstance(parent_dock, QtWidgets.QDockWidget):
             parent_dock = parent_dock.parent()
         return parent_dock
 
     @staticmethod
-    def _cleanup_single_dock(dock: QtGui.QDockWidget, main_window: QtGui.QMainWindow) -> None:
+    def _cleanup_single_dock(dock: QtWidgets.QDockWidget, main_window: QtWidgets.QMainWindow) -> None:
         """Clean up a single dock widget."""
         try:
             # Clean up any active highlighting

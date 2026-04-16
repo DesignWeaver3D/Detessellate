@@ -20,7 +20,7 @@ import FreeCADGui
 import Mesh
 import Part
 import PartDesign
-from PySide6 import QtGui, QtCore
+from PySide6 import QtCore, QtWidgets
 import time
 import sys
 
@@ -268,7 +268,7 @@ def run_unified_macro(auto_mode=True):
 
     # Initial banner
     FreeCAD.Console.PrintMessage("\n🚀 Mesh-to-Body macro started...\n")
-    QtGui.QApplication.processEvents()
+    QtWidgets.QApplication.processEvents()
     sys.stdout.flush()
 
     # Collect selection or all meshes
@@ -280,7 +280,7 @@ def run_unified_macro(auto_mode=True):
         mesh_objects = [obj for obj in doc.Objects if hasattr(obj, 'Mesh')]
         FreeCAD.Console.PrintMessage(f"No selection found. Found {len(mesh_objects)} meshes in document...\n")
 
-    QtGui.QApplication.processEvents()
+    QtWidgets.QApplication.processEvents()
     sys.stdout.flush()
 
     # --- Pre-collect metadata ---
@@ -302,7 +302,7 @@ def run_unified_macro(auto_mode=True):
         FreeCAD.Console.PrintMessage(
             f"{idx}. {m['name']} — {m['components']} components, {m['facets']} facets\n"
         )
-    QtGui.QApplication.processEvents()
+    QtWidgets.QApplication.processEvents()
     sys.stdout.flush()
 
     # --- Conversion loop ---
@@ -338,7 +338,7 @@ def run_unified_macro(auto_mode=True):
         FreeCAD.Console.PrintMessage(
             f"▶️ Starting conversion for {m['name']}, please wait...\n"
         )
-        QtGui.QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
         sys.stdout.flush()
 
         # Conversion
@@ -363,7 +363,7 @@ def run_unified_macro(auto_mode=True):
             FreeCAD.Console.PrintError(f"❌ Error converting {obj.Name}: {e}\n")
         finally:
             doc.commitTransaction()
-            QtGui.QApplication.processEvents()
+            QtWidgets.QApplication.processEvents()
 
     doc.recompute()
     total_elapsed = time.perf_counter() - total_start

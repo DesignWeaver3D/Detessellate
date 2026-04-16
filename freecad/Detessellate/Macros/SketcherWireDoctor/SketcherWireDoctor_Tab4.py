@@ -18,7 +18,7 @@ Version: 1.0 (Phased approach implementation)
 
 import FreeCAD as App
 import Part
-from PySide6 import QtCore, QtGui
+from PySide6 import QtCore, QtWidgets
 from typing import Any, List, Dict, Tuple, Set, Optional
 from collections import defaultdict
 from dataclasses import dataclass
@@ -1531,10 +1531,10 @@ def find_problematic_intersections(analyzer: Any) -> List[Dict[str, Any]]:
 
 def setup_intersections_tab(widget):
     """Setup the wire topology analysis tab with grouped issue categories."""
-    from PySide6 import QtGui, QtCore
+    from PySide6 import QtCore, QtWidgets
 
-    tab = QtGui.QWidget()
-    layout = QtGui.QVBoxLayout(tab)
+    tab = QtWidgets.QWidget()
+    layout = QtWidgets.QVBoxLayout(tab)
 
     # Create sections for each issue type with logical repair order
     sections = [
@@ -1548,11 +1548,11 @@ def setup_intersections_tab(widget):
 
     for section_title, section_key, issue_type in sections:
         # Group box for each section with initial count of 0
-        group_box = QtGui.QGroupBox(f"{section_title} (0)")
-        group_layout = QtGui.QVBoxLayout(group_box)
+        group_box = QtWidgets.QGroupBox(f"{section_title} (0)")
+        group_layout = QtWidgets.QVBoxLayout(group_box)
 
         # Issue list
-        issue_list = QtGui.QListWidget()
+        issue_list = QtWidgets.QListWidget()
         issue_list.setMaximumHeight(100)
         issue_list.itemEntered.connect(widget._on_hover)
         issue_list.itemClicked.connect(widget._on_intersection_selected)
@@ -1565,9 +1565,9 @@ def setup_intersections_tab(widget):
         group_layout.addWidget(issue_list)
 
         # Action buttons
-        button_layout = QtGui.QHBoxLayout()
+        button_layout = QtWidgets.QHBoxLayout()
 
-        make_all_btn = QtGui.QPushButton("Make All Construction")
+        make_all_btn = QtWidgets.QPushButton("Make All Construction")
         make_all_btn.clicked.connect(
             lambda checked=False, key=section_key: make_section_construction(widget, key, True, False)
         )
@@ -1575,13 +1575,13 @@ def setup_intersections_tab(widget):
 
         # Add "Make Strong Construction" button only for subdivision section
         if section_key == "subdivision":
-            make_strong_btn = QtGui.QPushButton("Make Strong Construction")
+            make_strong_btn = QtWidgets.QPushButton("Make Strong Construction")
             make_strong_btn.clicked.connect(
                 lambda checked=False, key=section_key: make_section_construction(widget, key, False, True)
             )
             button_layout.addWidget(make_strong_btn)
 
-        make_selected_btn = QtGui.QPushButton("Make Selected Construction")
+        make_selected_btn = QtWidgets.QPushButton("Make Selected Construction")
         make_selected_btn.clicked.connect(
             lambda checked=False, key=section_key: make_section_construction(widget, key, False, False)
         )
@@ -1644,7 +1644,7 @@ def populate_intersections_list(widget):
                 geo_name = get_geometry_name(issue.geo_idx, issue.geometry)
                 item_text = f"{geo_name}: {issue.description}"
 
-                list_item = QtGui.QListWidgetItem(item_text)
+                list_item = QtWidgets.QListWidgetItem(item_text)
                 list_item.setData(QtCore.Qt.UserRole, {
                     'geo_idx': issue.geo_idx,
                     'geometry': issue.geometry,
@@ -1692,7 +1692,7 @@ def populate_intersections_list(widget):
 
             if section_key in widget.issue_sections:
                 issue_list = widget.issue_sections[section_key]['list']
-                list_item = QtGui.QListWidgetItem(f"{geo_name}: {problem_type}")
+                list_item = QtWidgets.QListWidgetItem(f"{geo_name}: {problem_type}")
                 list_item.setData(QtCore.Qt.UserRole, item)
                 issue_list.addItem(list_item)
                 section_counts[section_key] += 1

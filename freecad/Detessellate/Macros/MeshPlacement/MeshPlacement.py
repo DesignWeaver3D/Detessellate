@@ -27,52 +27,52 @@ __date__    = "2025-12-11"
 __doc__     = "A FreeCAD macro to position selected meshes or parts at the global origin using bounding box alignment."
 
 import FreeCAD, FreeCADGui
-from PySide6 import QtGui, QtCore
+from PySide6 import QtCore, QtWidgets
 
-class MeshPlacementDock(QtGui.QDockWidget):
+class MeshPlacementDock(QtWidgets.QDockWidget):
     def __init__(self):
         super(MeshPlacementDock, self).__init__("MeshPlacement")
         self.setObjectName("MeshPlacement")
         self.setWindowTitle("MeshPlacement")
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
-        self.widget = QtGui.QWidget()
-        main_layout = QtGui.QVBoxLayout()
+        self.widget = QtWidgets.QWidget()
+        main_layout = QtWidgets.QVBoxLayout()
 
         # --- Center XYZ ---
-        main_layout.addWidget(QtGui.QPushButton("Center XYZ", clicked=self.centerXYZ))
+        main_layout.addWidget(QtWidgets.QPushButton("Center XYZ", clicked=self.centerXYZ))
 
         # --- Divider line ---
-        line = QtGui.QFrame()
-        line.setFrameShape(QtGui.QFrame.HLine)
-        line.setFrameShadow(QtGui.QFrame.Sunken)
+        line = QtWidgets.QFrame()
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
         main_layout.addWidget(line)
 
         # --- Z stack group ---
-        z_group = QtGui.QGroupBox("Z Controls")
-        z_layout = QtGui.QVBoxLayout()
-        z_layout.addWidget(QtGui.QPushButton("Align Bottom", clicked=self.alignBottom))
-        z_layout.addWidget(QtGui.QPushButton("Center Z", clicked=self.centerZ))
-        z_layout.addWidget(QtGui.QPushButton("Align Top", clicked=self.alignTop))
+        z_group = QtWidgets.QGroupBox("Z Controls")
+        z_layout = QtWidgets.QVBoxLayout()
+        z_layout.addWidget(QtWidgets.QPushButton("Align Bottom", clicked=self.alignBottom))
+        z_layout.addWidget(QtWidgets.QPushButton("Center Z", clicked=self.centerZ))
+        z_layout.addWidget(QtWidgets.QPushButton("Align Top", clicked=self.alignTop))
         z_group.setLayout(z_layout)
         main_layout.addWidget(z_group)
 
         # --- XY cross group ---
-        xy_group = QtGui.QGroupBox("XY Controls")
-        xy_layout = QtGui.QGridLayout()
+        xy_group = QtWidgets.QGroupBox("XY Controls")
+        xy_layout = QtWidgets.QGridLayout()
 
         # Row 0: Center XY
-        xy_layout.addWidget(QtGui.QPushButton("Center XY", clicked=self.centerXY), 0, 1)
+        xy_layout.addWidget(QtWidgets.QPushButton("Center XY", clicked=self.centerXY), 0, 1)
 
         # Row 1: Back - Center Y - Front
-        xy_layout.addWidget(QtGui.QPushButton("Align Back", clicked=self.alignBack), 1, 0)
-        xy_layout.addWidget(QtGui.QPushButton("Center Y", clicked=self.centerY), 1, 1)
-        xy_layout.addWidget(QtGui.QPushButton("Align Front", clicked=self.alignFront), 1, 2)
+        xy_layout.addWidget(QtWidgets.QPushButton("Align Back", clicked=self.alignBack), 1, 0)
+        xy_layout.addWidget(QtWidgets.QPushButton("Center Y", clicked=self.centerY), 1, 1)
+        xy_layout.addWidget(QtWidgets.QPushButton("Align Front", clicked=self.alignFront), 1, 2)
 
         # Row 2: Right - Center X - Left
-        xy_layout.addWidget(QtGui.QPushButton("Align Right", clicked=self.alignRight), 2, 0)
-        xy_layout.addWidget(QtGui.QPushButton("Center X", clicked=self.centerX), 2, 1)
-        xy_layout.addWidget(QtGui.QPushButton("Align Left", clicked=self.alignLeft), 2, 2)
+        xy_layout.addWidget(QtWidgets.QPushButton("Align Right", clicked=self.alignRight), 2, 0)
+        xy_layout.addWidget(QtWidgets.QPushButton("Center X", clicked=self.centerX), 2, 1)
+        xy_layout.addWidget(QtWidgets.QPushButton("Align Left", clicked=self.alignLeft), 2, 2)
 
         xy_group.setLayout(xy_layout)
         main_layout.addWidget(xy_group)
@@ -162,7 +162,7 @@ class MeshPlacementDock(QtGui.QDockWidget):
 
 # --- Ensure only one dock instance ---
 mw = FreeCADGui.getMainWindow()
-for dock in mw.findChildren(QtGui.QDockWidget):
+for dock in mw.findChildren(QtWidgets.QDockWidget):
     if dock.objectName() == "MeshPlacement":
         mw.removeDockWidget(dock)
         dock.deleteLater()
