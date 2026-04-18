@@ -23,7 +23,10 @@ problematic intersections.
 v1.0.0 - 2026-4-1 Updated to support external geometry as normal geometry
 """
 
+import importlib
 import math
+import os
+import sys
 from collections import defaultdict
 from typing import List, Dict, Tuple, Optional, Set, Any, Union
 
@@ -256,9 +259,6 @@ class GeometryAnalyzer:
     def find_zero_length_lines(self) -> List[Dict[str, Any]]:
         """Find all zero-length line segments - delegated to Tab1."""
         try:
-            import importlib
-            import sys
-            
             # Force reload if module already exists to avoid stale imports
             if 'SketcherWireDoctor_Tab1' in sys.modules:
                 importlib.reload(sys.modules['SketcherWireDoctor_Tab1'])
@@ -273,9 +273,6 @@ class GeometryAnalyzer:
     def find_duplicate_geometry(self) -> List[List[Dict[str, Any]]]:
         """Find duplicate or overlapping geometry - delegated to Tab2."""
         try:
-            import importlib
-            import sys
-            
             if 'SketcherWireDoctor_Tab2' in sys.modules:
                 importlib.reload(sys.modules['SketcherWireDoctor_Tab2'])
                 
@@ -289,9 +286,6 @@ class GeometryAnalyzer:
     def find_non_coincident_vertices(self) -> List[Dict[str, Any]]:
         """Find vertices that should be coincident but aren't - delegated to Tab3."""
         try:
-            import importlib
-            import sys
-            
             if 'SketcherWireDoctor_Tab3' in sys.modules:
                 importlib.reload(sys.modules['SketcherWireDoctor_Tab3'])
                 
@@ -305,9 +299,6 @@ class GeometryAnalyzer:
     def find_problematic_intersections(self) -> List[Dict[str, Any]]:
         """Find T-sections and bridge edges - delegated to Tab4."""
         try:
-            import importlib
-            import sys
-            
             if 'SketcherWireDoctor_Tab4' in sys.modules:
                 importlib.reload(sys.modules['SketcherWireDoctor_Tab4'])
                 
@@ -550,9 +541,6 @@ class SketcherWireDoctorWidget(QtWidgets.QWidget):
 
     def _setup_tabs(self) -> None:
         """Setup all tab widgets by importing and calling tab modules."""
-        import sys
-        import os
-        
         # Get the directory where this script is located
         script_dir = os.path.dirname(os.path.abspath(__file__))
         
@@ -739,9 +727,6 @@ class SketcherWireDoctorWidget(QtWidgets.QWidget):
 
     def _populate_all_tabs(self) -> None:
         """Populate all list widgets with analysis results."""
-        import sys
-        import os
-        
         script_dir = os.path.dirname(os.path.abspath(__file__))
         if script_dir not in sys.path:
             sys.path.insert(0, script_dir)
@@ -1082,8 +1067,6 @@ def show_sketcher_wire_doctor() -> None:
 
 def _clear_module_cache() -> None:
     """Clear SketcherWireDoctor module cache for fresh reload."""
-    import sys
-    
     # Clear all SketcherWireDoctor modules from cache
     modules_to_clear = [name for name in sys.modules.keys() if name.startswith('SketcherWireDoctor')]
     

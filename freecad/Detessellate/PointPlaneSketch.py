@@ -21,6 +21,7 @@ from __future__ import annotations
 
 # Standard library
 import math
+import time
 import traceback
 
 # Third-party
@@ -243,8 +244,6 @@ class PointHighlighter:
         Returns:
             True if highlighted, False if skipped
         """
-        import time
-        
         self.clear_highlights()
         
         doc = App.ActiveDocument
@@ -436,8 +435,6 @@ class PointHighlighter:
         Highlight profile plane points in a specific color.
         Similar to highlight_points but uses profile_highlight_objects list.
         """
-        import time
-        
         # Clear existing profile highlights
         doc = App.ActiveDocument
         if not doc:
@@ -1067,8 +1064,6 @@ class PointCloudPlaneWidget(QWidget):
     
     def _initialize_from_selection(self):
         """Initialize plane from selected vertices."""
-        import time
-        
         timing_results = []
         t_start = time.time()
         
@@ -1181,8 +1176,6 @@ class PointCloudPlaneWidget(QWidget):
     
     def _update_preview(self):
         """Update the preview with current tolerance."""
-        import time
-        
         if self.all_points_np is None or self.initial_normal is None:
             self.info_display.append("Error: Collect vertex data first.\n")
             return
@@ -1493,7 +1486,6 @@ class PointCloudPlaneWidget(QWidget):
         except Exception as e:
             doc.abortTransaction()
             self.info_display.append(f"Error creating sketch: {str(e)}\n")
-            import traceback
             traceback.print_exc()
     
     def closeEvent(self, event):

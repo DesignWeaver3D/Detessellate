@@ -21,6 +21,7 @@ import Sketcher
 import math
 from typing import List, Tuple, Dict, Any, Optional
 from collections import defaultdict, deque
+from PySide6 import QtCore, QtGui, QtWidgets
 
 # Tolerance thresholds for practical FreeCAD manufacturing use cases
 NEAR_COINCIDENT_THRESHOLD = 5e-6    # 5 micrometers - bell emoji (tiny discrepancy, high confidence)
@@ -581,7 +582,6 @@ def populate_tab3_list(widget):
             main_text = f"Group {i}: ({coord[0]:.3f}, {coord[1]:.3f}) - {len(eligible_vertices)} eligible vertices"
             
             try:
-                from PySide6 import QtCore, QtGui, QtWidgets
                 item = QtWidgets.QListWidgetItem(main_text)
                 
                 # Make group item bold using Qt font
@@ -808,8 +808,6 @@ def coincident_selected_vertices(widget):
 
 def setup_coincident_tab(widget):
     """Setup the non-coincident vertices tab."""
-    from PySide6 import QtCore, QtGui, QtWidgets
-    
     tab = QtWidgets.QWidget()
     layout = QtWidgets.QVBoxLayout(tab)
     
