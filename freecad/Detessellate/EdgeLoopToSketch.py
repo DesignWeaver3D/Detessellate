@@ -291,24 +291,28 @@ def edge_loop_to_sketch():
         doc.commitTransaction()
         FreeCAD.Console.PrintMessage(f"\nSketch created successfully with {len(selected_edges)} edges.\n")
         FreeCAD.Console.PrintMessage(f"\n{'='*60}\n")
-        FreeCAD.Console.PrintMessage(f"GEOMETRY SUMMARY\n")
+        FreeCAD.Console.PrintMessage("GEOMETRY SUMMARY\n")
         FreeCAD.Console.PrintMessage(f"{'='*60}\n")
         for geom_type, count in sorted(geometry_summary.items()):
             FreeCAD.Console.PrintMessage(f"  {geom_type:20s} {count:>3d}\n")
         FreeCAD.Console.PrintMessage(f"\n{'='*60}\n")
-        FreeCAD.Console.PrintMessage(f"CONSTRAINT SUMMARY\n")
+        FreeCAD.Console.PrintMessage("CONSTRAINT SUMMARY\n")
         FreeCAD.Console.PrintMessage(f"{'='*60}\n")
         for constraint_type, count in sorted(constraint_summary.items()):
             if count > 0:  # Only show non-zero counts
                 FreeCAD.Console.PrintMessage(f"  {constraint_type:20s} {count:>3d}\n")
         FreeCAD.Console.PrintMessage(f"\n{'='*60}\n")
-        FreeCAD.Console.PrintMessage(f"PERFORMANCE REPORT\n")
+        FreeCAD.Console.PrintMessage("PERFORMANCE REPORT\n")
         FreeCAD.Console.PrintMessage(f"{'='*60}\n")
         FreeCAD.Console.PrintMessage(f"  Plane calculation:      {plane_time:>8.3f}s\n")
-        FreeCAD.Console.PrintMessage(f"  Geometry & constraints: {geometry_time:>8.3f}s\n")
+        FreeCAD.Console.PrintMessage(
+            f"  Geometry & constraints: {geometry_time:>8.3f}s\n"
+        )
         FreeCAD.Console.PrintMessage(f"  {'-'*58}\n")
-        FreeCAD.Console.PrintMessage(f"  Total processing:       {total_time:>8.3f}s\n")
-        FreeCAD.Console.PrintMessage(f"  (Excludes user dialog time)\n")
+        FreeCAD.Console.PrintMessage(
+            f"  Total processing:       {total_time:>8.3f}s\n"
+        )
+        FreeCAD.Console.PrintMessage("  (Excludes user dialog time)\n")
         FreeCAD.Console.PrintMessage(f"{'='*60}\n")
 
     except Exception as e:
@@ -577,7 +581,10 @@ def add_vertex_coincident_constraints(sketch, geo_indices):
                 sketch.addConstraint(Sketcher.Constraint('Coincident', base[0], base[1], other[0], other[1]))
                 constraint_count += 1
             except Exception as e:
-                FreeCAD.Console.PrintWarning(f"Failed to constrain geo[{base[0]}] vertex {base[1]} to geo[{other[0]}] vertex {other[1]}: {e}\n")
+                FreeCAD.Console.PrintWarning(
+                    f"Failed to constrain geo[{base[0]}] vertex {base[1]} "
+                    f"to geo[{other[0]}] vertex {other[1]}: {e}\n"
+                )
 
     return constraint_count
 

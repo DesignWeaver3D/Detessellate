@@ -57,7 +57,7 @@ def get_geometry_name(geo_idx, geometry):
                 return f"Geometry{geo_idx+1}"
         else:
             return f"Geometry{geo_idx+1}"
-    except:
+    except Exception:
         return f"Geometry{geo_idx+1}"
 
 def get_geometry_endpoints(geometry, geo_idx, sketch):
@@ -92,7 +92,7 @@ def get_geometry_endpoints(geometry, geo_idx, sketch):
                         return None, None
                     else:
                         return (start_point.x, start_point.y), (end_point.x, end_point.y)
-                except:
+                except Exception:
                     return None, None
 
             elif effective_type == 'Part::GeomPoint':
@@ -286,7 +286,7 @@ def delete_selected_duplicates(widget):
                 data = item.data(QtCore.Qt.UserRole)
                 if data and data.get('type') == 'geometry':
                     duplicates_to_delete.append(data['data'])
-            except:
+            except Exception:
                 pass
         
         # Sort by highest geometry index first to avoid index shifting

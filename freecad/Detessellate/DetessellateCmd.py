@@ -165,7 +165,7 @@ class ConstrainAllPointOnPointCommand:
                 obj = edit_obj.Object
                 return hasattr(obj, 'TypeId') and 'Sketch' in obj.TypeId
             return False
-        except:
+        except Exception:
             return False
 
 

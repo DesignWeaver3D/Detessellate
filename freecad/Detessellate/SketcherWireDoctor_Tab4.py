@@ -235,7 +235,10 @@ class WireTopologyAnalyzer:
         
         # Remove duplicates from constraint coordinates
         unique_constraint_coords = list(set(constraint_coords))
-        App.Console.PrintMessage(f"🔗 Collected {len(unique_constraint_coords)} unique constraint coordinates from {constraint_count} constraints\n")
+        App.Console.PrintMessage(
+            f"🔗 Collected {len(unique_constraint_coords)} unique constraint coordinates "
+            f"from {constraint_count} constraints\n"
+        )
         
         # Step 2: Build vertex-to-vertex graph from normal geometry with coordinate replacement
         def find_nearest_constraint_coord(geom_coord, tolerance=1e-3):
@@ -298,7 +301,7 @@ class WireTopologyAnalyzer:
 
     def _find_all_loops(self) -> List[List[int]]:
         """Find all closed loops using constraint-informed vertex traversal with edge uniqueness."""
-        App.Console.PrintMessage(f"🔍 Constraint-informed vertex traversal loop detection...\n")
+        App.Console.PrintMessage("🔍 Constraint-informed vertex traversal loop detection...\n")
         
         # Build constraint-informed vertex graph
         graph_data = self._build_geometry_connection_graph()
@@ -316,7 +319,9 @@ class WireTopologyAnalyzer:
         max_loops = 1000
         max_path_length = len(self.normal_geometry)  # No loop can use more edges than exist
         
-        App.Console.PrintMessage(f"🔍 Safety limits: max_loops={max_loops}, max_path_length={max_path_length}\n")
+        App.Console.PrintMessage(
+            f"🔍 Safety limits: max_loops={max_loops}, max_path_length={max_path_length}\n"
+        )
         
         def dfs_find_loops(start_vertex, current_vertex, path_vertices, used_edges):
             """DFS to find loops starting from start_vertex, currently at current_vertex."""
@@ -371,7 +376,10 @@ class WireTopologyAnalyzer:
                 
             # Progress reporting
             if i > 0 and i % 10 == 0:
-                App.Console.PrintMessage(f"🔍 Progress: checked {i}/{len(vertices)} starting vertices, found {len(all_loops)} loops\n")
+                App.Console.PrintMessage(
+                    f"🔍 Progress: checked {i}/{len(vertices)} starting vertices, "
+                    f"found {len(all_loops)} loops\n"
+                )
             
             initial_path = [start_vertex]
             initial_used_edges = set()
@@ -484,9 +492,9 @@ class WireTopologyAnalyzer:
                         elif not is_endpoint_connection:
                             # Single intersection away from endpoints = likely X-crossing
                             is_problematic = True
-                            App.Console.PrintMessage(f"    → FLAGGED: Mid-edge crossing\n")
+                            App.Console.PrintMessage("    → FLAGGED: Mid-edge crossing\n")
                         else:
-                            App.Console.PrintMessage(f"    → SKIPPED: Endpoint connection (likely constraint)\n")
+                            App.Console.PrintMessage("    → SKIPPED: Endpoint connection (likely constraint)\n")
 
                         if is_problematic:
                             overlapping_pairs.append((idx1, idx2))
@@ -795,7 +803,10 @@ class WireTopologyAnalyzer:
         except Exception as e:
             App.Console.PrintError(f"Error building constraint connectivity: {e}\n")
 
-        App.Console.PrintMessage(f"Built constraint map: {len(constraint_map)} coincident, {len(internal_alignment_map)} internal alignment\n")
+        App.Console.PrintMessage(
+            f"Built constraint map: {len(constraint_map)} coincident, "
+            f"{len(internal_alignment_map)} internal alignment\n"
+        )
 
         return {
             'coincident': constraint_map,
@@ -1183,7 +1194,7 @@ class WireTopologyAnalyzer:
         # Debug logging
         App.Console.PrintMessage(f"🔍 Confidence analysis for geo {geo_idx}:\n")
         App.Console.PrintMessage(f"   Group {edge_group} has {len(group_loops)} loops\n")
-        App.Console.PrintMessage(f"   Group loop perimeters:\n")
+        App.Console.PrintMessage("   Group loop perimeters:\n")
         for loop, perimeter in group_perimeters:
             App.Console.PrintMessage(f"     Loop {loop}: {perimeter:.1f} units\n")
         App.Console.PrintMessage(f"   Largest group loop: {largest_group_loop} ({largest_group_perimeter:.1f} units)\n")
@@ -1406,15 +1417,24 @@ class WireTopologyAnalyzer:
 
                     # Debug logging for description logic
                     App.Console.PrintMessage(f"🔍 T-junction analysis for {geo_name}:\n")
-                    App.Console.PrintMessage(f"   Start: geo={start_geo_connections}, coincident={start_coincident_connections}, other_constraints={start_other_constraints}, vertex_total={start_vertex_total}\n")
-                    App.Console.PrintMessage(f"   End: geo={end_geo_connections}, coincident={end_coincident_connections}, other_constraints={end_other_constraints}, vertex_total={end_vertex_total}\n")
+                    App.Console.PrintMessage(
+                        f"   Start: geo={start_geo_connections}, coincident={start_coincident_connections}, "
+                        f"other_constraints={start_other_constraints}, vertex_total={start_vertex_total}\n"
+                    )
+                    App.Console.PrintMessage(
+                        f"   End: geo={end_geo_connections}, coincident={end_coincident_connections}, "
+                        f"other_constraints={end_other_constraints}, vertex_total={end_vertex_total}\n"
+                    )
 
                     # Determine specific description based on connection pattern
                     if start_vertex_total == 0 and end_vertex_total == 0:
                         # Both ends disconnected from vertices
                         if start_other_constraints > 0 or end_other_constraints > 0:
                             description = "Anchored but not connected"
-                            App.Console.PrintMessage(f"   → Description: {description} (has non-vertex constraints but no vertex connections)\n")
+                            App.Console.PrintMessage(
+                                f"   → Description: {description} "
+                                f"(has non-vertex constraints but no vertex connections)\n"
+                            )
                         else:
                             description = "No connections"
                             App.Console.PrintMessage(f"   → Description: {description} (completely isolated)\n")
@@ -1440,7 +1460,11 @@ class WireTopologyAnalyzer:
                         App.Console.PrintMessage(f"   → Description: {description} (unexpected case)\n")
 
                     tjunctions.append((geo_idx, description))
-                    App.Console.PrintMessage(f"⚠️  T-junction: {geo_name} (start_vertex={start_vertex_total}, end_vertex={end_vertex_total}) - {description}\n")
+                    App.Console.PrintMessage(
+                        f"⚠️  T-junction: {geo_name} "
+                        f"(start_vertex={start_vertex_total}, end_vertex={end_vertex_total}) "
+                        f"- {description}\n"
+                    )
 
         return tjunctions
 
@@ -1748,7 +1772,7 @@ def make_section_construction(widget, section_key: str, all_items: bool, strong_
                 indices.append(geo_idx)
                 App.Console.PrintMessage(f"    → Strong candidate geo_idx: {geo_idx}\n")
             else:
-                App.Console.PrintMessage(f"    → Skipped (not strong or no data)\n")
+                App.Console.PrintMessage("    → Skipped (not strong or no data)\n")
     else:
         App.Console.PrintMessage("🔍 Collecting selected item...\n")
         current_item = issue_list.currentItem()

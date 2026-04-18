@@ -44,7 +44,10 @@ def attempt_mesh_repair(mesh_obj):
     try:
         mesh = mesh_obj.Mesh
         if not mesh.isSolid():
-            FreeCAD.Console.PrintMessage("🔧 Skipping repair: mesh is not solid (repairs can be destructive on overlap).\n")
+            FreeCAD.Console.PrintMessage(
+                "🔧 Skipping repair: mesh is not solid "
+                "(repairs can be destructive on overlap).\n"
+            )
             return False
         FreeCAD.Console.PrintMessage(f"🔧 Conservative repair for '{mesh_obj.Name}'...\n")
         mutable_mesh = Mesh.Mesh(mesh.Topology)

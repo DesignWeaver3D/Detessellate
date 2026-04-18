@@ -98,7 +98,7 @@ class EdgeDataCollector(QDockWidget):
             try:
                 vertex_points = [v.Point for v in edge.Vertexes]
                 vertex_count = len(vertex_points)
-            except:
+            except Exception:
                 vertex_points = []
                 vertex_count = 0
 
@@ -122,7 +122,7 @@ class EdgeDataCollector(QDockWidget):
                 # Check for property access errors
                 try:
                     _ = edge.Length
-                except:
+                except Exception:
                     edge_dict['valid'] = False
                     edge_dict['error_reason'] = "Property access error"
                     property_error_count += 1
@@ -196,7 +196,7 @@ class EdgeDataCollector(QDockWidget):
             # Use face directly, no string parsing needed
             plane_normal = selected_faces[0].Surface.Axis
             plane_point = selected_faces[0].CenterOfMass
-            self.info_display.append(f"Using plane defined by selected face")
+            self.info_display.append("Using plane defined by selected face")
         elif len(selected_edges) >= 2:
             # OPTIMIZATION: Use cached vertex points instead of re-accessing edge.Vertexes
             # We need edge names to look up in our cache
@@ -239,7 +239,10 @@ class EdgeDataCollector(QDockWidget):
                     unique_points.append(p2)
 
             if len(unique_points) < 3:
-                self.info_display.append("Error: Need at least 3 unique points to define a plane. Selected edges may be collinear.")
+                self.info_display.append(
+                    "Error: Need at least 3 unique points to define a plane. "
+                    "Selected edges may be collinear."
+                )
                 return
 
             # Calculate plane from the unique points
@@ -274,7 +277,7 @@ class EdgeDataCollector(QDockWidget):
         try:
             # Clamp user input between 1e-6 and 1.0
             tolerance = max(1e-6, min(float(self.tolerance_input.text()), 1.0))
-        except:
+        except Exception:
             tolerance = 1e-6  # fallback if input is invalid
 
         coplanar_edge_indices = set()
@@ -299,7 +302,11 @@ class EdgeDataCollector(QDockWidget):
         # Validate coplanar results - warn if we selected too many edges
         total_valid_edges = len([ed for ed in self.collected_edges if ed['valid']])
         if len(coplanar_edge_indices) > total_valid_edges * 0.5:
-            self.info_display.append(f"Warning: {len(coplanar_edge_indices)} coplanar edges found ({len(coplanar_edge_indices)/total_valid_edges*100:.1f}% of valid edges) - check plane definition.")
+            self.info_display.append(
+                f"Warning: {len(coplanar_edge_indices)} coplanar edges found "
+                f"({len(coplanar_edge_indices)/total_valid_edges*100:.1f}% of valid edges) "
+                f"- check plane definition."
+            )
 
         # OPTIMIZATION: Batch selection instead of individual addSelection calls
         FreeCADGui.Selection.clearSelection()
@@ -390,7 +397,7 @@ class EdgeDataCollector(QDockWidget):
                     edge_vertices_cache.append((v_start, v_end))
                 else:
                     edge_vertices_cache.append(None)
-            except:
+            except Exception:
                 edge_vertices_cache.append(None)
 
         FreeCAD.Console.PrintMessage(f"DEBUG: Cached {len(edge_vertices_cache)} vertex pairs\n")
@@ -475,7 +482,7 @@ class EdgeDataCollector(QDockWidget):
             try:
                 final_sketch.setAutomaticSolve(False)
                 FreeCAD.Console.PrintMessage("DEBUG: Disabled auto-solve\n")
-            except:
+            except Exception:
                 pass
 
         # OPTIMIZATION: Batch add all geometries at once - MASSIVE SPEEDUP!
@@ -484,16 +491,18 @@ class EdgeDataCollector(QDockWidget):
         # Pass True as third parameter to mark as construction during creation
         geo_indices = final_sketch.addGeometry(geometries, True)  # True = construction mode
         add_duration = time.time() - add_start
-        FreeCAD.Console.PrintMessage(f"DEBUG: Batch add complete (with construction flag) in {add_duration:.3f}s\n")
+        FreeCAD.Console.PrintMessage(
+            f"DEBUG: Batch add complete (with construction flag) in {add_duration:.3f}s\n"
+        )
 
         # OPTIMIZATION: Re-enable automatic solving
         if hasattr(final_sketch, 'setAutomaticSolve'):
             try:
                 final_sketch.setAutomaticSolve(True)
-            except:
+            except Exception:
                 pass
 
-        FreeCAD.Console.PrintMessage(f"DEBUG: Calling recompute\n")
+        FreeCAD.Console.PrintMessage("DEBUG: Calling recompute\n")
 
         # Single recompute at the end
         recompute_start = time.time()
@@ -506,7 +515,9 @@ class EdgeDataCollector(QDockWidget):
         num_constraints_added = self._add_coincident_constraints_fast(final_sketch)
         constraint_duration = time.time() - constraint_start
         if num_constraints_added > 0:
-            FreeCAD.Console.PrintMessage(f"DEBUG: Added {num_constraints_added} coincident constraints in {constraint_duration:.3f}s\n")
+            FreeCAD.Console.PrintMessage(
+                f"DEBUG: Added {num_constraints_added} coincident constraints in {constraint_duration:.3f}s\n"
+            )
 
         return final_sketch, num_constraints_added, 0  # Return constraints added count
 
@@ -520,7 +531,7 @@ class EdgeDataCollector(QDockWidget):
 
         # Add sketch to body
         target_body.ViewObject.dropObject(final_sketch, None, '', [])
-        FreeCAD.Console.PrintMessage(f"DEBUG: Sketch added to body\n")
+        FreeCAD.Console.PrintMessage("DEBUG: Sketch added to body\n")
 
         # Set up attachment to body origin
         final_sketch.AttachmentSupport = [(target_body.Origin.OriginFeatures[0], '')]
@@ -542,7 +553,7 @@ class EdgeDataCollector(QDockWidget):
             try:
                 final_sketch.setAutomaticSolve(False)
                 FreeCAD.Console.PrintMessage("DEBUG: Disabled auto-solve\n")
-            except:
+            except Exception:
                 pass
 
         # OPTIMIZATION: Batch add all geometries at once - MASSIVE SPEEDUP!
@@ -551,16 +562,18 @@ class EdgeDataCollector(QDockWidget):
         # Pass True as third parameter to mark as construction during creation
         geo_indices = final_sketch.addGeometry(geometries, True)  # True = construction mode
         add_duration = time.time() - add_start
-        FreeCAD.Console.PrintMessage(f"DEBUG: Batch add complete (with construction flag) in {add_duration:.3f}s\n")
+        FreeCAD.Console.PrintMessage(
+            f"DEBUG: Batch add complete (with construction flag) in {add_duration:.3f}s\n"
+        )
 
         # OPTIMIZATION: Re-enable automatic solving
         if hasattr(final_sketch, 'setAutomaticSolve'):
             try:
                 final_sketch.setAutomaticSolve(True)
-            except:
+            except Exception:
                 pass
 
-        FreeCAD.Console.PrintMessage(f"DEBUG: Calling recompute\n")
+        FreeCAD.Console.PrintMessage("DEBUG: Calling recompute\n")
 
         # Single recompute at the end
         recompute_start = time.time()
@@ -573,7 +586,9 @@ class EdgeDataCollector(QDockWidget):
         num_constraints_added = self._add_coincident_constraints_fast(final_sketch)
         constraint_duration = time.time() - constraint_start
         if num_constraints_added > 0:
-            FreeCAD.Console.PrintMessage(f"DEBUG: Added {num_constraints_added} coincident constraints in {constraint_duration:.3f}s\n")
+            FreeCAD.Console.PrintMessage(
+                f"DEBUG: Added {num_constraints_added} coincident constraints in {constraint_duration:.3f}s\n"
+            )
 
         return final_sketch, num_constraints_added, 0  # Return constraints added count
 
@@ -648,7 +663,10 @@ class EdgeDataCollector(QDockWidget):
         # Check if any edges are selected
         selection = FreeCADGui.Selection.getSelectionEx()
         if not selection or not any(name.startswith("Edge") for s in selection for name in s.SubElementNames):
-            self.info_display.append("Error: No edges selected. Use 'Select Coplanar Edges' or manually select edges first.")
+            self.info_display.append(
+                "Error: No edges selected. Use 'Select Coplanar Edges' "
+                "or manually select edges first."
+            )
             return
 
         start_time = time.time()
@@ -658,7 +676,7 @@ class EdgeDataCollector(QDockWidget):
 
         try:
             FreeCAD.Console.PrintMessage("DEBUG: Starting sketch creation\n")
-            FreeCAD.Console.PrintMessage(f"DEBUG: Processing selection\n")
+            FreeCAD.Console.PrintMessage("DEBUG: Processing selection\n")
 
             selected_edges = []
             selected_objects = FreeCADGui.Selection.getSelectionEx()
@@ -744,7 +762,10 @@ class EdgeDataCollector(QDockWidget):
                 FreeCAD.Console.PrintWarning(f"Could not remove temporary sketch: {e}\n")
 
             # Inform user about constraint addition
-            self.info_display.append(f"Note: Coincident constraints added using fast built-in method ({num_constraints_added} constraints).")
+            self.info_display.append(
+                f"Note: Coincident constraints added using fast built-in method "
+                f"({num_constraints_added} constraints)."
+            )
 
             duration = time.time() - start_time
             self.info_display.append("Sketch created successfully.")
@@ -761,7 +782,7 @@ class EdgeDataCollector(QDockWidget):
             try:
                 if temp_sketch is not None:
                     doc.removeObject(temp_sketch.Name)
-            except:
+            except Exception:
                 pass
 
     def clean_degenerate_edges(self):
@@ -824,7 +845,7 @@ class EdgeDataCollector(QDockWidget):
             duration = time.time() - start_time
             self.info_display.append(f"Created cleaned object: {cleaned_object.Label}")
             self.info_display.append(f"Retained {len(valid_faces)} faces, skipped {skipped_faces} faces with degenerate edges.")
-            self.info_display.append(f"Original object hidden following Part workbench convention.")
+            self.info_display.append("Original object hidden following Part workbench convention.")
             self.info_display.append(f"Elapsed time: {duration:.4f} seconds.")
             self.info_display.append("Automatically collecting edge data from cleaned object...\n")
 

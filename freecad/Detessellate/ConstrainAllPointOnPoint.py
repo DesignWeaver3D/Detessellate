@@ -66,7 +66,7 @@ def get_sketch():
                 obj = edit_obj.Object
                 if hasattr(obj, 'TypeId') and 'Sketcher::SketchObject' in obj.TypeId:
                     sketch = obj
-    except:
+    except Exception:
         pass
 
     # Method 2: Try getActiveObject (fallback)
@@ -76,7 +76,7 @@ def get_sketch():
                 active_view = Gui.ActiveDocument.ActiveView
                 if hasattr(active_view, 'getActiveObject'):
                     sketch = active_view.getActiveObject('sketch')
-        except:
+        except Exception:
             pass
 
     if not sketch:
@@ -118,7 +118,7 @@ def collect_all_vertices(sketch):
                     positions_to_check = [3]  # Center only for full circles
                 else:
                     positions_to_check = [1, 2, 3]  # Start, End, Center for arcs
-            except:
+            except Exception:
                 positions_to_check = [3]  # Default to center
         elif type_id == 'Part::GeomPoint':
             positions_to_check = [1]  # Point geometry
@@ -142,7 +142,7 @@ def collect_all_vertices(sketch):
 
                 vertices_data.append(vertex_data)
 
-            except:
+            except Exception:
                 pass  # Skip positions that can't be accessed
 
     return vertices_data
@@ -329,9 +329,9 @@ def filter_eligible_vertices(sketch, vertex_group, tolerance):
                                 if dist_to_start <= tolerance or dist_to_end <= tolerance:
                                     is_at_endpoint = True
                                     break
-                            except:
+                            except Exception:
                                 pass
-                except:
+                except Exception:
                     pass
 
             if not is_at_endpoint:
@@ -410,7 +410,7 @@ def main():
     if not sketch:
         return
 
-    print(f"\n=== Constrain All Point-On-Point ===")
+    print("\n=== Constrain All Point-On-Point ===")
     print(f"Sketch: {sketch.Label}")
     print(f"Tolerance: {format_distance(DEFAULT_TOLERANCE)}")
 

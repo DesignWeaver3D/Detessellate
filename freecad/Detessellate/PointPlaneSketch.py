@@ -894,7 +894,7 @@ class PointCloudPlaneWidget(QWidget):
             # Also update normal arrow color immediately if it exists
             if self.refined_normal and self.refined_plane_point:
                 self.highlighter.show_normal_arrow(self.refined_plane_point, self.refined_normal, length=50.0)
-            self.info_display.append(f"Changed base highlight color\n")
+            self.info_display.append("Changed base highlight color\n")
         else:  # profile mode
             self.profile_color_index = index
             # Re-highlight profile points if they exist
@@ -903,7 +903,7 @@ class PointCloudPlaneWidget(QWidget):
                 profile_points_fc = [App.Vector(float(pt[0]), float(pt[1]), float(pt[2])) 
                                       for pt in profile_points_np]
                 self.highlighter.highlight_profile_points(profile_points_fc, color, skip_if_too_many=True)
-            self.info_display.append(f"Changed profile highlight color\n")
+            self.info_display.append("Changed profile highlight color\n")
         
         # Update button styles
         for i, button in enumerate(self.color_buttons):
@@ -968,7 +968,7 @@ class PointCloudPlaneWidget(QWidget):
             self.info_display.append(
                 f"Error: New selection must be from {self.source_object.Label} (Name: {self.source_object.Name}).\n"
                 f"You selected from {selected_object.Label} (Name: {selected_object.Name}).\n"
-                f"To work with a different object, close this docker and restart the macro.\n"
+                "To work with a different object, close this docker and restart the macro.\n"
             )
             return
         
@@ -1262,7 +1262,7 @@ class PointCloudPlaneWidget(QWidget):
                 self.highlighter.clear_highlights(clear_profile=False)  # Keep profile highlights
             else:
                 if num_selected > 1000:
-                    self.info_display.append(f"Creating highlight visualization...\n")
+                    self.info_display.append("Creating highlight visualization...\n")
                     Gui.updateGui()
                 
                 # More efficient conversion using direct indexing

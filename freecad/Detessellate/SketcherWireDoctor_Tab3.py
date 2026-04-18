@@ -63,7 +63,7 @@ def get_geometry_name(geo_idx, geometry):
                 return f"Geometry{geo_idx+1}"
         else:
             return f"Geometry{geo_idx+1}"
-    except:
+    except Exception:
         return f"Geometry{geo_idx+1}"
 
 def get_gui_vertex_name(sketch, geo_idx, pos):
@@ -75,12 +75,12 @@ def get_gui_vertex_name(sketch, geo_idx, pos):
                 mapped_geo, mapped_pos = sketch.getGeoVertexIndex(vid)
                 if mapped_geo == geo_idx and mapped_pos == pos:
                     return f"Vertex{vid + 1}"  # 1-indexed for GUI
-            except:
+            except Exception:
                 break
         # Fallback: calculate approximate vertex ID
         approx_vid = geo_idx * 3 + pos
         return f"Vertex{approx_vid}"
-    except:
+    except Exception:
         return f"Vertex{geo_idx * 3 + pos}"
 
 def get_position_name(pos):
@@ -111,7 +111,7 @@ def collect_all_vertices(analyzer):
                         positions_to_check = [3]  # Center only for full circles
                     else:
                         positions_to_check = [1, 2, 3]  # Start, End, Center for arcs
-                except:
+                except Exception:
                     positions_to_check = [3]  # Default to center
             elif geometry.TypeId == 'Part::GeomPoint':
                 positions_to_check = [1]  # Point geometry
@@ -682,14 +682,14 @@ def populate_tab3_list(widget):
                 try:
                     item = QtWidgets.QListWidgetItem(main_text)
                     widget.coincident_list.addItem(item)
-                except:
+                except Exception:
                     pass
-        
+
     except Exception as e:
         # Try to at least clear the list
         try:
             widget.coincident_list.clear()
-        except:
+        except Exception:
             pass
 
 def coincident_all_vertices(widget, analyzer=None):

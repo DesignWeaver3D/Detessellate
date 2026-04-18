@@ -632,7 +632,7 @@ class SketcherWireDoctorWidget(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout(tab)
         
         label = QtWidgets.QLabel(f"Module not found for {tab_name}\n\n"
-                           f"Please ensure SketcherWireDoctor_Tab files are installed.")
+                           "Please ensure SketcherWireDoctor_Tab files are installed.")
         label.setAlignment(QtCore.Qt.AlignCenter)
         label.setStyleSheet("color: red; font-weight: bold;")
         layout.addWidget(label)
