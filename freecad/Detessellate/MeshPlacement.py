@@ -160,12 +160,15 @@ class MeshPlacementDock(QtWidgets.QDockWidget):
         doc.commitTransaction()
         FreeCAD.Console.PrintMessage(f"Objects aligned ({mode}).\n")
 
-# --- Ensure only one dock instance ---
-mw = FreeCADGui.getMainWindow()
-for dock in mw.findChildren(QtWidgets.QDockWidget):
-    if dock.objectName() == "MeshPlacement":
-        mw.removeDockWidget(dock)
-        dock.deleteLater()
 
-dock = MeshPlacementDock()
-mw.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock)
+def run():
+
+    window = FreeCADGui.getMainWindow()
+
+    for dock in window.findChildren(QtWidgets.QDockWidget):
+        if dock.objectName() == "MeshPlacement":
+            window.removeDockWidget(dock)
+            dock.deleteLater()
+
+    dock = MeshPlacementDock()
+    window.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock)

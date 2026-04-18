@@ -382,6 +382,11 @@ def run_unified_macro(auto_mode=True):
 
     return results
 
+
+def run():
+    run_unified_macro(auto_mode=True)
+
+
 # --- Main execution ---
 if __name__ == "__main__":
     run_unified_macro(auto_mode=True)

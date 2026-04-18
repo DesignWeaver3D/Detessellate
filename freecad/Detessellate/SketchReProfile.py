@@ -1085,5 +1085,10 @@ def main():
         import traceback
         App.Console.PrintError(traceback.format_exc())
 
+
+def run():
+    main()
+
+
 if __name__ == "__main__":
     main()

@@ -736,3 +736,7 @@ if __name__ == "__main__":
         App.ActiveDocument.abortTransaction()
         print(f"Error creating TopoMatchSelector: {str(e)}")
         raise
+
+
+def run():
+    create_topo_match_selector()

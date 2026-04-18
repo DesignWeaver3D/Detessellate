@@ -1094,6 +1094,11 @@ def _clear_module_cache() -> None:
             pass  # Module might not exist or be locked
 
 
+
+def run():
+    show_sketcher_wire_doctor()
+
+
 # Main execution
 if __name__ == "__main__":
     show_sketcher_wire_doctor()

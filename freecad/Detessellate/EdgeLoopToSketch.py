@@ -611,5 +611,6 @@ def add_line_distance_constraints(sketch, geo_indices):
     return distance_constraint_count
 
 
-# Run the macro
-edge_loop_to_sketch()
+
+def run():
+    edge_loop_to_sketch()

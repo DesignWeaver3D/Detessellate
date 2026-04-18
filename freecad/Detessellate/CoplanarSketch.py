@@ -849,4 +849,6 @@ def show_edge_data_collector_docker():
             d.deleteLater()
     mw.addDockWidget(Qt.RightDockWidgetArea, EdgeDataCollector())
 
-show_edge_data_collector_docker()
+
+def run():
+    show_edge_data_collector_docker()

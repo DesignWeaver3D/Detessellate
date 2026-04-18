@@ -1579,6 +1579,11 @@ def show_point_cloud_plane_sketch():
     point_cloud_plane_dock.show()
 
 
+
+def run():
+    show_point_cloud_plane_sketch()
+
+
 # Run the macro
 if __name__ == "__main__":
     show_point_cloud_plane_sketch()

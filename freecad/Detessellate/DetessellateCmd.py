@@ -3,7 +3,7 @@
 # SPDX-FileNotice: Part of the Detessellate addon.
 
 from pathlib import Path
-import sys
+from importlib import reload
 
 import FreeCAD
 import FreeCADGui
@@ -16,7 +16,6 @@ from freecad.Detessellate.Misc.Resources import asIcon
 # ---------------------------------------------------------------------------
 
 class MeshPlacementCommand:
-    base_path: Path = Path(__file__).parent / "Macros/MeshPlacement"
 
     def GetResources(self):
         return {
@@ -26,15 +25,10 @@ class MeshPlacementCommand:
         }
 
     def Activated(self):
-        if str(self.base_path) not in sys.path:
-            sys.path.append(str(self.base_path))
         try:
-            import importlib
-            if 'MeshPlacement' in sys.modules:
-                import MeshPlacement
-                importlib.reload(MeshPlacement)
-            else:
-                import MeshPlacement
+            import freecad.Detessellate.MeshPlacement as Macro
+            reload(Macro)
+            Macro.run()
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error running MeshPlacement: {e}\n")
             import traceback
@@ -45,7 +39,6 @@ class MeshPlacementCommand:
 
 
 class MeshToBodyCommand:
-    base_path: Path = Path(__file__).parent / "Macros/MeshToBody"
 
     def GetResources(self):
         return {
@@ -55,16 +48,10 @@ class MeshToBodyCommand:
         }
 
     def Activated(self):
-        if str(self.base_path) not in sys.path:
-            sys.path.append(str(self.base_path))
         try:
-            import importlib
-            if 'MeshToBody' in sys.modules:
-                import MeshToBody
-                importlib.reload(MeshToBody)
-            else:
-                import MeshToBody
-            MeshToBody.run_unified_macro(auto_mode=True)
+            import freecad.Detessellate.MeshToBody as Macro
+            reload(Macro)
+            Macro.run()
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error running MeshToBody: {e}\n")
             import traceback
@@ -79,7 +66,6 @@ class MeshToBodyCommand:
 # ---------------------------------------------------------------------------
 
 class CoplanarSketchCommand:
-    base_path: Path = Path(__file__).parent / "Macros/CoplanarSketch"
 
     def GetResources(self):
         return {
@@ -89,15 +75,10 @@ class CoplanarSketchCommand:
         }
 
     def Activated(self):
-        if str(self.base_path) not in sys.path:
-            sys.path.append(str(self.base_path))
         try:
-            import importlib
-            if 'CoplanarSketch' in sys.modules:
-                import CoplanarSketch
-                importlib.reload(CoplanarSketch)
-            else:
-                import CoplanarSketch
+            import freecad.Detessellate.CoplanarSketch as Macro
+            reload(Macro)
+            Macro.run()
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error running CoplanarSketch: {e}\n")
             import traceback
@@ -108,7 +89,6 @@ class CoplanarSketchCommand:
 
 
 class PointPlaneSketchCommand:
-    base_path: Path = Path(__file__).parent / "Macros/PointPlaneSketch"
 
     def GetResources(self):
         return {
@@ -118,16 +98,10 @@ class PointPlaneSketchCommand:
         }
 
     def Activated(self):
-        if str(self.base_path) not in sys.path:
-            sys.path.append(str(self.base_path))
         try:
-            import importlib
-            if 'PointPlaneSketch' in sys.modules:
-                import PointPlaneSketch
-                importlib.reload(PointPlaneSketch)
-            else:
-                import PointPlaneSketch
-            PointPlaneSketch.show_point_cloud_plane_sketch()
+            import freecad.Detessellate.PointPlaneSketch as Macro
+            reload(Macro)
+            Macro.run()
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error running PointPlaneSketch: {e}\n")
             import traceback
@@ -138,7 +112,6 @@ class PointPlaneSketchCommand:
 
 
 class SketchReProfileCommand:
-    base_path: Path = Path(__file__).parent / "Macros/SketchReProfile"
 
     def GetResources(self):
         return {
@@ -148,16 +121,10 @@ class SketchReProfileCommand:
         }
 
     def Activated(self):
-        if str(self.base_path) not in sys.path:
-            sys.path.append(str(self.base_path))
         try:
-            import importlib
-            if 'SketchReProfile' in sys.modules:
-                import SketchReProfile
-                importlib.reload(SketchReProfile)
-            else:
-                import SketchReProfile
-            SketchReProfile.main()
+            import freecad.Detessellate.SketchReProfile as Macro
+            reload(Macro)
+            Macro.run()
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error running SketchReProfile: {e}\n")
             import traceback
@@ -168,7 +135,6 @@ class SketchReProfileCommand:
 
 
 class ConstrainAllPointOnPointCommand:
-    base_path: Path = Path(__file__).parent / "Macros/ConstrainAllPointOnPoint"
 
     def GetResources(self):
         return {
@@ -178,16 +144,10 @@ class ConstrainAllPointOnPointCommand:
         }
 
     def Activated(self):
-        if str(self.base_path) not in sys.path:
-            sys.path.append(str(self.base_path))
         try:
-            import importlib
-            if 'ConstrainAllPointOnPoint' in sys.modules:
-                import ConstrainAllPointOnPoint
-                importlib.reload(ConstrainAllPointOnPoint)
-            else:
-                import ConstrainAllPointOnPoint
-            ConstrainAllPointOnPoint.main()
+            import freecad.Detessellate.ConstrainAllPointOnPoint as Macro
+            reload(Macro)
+            Macro.run()
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error running ConstrainAllPointOnPoint: {e}\n")
             import traceback
@@ -210,7 +170,6 @@ class ConstrainAllPointOnPointCommand:
 
 
 class SketcherWireDoctorCommand:
-    base_path: Path = Path(__file__).parent / "Macros/SketcherWireDoctor"
 
     def GetResources(self):
         return {
@@ -220,16 +179,10 @@ class SketcherWireDoctorCommand:
         }
 
     def Activated(self):
-        if str(self.base_path) not in sys.path:
-            sys.path.append(str(self.base_path))
         try:
-            import importlib
-            if 'SketcherWireDoctor_Main' in sys.modules:
-                import SketcherWireDoctor_Main
-                importlib.reload(SketcherWireDoctor_Main)
-            else:
-                import SketcherWireDoctor_Main
-            SketcherWireDoctor_Main.show_sketcher_wire_doctor()
+            import freecad.Detessellate.SketcherWireDoctor_Main as Macro
+            reload(Macro)
+            Macro.run()
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error running SketcherWireDoctor: {e}\n")
             import traceback
@@ -244,7 +197,6 @@ class SketcherWireDoctorCommand:
 # ---------------------------------------------------------------------------
 
 class EdgeLoopSelectorCommand:
-    base_path: Path = Path(__file__).parent / "Macros/EdgeLoopSelector"
 
     def GetResources(self):
         return {
@@ -254,15 +206,10 @@ class EdgeLoopSelectorCommand:
         }
 
     def Activated(self):
-        if str(self.base_path) not in sys.path:
-            sys.path.append(str(self.base_path))
         try:
-            import importlib
-            if 'EdgeLoopSelector' in sys.modules:
-                import EdgeLoopSelector
-                importlib.reload(EdgeLoopSelector)
-            else:
-                import EdgeLoopSelector
+            import freecad.Detessellate.EdgeLoopSelector as Macro
+            reload(Macro)
+            Macro.run()
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error running EdgeLoopSelector: {e}\n")
             import traceback
@@ -273,7 +220,6 @@ class EdgeLoopSelectorCommand:
 
 
 class EdgeLoopToSketchCommand:
-    base_path: Path = Path(__file__).parent / "Macros/EdgeLoopToSketch"
 
     def GetResources(self):
         return {
@@ -283,15 +229,10 @@ class EdgeLoopToSketchCommand:
         }
 
     def Activated(self):
-        if str(self.base_path) not in sys.path:
-            sys.path.append(str(self.base_path))
         try:
-            import importlib
-            if 'EdgeLoopToSketch' in sys.modules:
-                import EdgeLoopToSketch
-                importlib.reload(EdgeLoopToSketch)
-            else:
-                import EdgeLoopToSketch
+            import freecad.Detessellate.EdgeLoopToSketch as Macro
+            reload(Macro)
+            Macro.run()
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error running EdgeLoopToSketch: {e}\n")
             import traceback
@@ -302,7 +243,6 @@ class EdgeLoopToSketchCommand:
 
 
 class ReconstructSolidCommand:
-    base_path: Path = Path(__file__).parent / "Macros/ReconstructSolid"
 
     def GetResources(self):
         return {
@@ -312,15 +252,10 @@ class ReconstructSolidCommand:
         }
 
     def Activated(self):
-        if str(self.base_path) not in sys.path:
-            sys.path.append(str(self.base_path))
         try:
-            import importlib
-            if 'ReconstructSolid' in sys.modules:
-                import ReconstructSolid
-                importlib.reload(ReconstructSolid)
-            else:
-                import ReconstructSolid
+            import freecad.Detessellate.ReconstructSolid as Macro
+            reload(Macro)
+            Macro.run()
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error running ReconstructSolid: {e}\n")
             import traceback
@@ -331,7 +266,6 @@ class ReconstructSolidCommand:
 
 
 class TopoMatchSelectorCommand:
-    base_path: Path = Path(__file__).parent / "Macros/TopoMatchSelector"
 
     def GetResources(self):
         return {
@@ -341,16 +275,10 @@ class TopoMatchSelectorCommand:
         }
 
     def Activated(self):
-        if str(self.base_path) not in sys.path:
-            sys.path.append(str(self.base_path))
         try:
-            import importlib
-            if 'TopoMatchSelector' in sys.modules:
-                import TopoMatchSelector
-                importlib.reload(TopoMatchSelector)
-            else:
-                import TopoMatchSelector
-            TopoMatchSelector.create_topo_match_selector()
+            import freecad.Detessellate.TopoMatchSelector as Macro
+            reload(Macro)
+            Macro.run()
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error running TopoMatchSelector: {e}\n")
             import traceback
@@ -361,7 +289,6 @@ class TopoMatchSelectorCommand:
 
 
 class VarSetUpdateCommand:
-    base_path: Path = Path(__file__).parent / "Macros/VarSet-Update"
 
     def GetResources(self):
         return {
@@ -371,15 +298,10 @@ class VarSetUpdateCommand:
         }
 
     def Activated(self):
-        if str(self.base_path) not in sys.path:
-            sys.path.append(str(self.base_path))
         try:
-            import importlib
-            if 'VarSetUpdate' in sys.modules:
-                import VarSetUpdate
-                importlib.reload(VarSetUpdate)
-            else:
-                import VarSetUpdate
+            import freecad.Detessellate.VarSetUpdate as Macro
+            reload(Macro)
+            Macro.run()
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error running VarSet Update: {e}\n")
             import traceback
@@ -394,7 +316,6 @@ class VarSetUpdateCommand:
 # ---------------------------------------------------------------------------
 
 class CreateSketchToolbarCommand:
-    wb_path: Path = Path(__file__).parent
 
     def GetResources(self):
         return {
@@ -421,17 +342,17 @@ class CreateSketchToolbarCommand:
                 "<b>SketchReProfile</b><br><br>"
                 "Draws lines, circles, arcs, and splines over construction geometry<br><br>"
                 "<i>Detessellate_SketchReProfile</i>",
-                lambda: self._run_macro('SketchReProfile', 'SketchReProfile', 'main'))
+                lambda: self._run_macro('freecad.Detessellate.SketchReProfile'))
             self._add_button(custom_toolbar, 'ConstrainAllPointOnPoint', "Constrain All Point-On-Point",
                 "<b>Constrain All Point-On-Point</b><br><br>"
                 "Automatically add missing coincident constraints<br><br>"
                 "<i>Detessellate_ConstrainAllPointOnPoint</i>",
-                lambda: self._run_macro('ConstrainAllPointOnPoint', 'ConstrainAllPointOnPoint', 'main'))
+                lambda: self._run_macro('freecad.Detessellate.ConstrainAllPointOnPoint'))
             self._add_button(custom_toolbar, 'SketcherWireDoctor', "Sketcher Wire Doctor",
                 "<b>SketcherWireDoctor</b><br><br>"
                 "Detects sketch issues and provides repair tools<br><br>"
                 "<i>Detessellate_SketcherWireDoctor</i>",
-                lambda: self._run_macro('SketcherWireDoctor', 'SketcherWireDoctor_Main', 'show_sketcher_wire_doctor'))
+                lambda: self._run_macro('freecad.Detessellate.SketcherWireDoctor_Main'))
 
             self._connect_workbench_toggle(custom_toolbar, "SketcherWorkbench",
                                            '_detessellate_sketch_toolbars')
@@ -455,19 +376,12 @@ class CreateSketchToolbarCommand:
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error adding {label} button: {e}\n")
 
-    def _run_macro(self, macro_folder, module_name, func_name):
-        macro_path = self.wb_path / "Macros" / macro_folder
+    def _run_macro(self, module_name):
         try:
-            if str(macro_path) not in sys.path:
-                sys.path.append(str(macro_path))
             import importlib
-            mod = sys.modules.get(module_name)
-            if mod:
-                importlib.reload(mod)
-            else:
-                import importlib as il
-                mod = il.import_module(module_name)
-            getattr(mod, func_name)()
+            Macro = importlib.import_module(module_name)
+            reload(Macro)
+            Macro.run()
         except Exception as e:
             FreeCAD.Console.PrintError(f"Error running {module_name}: {e}\n")
             import traceback

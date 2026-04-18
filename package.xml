@@ -33,7 +33,7 @@ standalone = 'no'
     >DesignWeaver3D</maintainer>
   <!--[ Licenses ]―――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
   <license
-    file = 'LICENSE-CODE'
+    file = 'LICENSE'
     >LGPL-2.1-or-later</license>
   <!--[ Icon ]―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
   <icon>freecad/Detessellate/Resources/Icons/Detessellate.svg</icon>
@@ -48,6 +48,9 @@ standalone = 'no'
   <url
     type = 'bugtracker'
     >https://github.com/DesignWeaver3D/Detessellate/issues</url>
+  <url
+    type = 'documentation'
+    >https://github.com/DesignWeaver3D/Detessellate/tree/main/Documentation</url>
   <url
     type = 'readme'
     >https://raw.githubusercontent.com/DesignWeaver3D/Detessellate/refs/heads/addon-manager-restructure/Resources/Documents/Overview.md</url>

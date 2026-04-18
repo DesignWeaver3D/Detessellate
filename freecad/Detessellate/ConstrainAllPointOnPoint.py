@@ -510,6 +510,11 @@ def main():
         print("=" * 50)
 
 
+
+def run():
+    main()
+
+
 # Run the macro
 if __name__ == "__main__":
     main()

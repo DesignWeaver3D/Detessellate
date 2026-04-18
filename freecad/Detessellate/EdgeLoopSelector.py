@@ -347,5 +347,6 @@ def select_connected_loop_or_sketch():
         f"Selected {len(all_edges_to_select)} edges.\n"
     )
 
-# --- Run the macro ---
-select_connected_loop_or_sketch()
+
+def run():
+    select_connected_loop_or_sketch()

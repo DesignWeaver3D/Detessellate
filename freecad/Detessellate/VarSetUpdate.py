@@ -452,10 +452,11 @@ class UpdateVarSetDialog(QtWidgets.QDialog):
                 self.results_text.append(f"Failed to show error dialog: {inner_e}")
 
 
-# Run the dialog
-app = QtWidgets.QApplication.instance()
-if not app:
-    app = QtWidgets.QApplication([])
 
-dialog = UpdateVarSetDialog()
-dialog.exec()
+def run():
+    app = QtWidgets.QApplication.instance()
+    if not app:
+        app = QtWidgets.QApplication([])
+
+    dialog = UpdateVarSetDialog()
+    dialog.exec()
