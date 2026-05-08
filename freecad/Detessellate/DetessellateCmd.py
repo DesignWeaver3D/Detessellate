@@ -557,9 +557,9 @@ command_list = [
     ("Detessellate_ReconstructSolid",       ReconstructSolidCommand),
     ("Detessellate_TopoMatchSelector",      TopoMatchSelectorCommand),
     ("Detessellate_VarSetUpdate",           VarSetUpdateCommand),
-    ("CreateSketchToolbar",                 CreateSketchToolbarCommand),
-    ("CreatePartDesignToolbar",             CreatePartDesignToolbarCommand),
-    ("CreateGlobalToolbar",                 CreateGlobalToolbarCommand),
+    ("Detessellate_CreateSketchToolbar",                 CreateSketchToolbarCommand),
+    ("Detessellate_CreatePartDesignToolbar",             CreatePartDesignToolbarCommand),
+    ("Detessellate_CreateGlobalToolbar",                 CreateGlobalToolbarCommand),
 ]
 
 for cmd_name, cmd_class in command_list:

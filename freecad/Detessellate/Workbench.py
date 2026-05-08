@@ -56,19 +56,19 @@ class DetessellateWorkbench(FreeCADGui.Workbench):
 
     def _auto_create_sketch_toolbar(self):
         try:
-            FreeCADGui.runCommand('CreateSketchToolbar')
+            FreeCADGui.runCommand('Detessellate_CreateSketchToolbar')
         except Exception as e:
             FreeCAD.Console.PrintWarning(f"Could not auto-create sketch toolbar: {e}\n")
 
     def _auto_create_partdesign_toolbar(self):
         try:
-            FreeCADGui.runCommand('CreatePartDesignToolbar')
+            FreeCADGui.runCommand('Detessellate_CreatePartDesignToolbar')
         except Exception as e:
             FreeCAD.Console.PrintWarning(f"Could not auto-create PartDesign toolbar: {e}\n")
 
     def _auto_create_global_toolbar(self):
         try:
-            FreeCADGui.runCommand('CreateGlobalToolbar')
+            FreeCADGui.runCommand('Detessellate_CreateGlobalToolbar')
         except Exception as e:
             FreeCAD.Console.PrintWarning(f"Could not auto-create Global toolbar: {e}\n")
 
