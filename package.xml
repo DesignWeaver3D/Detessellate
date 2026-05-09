@@ -1,5 +1,5 @@
 <?xml
-version = '1.0.0'
+version = '1.0'
 encoding = 'UTF-8'
 standalone = 'no'
 ?>
@@ -12,7 +12,7 @@ standalone = 'no'
   <!--[ Versions ]―――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
   <freecadmin>1.1.0</freecadmin>
   <pythonmin>3.11</pythonmin>
-  <version>0.4.2</version>
+  <version>1.0.0</version>
   <date>2026-04-01</date>
   <!--[ Dependencies ]―――――――――――――――――――――――――――――――――――――――――――――――――――――-->
   <depend
