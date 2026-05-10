@@ -60,6 +60,7 @@ Install via **FreeCAD Addon Manager** by adding the Detessellate Repository to t
 - 🎯 Integration with FreeCAD Addon Manager
 
 ## 📜 Changelog
+- **v1.1.0** (2026-05-07) - PointPlaneSketch greatly improved with faster performance and a voxel filter for reducing points prior to creating a sketch.
 - **v1.0.0** (2026-05-07) - Restructured as a proper FreeCAD workbench for Addon Manager indexing.
 - **v0.4.2** (2026-04-01) - SketcherWireDoctor updated to v1.0.0, adding support for normal external geometry.
 - **v0.4.1** (2026-01-31) - Fixed ConstrainAllPointOnPoint default tolerance to 50 microns
