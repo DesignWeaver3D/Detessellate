@@ -2,25 +2,27 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 # SPDX-FileCopyrightText: 2024 DesignWeaver3D
 # SPDX-FileNotice: Part of the Detessellate addon.
+
 """
-Point Cloud Plane Sketch - FreeCAD Macro
+Point Plane Sketch - FreeCAD Macro
 
 Workflow:
-1. User selects 3+ vertices from point cloud to define approximate plane
-2. Interactive docker shows tolerance adjustment with live preview
-3. All points within tolerance are selected and highlighted
-4. RANSAC fits best plane to selected points
-5. User chooses destination (Standalone/New Body/Existing Body)
-6. Creates datum plane and sketch with projected construction points
+1. Using Part workbench convert Mesh to Points.
+2. User selects 3+ vertices from points shape object to define approximate plane
+3. Interactive docker shows tolerance adjustment with live preview
+4. All points within tolerance are selected and highlighted
+5. RANSAC fits best plane to selected points
+6. User defines voxel filter size if desired (recommended if selection is >1k points)
+7. User chooses new sketch destination (Standalone/New Body/Existing Body)
+8. Creates datum plane and sketch with projected construction points
 
-Author: Based on SketcherWireDoctor and CoplanarSketch patterns
-Version: 1.2
 """
 
 from __future__ import annotations
 
 # Standard library
 import math
+import re
 import traceback
 
 # Third-party
@@ -47,14 +49,15 @@ class Config:
     MAX_TOLERANCE = 50.0
     TOLERANCE_STEP = 0.1
     TOLERANCE_DECIMALS = 3
-
+    
     RANSAC_ITERATIONS = 200
-
+    MAX_RANSAC_POINTS = 10000
+    
     HIGHLIGHT_POINT_SIZE = 8.0
 
     # Default highlight color index (Yellow)
     DEFAULT_HIGHLIGHT_COLOR_INDEX = 3
-
+    
     # Default highlight colors (R, G, B)
     HIGHLIGHT_COLORS = [
         (1.0, 0.0, 0.0),    # Red
@@ -66,7 +69,7 @@ class Config:
         (1.0, 0.5, 0.0),    # Orange
         (1.0, 1.0, 1.0),    # White
     ]
-
+    
     COLOR_BUTTON_SIZE = (25, 25, 35, 35)  # min_w, min_h, max_w, max_h
 
 class PointCloudAnalyzer:
@@ -86,19 +89,19 @@ class PointCloudAnalyzer:
             return App.Vector(0, 0, 1)
 
         normal = normal.normalize()
-
+        
         # Get view direction (points INTO the screen, away from camera)
         try:
             view_dir = Gui.ActiveDocument.ActiveView.getViewDirection()
         except Exception:
             view_dir = App.Vector(0, 0, 1)
-
+        
         # view_dir points INTO screen, we want normal to point OUT (opposite direction)
         # If dot product < 0, they already point opposite ways - keep normal as is
         # If dot product > 0, they point same way - flip normal
         if normal.dot(view_dir) > 0:
             normal = -normal
-
+            
         return normal
 
     @staticmethod
@@ -204,6 +207,75 @@ class PointCloudAnalyzer:
         normal_array = np.array([normal.x, normal.y, normal.z])
         distances = np.abs(np.dot(points_np - plane_point_array, normal_array))
         return np.where(distances <= tolerance)[0].tolist()
+
+    @staticmethod
+    def voxel_filter(base_np: np.ndarray, profile_np: np.ndarray,
+                     placement: App.Placement, cell_size: float):
+        """
+        Reduce base and profile point sets using a 3D voxel grid aligned to the
+        fitted plane's local coordinate system.
+
+        Points from both sets are pooled and binned together. Within each occupied
+        cell the point whose local XY position is closest to the cell's XY center
+        is retained, regardless of which set it came from. Survivors are then split
+        back into base and profile sets using their original source tags.
+
+        Args:
+            base_np:    Nx3 numpy array of base plane points in global coords.
+            profile_np: Mx3 numpy array of profile plane points in global coords
+                        (may be empty).
+            placement:  The sketch placement whose inverse transforms global →
+                        plane-local coordinates.
+            cell_size:  Voxel cell size in mm (cube side length).
+
+        Returns:
+            (filtered_base_np, filtered_profile_np) both in global coordinates.
+        """
+        # Build combined array with source tag: 0 = base, 1 = profile
+        has_profile = profile_np is not None and len(profile_np) > 0
+        if has_profile:
+            combined = np.vstack([base_np, profile_np])
+            tags = np.array([0] * len(base_np) + [1] * len(profile_np), dtype=np.int8)
+        else:
+            combined = base_np
+            tags = np.zeros(len(base_np), dtype=np.int8)
+
+        # Transform all points to plane-local space in one vectorised operation
+        inv = placement.inverse()
+        mat = np.array(inv.Matrix.A).reshape(4, 4)
+        ones = np.ones((len(combined), 1))
+        homogeneous = np.hstack([combined, ones])          # Nx4
+        local = (mat @ homogeneous.T).T[:, :3]            # Nx3 in local space
+
+        # Compute cell indices from local XY only (Z ignored for binning)
+        ix = np.floor(local[:, 0] / cell_size).astype(np.int32)
+        iy = np.floor(local[:, 1] / cell_size).astype(np.int32)
+
+        # Cell center XY in local space
+        cx = (ix + 0.5) * cell_size
+        cy = (iy + 0.5) * cell_size
+
+        # 2D distance from each point to its cell center (local XY only)
+        dx = local[:, 0] - cx
+        dy = local[:, 1] - cy
+        dist2 = dx * dx + dy * dy
+
+        # For each cell keep the index of the point closest to XY center
+        cell_map: dict[tuple[int, int], tuple[float, int]] = {}
+        for i, (key_x, key_y, d2) in enumerate(zip(ix, iy, dist2)):
+            key = (int(key_x), int(key_y))
+            if key not in cell_map or d2 < cell_map[key][0]:
+                cell_map[key] = (d2, i)
+
+        kept = np.array([idx for _, idx in cell_map.values()], dtype=np.int64)
+
+        # Split survivors back by source tag
+        kept_tags = tags[kept]
+        filtered_base = combined[kept[kept_tags == 0]]
+        filtered_profile = combined[kept[kept_tags == 1]] if has_profile else np.empty((0, 3))
+
+        return filtered_base, filtered_profile
+
 
 class PointHighlighter:
     """Handles point highlighting in the 3D view via Coin3D scene graph nodes."""
@@ -356,7 +428,7 @@ class PointHighlighter:
                 pass
         self._arrow_sep = None
         self._arrow_color = None
-
+    
     def show_normal_arrow(self, origin: App.Vector, normal: App.Vector, length: float = 50.0):
         """
         Show a line indicating the plane normal direction via Coin3D.
@@ -421,7 +493,7 @@ class PointHighlighter:
         except Exception as e:
             print(f"Error creating normal arrow: {e}")
             traceback.print_exc()
-
+    
 class SketchCreator:
     """Create datum planes and sketches with viewer-facing orientation."""
 
@@ -492,7 +564,7 @@ class SketchCreator:
             0, 0, 0, 1
         )
         rot = App.Placement(matrix).Rotation
-
+        
         return App.Placement(point, rot)
 
     # ---------------------------
@@ -533,13 +605,13 @@ class SketchCreator:
         origin = body.Origin
         if not hasattr(origin, 'OriginFeatures'):
             return None
-
+        
         # Look for XY_Plane in the origin features
         for feat in origin.OriginFeatures:
             # Check both Name and Label for XY_Plane
             if 'XY_Plane' in feat.Name or feat.Label == 'XY_Plane':
                 return feat
-
+        
         # Fallback: return first origin feature if it exists
         return origin.OriginFeatures[0] if origin.OriginFeatures else None
 
@@ -572,13 +644,13 @@ class SketchCreator:
         if body is None:
             body = doc.addObject("PartDesign::Body", "Body")
             doc.recompute()
-
+    
         placement = SketchCreator.create_placement_from_plane(normal, plane_point)
-
+    
         # Create proper PartDesign datum plane inside the body
         datum = body.newObject("PartDesign::Plane", "DatumPlane")
         doc.recompute()
-
+        
         # Attach datum plane to body's XY origin plane with attachment offset
         xy_plane = SketchCreator._get_body_xy_plane(body)
         if xy_plane:
@@ -589,19 +661,19 @@ class SketchCreator:
             # Fallback if no origin plane available
             datum.MapMode = 'Deactivated'
             datum.Placement = placement
-
+        
         datum.recompute()
         doc.recompute()
-
-        # Create proper PartDesign sketch inside the body
+    
+        # Create proper PartDesign sketch inside the body  
         sketch = body.newObject("Sketcher::SketchObject", "PointCloudSketch")
         sketch.AttachmentSupport = [(datum, '')]
         sketch.MapMode = 'FlatFace'
         doc.recompute()
-
+    
         SketchCreator._add_construction_points(sketch, points, placement)
         doc.recompute()
-
+    
         return datum, sketch, body
 
     # ---------------------------
@@ -610,46 +682,54 @@ class SketchCreator:
     @staticmethod
     def _add_construction_points(sketch, points: list[App.Vector], placement: App.Placement) -> None:
         """Add points as construction geometry to a sketch."""
-        # Transform points from global space to sketch's local coordinate system
-        # The sketch is attached to the datum plane, so we need to use the placement
-        # that was used to position the datum plane
-        inverse_placement = placement.inverse()
-        for point in points:
-            local_point = inverse_placement.multVec(point)
-            # Project onto XY plane (Z=0) in sketch coordinates
-            geo_point = Part.Point(App.Vector(local_point.x, local_point.y, 0))
-            sketch.addGeometry(geo_point, True)
+        if not points:
+            return
+
+        # Vectorise the global → local coordinate transform using the inverse placement matrix
+        inv = placement.inverse()
+        mat = np.array(inv.Matrix.A).reshape(4, 4)
+        pts_np = np.array([[p.x, p.y, p.z] for p in points])
+        ones = np.ones((len(pts_np), 1))
+        local = (mat @ np.hstack([pts_np, ones]).T).T[:, :2]  # Nx2 local XY, Z discarded
+
+        for lx, ly in local:
+            sketch.addGeometry(Part.Point(App.Vector(float(lx), float(ly), 0)), True)
 
 class PointCloudPlaneWidget(QWidget):
     """Main widget for the Point Cloud Plane Sketch docker."""
-
+    
     def __init__(self):
         super().__init__()
-
+        
         self.all_points_np = None  # Numpy array of all points (Nx3)
         self.source_object = None
         self.source_object_visibility = None  # Store original visibility state
         self.initial_normal = None
         self.initial_plane_point = None
-
+        
         self.selected_indices = []
         self.refined_normal = None
         self.refined_plane_point = None
-
+        
         # Profile plane selection
         self.profile_indices = []
         self.profile_color_index = 4  # Default to Magenta (index 4) for profile points
         self.color_mode = "base"  # "base" or "profile" - which colors the swatches control
 
+        # Voxel filter state
+        self.filter_active = False
+        self.filtered_base_np = None    # Nx3 global coords after filtering
+        self.filtered_profile_np = None # Mx3 global coords after filtering
+        
         self.highlighter = PointHighlighter()
         self.current_color_index = Config.DEFAULT_HIGHLIGHT_COLOR_INDEX
-
+        
         self._setup_ui()
-
+    
     def _setup_ui(self):
         """Setup the user interface."""
         layout = QVBoxLayout(self)
-
+        
         # Instructions
         instructions = QLabel(
             "1. Select 3+ vertices from point cloud\n"
@@ -660,27 +740,27 @@ class PointCloudPlaneWidget(QWidget):
         )
         instructions.setWordWrap(True)
         layout.addWidget(instructions)
-
+        
         # Initialize button
         self.init_button = QPushButton("Collect Vertex Data")
         self.init_button.clicked.connect(self._on_collect_button_pressed)
         layout.addWidget(self.init_button)
-
+        
         # New selection button (initially hidden)
         self.new_selection_button = QPushButton("New Selection (Select 3+ vertices)")
         self.new_selection_button.clicked.connect(self._on_new_selection)
         self.new_selection_button.setVisible(False)
         layout.addWidget(self.new_selection_button)
-
+        
         # Tolerance section (initially hidden)
         self.tolerance_widget = QWidget()
         tolerance_layout = QVBoxLayout(self.tolerance_widget)
         tolerance_layout.setContentsMargins(0, 0, 0, 0)
-
+        
         # Tolerance input
         tol_input_layout = QHBoxLayout()
         tol_input_layout.addWidget(QLabel("Tolerance (mm):"))
-
+        
         self.tolerance_spin = QDoubleSpinBox()
         self.tolerance_spin.setRange(Config.MIN_TOLERANCE, Config.MAX_TOLERANCE)
         self.tolerance_spin.setValue(Config.DEFAULT_TOLERANCE)
@@ -688,27 +768,27 @@ class PointCloudPlaneWidget(QWidget):
         self.tolerance_spin.setSingleStep(Config.TOLERANCE_STEP)
         self.tolerance_spin.setMinimumWidth(100)
         tol_input_layout.addWidget(self.tolerance_spin)
-
+        
         self.update_button = QPushButton("Update Preview")
         self.update_button.clicked.connect(self._update_preview)
         tol_input_layout.addWidget(self.update_button)
-
+        
         tol_input_layout.addStretch()
         tolerance_layout.addLayout(tol_input_layout)
-
+        
         # Point count display
         self.count_label = QLabel("Selected: 0 points")
         self.count_label.setStyleSheet("font-weight: bold; font-size: 11pt;")
         tolerance_layout.addWidget(self.count_label)
-
+        
         # Color selection
         self._setup_color_selector(tolerance_layout)
-
+        
         # Profile plane section
         profile_label = QLabel("Profile Plane (Optional):")
         profile_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
         tolerance_layout.addWidget(profile_label)
-
+        
         # Profile distance
         profile_dist_layout = QHBoxLayout()
         profile_dist_layout.addWidget(QLabel("Offset Distance (mm):"))
@@ -719,7 +799,7 @@ class PointCloudPlaneWidget(QWidget):
         profile_dist_layout.addWidget(self.profile_distance_edit)
         profile_dist_layout.addStretch()
         tolerance_layout.addLayout(profile_dist_layout)
-
+        
         # Profile tolerance
         profile_tol_layout = QHBoxLayout()
         profile_tol_layout.addWidget(QLabel("Tolerance (mm):"))
@@ -730,74 +810,106 @@ class PointCloudPlaneWidget(QWidget):
         profile_tol_layout.addWidget(self.profile_tolerance_edit)
         profile_tol_layout.addStretch()
         tolerance_layout.addLayout(profile_tol_layout)
-
+        
         # Add profile points button
         self.add_profile_button = QPushButton("Add Profile Plane Points")
         self.add_profile_button.clicked.connect(self._add_profile_points)
         self.add_profile_button.setEnabled(False)
         tolerance_layout.addWidget(self.add_profile_button)
-
+        
         # Profile count display
         self.profile_count_label = QLabel("")
         self.profile_count_label.setStyleSheet("font-style: italic;")
         tolerance_layout.addWidget(self.profile_count_label)
+
+        # Voxel filter section
+        voxel_label = QLabel("Voxel Filter (Optional):")
+        voxel_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
+        tolerance_layout.addWidget(voxel_label)
+
+        voxel_input_layout = QHBoxLayout()
+        voxel_input_layout.addWidget(QLabel("Cell Size (mm):"))
+        self.voxel_size_spin = QDoubleSpinBox()
+        self.voxel_size_spin.setRange(0.1, 100.0)
+        self.voxel_size_spin.setValue(1.0)
+        self.voxel_size_spin.setDecimals(1)
+        self.voxel_size_spin.setSingleStep(0.1)
+        self.voxel_size_spin.setMinimumWidth(80)
+        voxel_input_layout.addWidget(self.voxel_size_spin)
+
+        self.apply_filter_button = QPushButton("Apply Filter")
+        self.apply_filter_button.clicked.connect(self._apply_voxel_filter)
+        self.apply_filter_button.setEnabled(False)
+        voxel_input_layout.addWidget(self.apply_filter_button)
+
+        self.clear_filter_button = QPushButton("Clear Filter")
+        self.clear_filter_button.clicked.connect(self._clear_voxel_filter)
+        self.clear_filter_button.setEnabled(False)
+        voxel_input_layout.addWidget(self.clear_filter_button)
+
+        voxel_input_layout.addStretch()
+        tolerance_layout.addLayout(voxel_input_layout)
+
+        self.voxel_status_label = QLabel("")
+        self.voxel_status_label.setStyleSheet("font-style: italic;")
+        tolerance_layout.addWidget(self.voxel_status_label)
 
         # Create sketch button
         self.create_button = QPushButton("Create Sketch")
         self.create_button.clicked.connect(self._create_sketch)
         self.create_button.setEnabled(False)
         tolerance_layout.addWidget(self.create_button)
-
+        
         self.tolerance_widget.setVisible(False)
         layout.addWidget(self.tolerance_widget)
-
+        
         # Info display
         self.info_display = QTextEdit()
         self.info_display.setReadOnly(True)
         self.info_display.setMaximumHeight(150)
         layout.addWidget(self.info_display)
-
+        
         # Clear button
         clear_button = QPushButton("Clear Messages")
         clear_button.clicked.connect(self.info_display.clear)
         layout.addWidget(clear_button)
-
+        
         layout.addStretch()
-
+    
     def _setup_color_selector(self, layout):
         """Setup color selection widget."""
         color_box = QHBoxLayout()
         self.color_mode_label = QLabel("Highlight Color:")
         color_box.addWidget(self.color_mode_label)
-
+        
         self.color_buttons = []
-
+        
         for i, color in enumerate(Config.HIGHLIGHT_COLORS):
             button = self._create_color_button(color, i)
             self.color_buttons.append(button)
             color_box.addWidget(button)
-
+        
         color_box.addStretch()
         layout.addLayout(color_box)
-
+    
     def _create_color_button(self, color, index):
         """Create a single color button."""
         button = QToolButton()
         min_w, min_h, max_w, max_h = Config.COLOR_BUTTON_SIZE
         button.setMinimumSize(min_w, min_h)
         button.setMaximumSize(max_w, max_h)
-
+        
         self._update_color_button_style(button, color, index == self.current_color_index)
         button.clicked.connect(lambda checked=False, c=color, idx=index: self._set_highlight_color(c, idx))
-
+        
         return button
-
+    
     def _update_color_button_style(self, button, color, is_selected):
         """Update the style of a color button."""
         rgb = f"rgb({int(color[0]*255)}, {int(color[1]*255)}, {int(color[2]*255)})"
         border = "3px solid white" if is_selected else "2px solid black"
         button.setStyleSheet(f"background-color: {rgb}; border: {border};")
-
+    
     def _set_highlight_color(self, color, index):
         """Set the highlight color based on current mode (base or profile)."""
         if self.color_mode == "base":
@@ -814,22 +926,22 @@ class PointCloudPlaneWidget(QWidget):
                 profile_points_np = self.all_points_np[self.profile_indices]
                 self.highlighter.highlight_profile_points(profile_points_np, color)
             self.info_display.append("Changed profile highlight color\n")
-
+        
         # Update button styles
         for i, button in enumerate(self.color_buttons):
             button_color = Config.HIGHLIGHT_COLORS[i]
             self._update_color_button_style(button, button_color, i == index)
-
+    
     def _on_new_selection(self):
         """Prepare for a new manual vertex selection without recollecting all points."""
         # Clear current highlights
         self.highlighter.clear_highlights()
-
+    
         # Show the source object again so user can pick vertices
         if self.source_object and hasattr(self.source_object, 'ViewObject'):
             self.source_object.ViewObject.Visibility = True
             self.info_display.append(f"Showing {self.source_object.Label} (Name: {self.source_object.Name}) for new selection\n")
-
+    
         # Reset only the selection state (keep all_points_np cached!)
         self.initial_normal = None
         self.initial_plane_point = None
@@ -839,15 +951,23 @@ class PointCloudPlaneWidget(QWidget):
         self.refined_plane_point = None
         self.profile_indices = []  # Clear profile points
 
+        # Reset filter state
+        self.filter_active = False
+        self.filtered_base_np = None
+        self.filtered_profile_np = None
+        self.voxel_status_label.setText("")
+        self.apply_filter_button.setEnabled(False)
+        self.clear_filter_button.setEnabled(False)
+    
         # Reset tolerance to default
         self.tolerance_spin.setValue(Config.DEFAULT_TOLERANCE)
-
+    
         # Clear display
         self.count_label.setText("Selected: 0 points")
         self.profile_count_label.setText("")
         self.create_button.setEnabled(False)
         self.add_profile_button.setEnabled(False)
-
+    
         # Reset color mode back to base
         self.color_mode = "base"
         self.color_mode_label.setText("Highlight Color:")
@@ -855,15 +975,15 @@ class PointCloudPlaneWidget(QWidget):
         for i, button in enumerate(self.color_buttons):
             button_color = Config.HIGHLIGHT_COLORS[i]
             self._update_color_button_style(button, button_color, i == self.current_color_index)
-
+    
         self.info_display.append("\n--- Ready for new selection ---")
         self.info_display.append(f"Select 3+ vertices from {self.source_object.Label}, then click 'New Selection' again\n")
-
+    
         # Change button text to indicate we're waiting for selection
         self.new_selection_button.setText("Process New Selection")
         self.new_selection_button.clicked.disconnect()
         self.new_selection_button.clicked.connect(self._process_new_selection)
-
+    
     def _process_new_selection(self):
         """Process the new vertex selection - optimized to skip full initialization."""
         # Validate and process new selection
@@ -871,7 +991,7 @@ class PointCloudPlaneWidget(QWidget):
         if not selection:
             self.info_display.append("Error: No selection made. Please select 3+ vertices.\n")
             return
-
+        
         # Check if selection is from the same source object
         selected_object = selection[0].Object
         if selected_object != self.source_object:
@@ -881,52 +1001,44 @@ class PointCloudPlaneWidget(QWidget):
                 "To work with a different object, close this docker and restart the macro.\n"
             )
             return
-
-        # Collect selected vertices directly (optimized - cache Vertexes array)
+        
+        # Collect selected vertices via PickedPoints — avoids materializing OCCT vertex list
         selected_vertices = []
         vertices_from_other_objects = 0
 
         for sel in selection:
-            # Additional safety check - only process vertices from source object
             if sel.Object != self.source_object:
-                # Count vertices from other objects for info message
                 if hasattr(sel.Object, 'Shape'):
                     for sub_name in sel.SubElementNames:
                         if sub_name.startswith("Vertex"):
                             vertices_from_other_objects += 1
                 continue
-            if hasattr(sel.Object, 'Shape'):
-                vertexes = sel.Object.Shape.Vertexes  # Cache once!
-                sub_names = sel.SubElementNames  # Cache once!
-                for sub_name in sub_names:
-                    if sub_name.startswith("Vertex"):
-                        vertex_idx = int(sub_name[6:]) - 1
-                        if vertex_idx < len(vertexes):
-                            selected_vertices.append(vertexes[vertex_idx].Point)
-
+            for pt in sel.PickedPoints:
+                selected_vertices.append(App.Vector(pt.x, pt.y, pt.z))
+        
         # Inform user if vertices from other objects were ignored
         if vertices_from_other_objects > 0:
             self.info_display.append(
                 f"Note: Ignored {vertices_from_other_objects} vertex/vertices from other objects. "
                 f"Only using vertices from {self.source_object.Label}\n"
             )
-
+        
         if len(selected_vertices) < 3:
             self.info_display.append(f"Error: Only {len(selected_vertices)} vertex/vertices selected. Please select at least 3 vertices.\n")
             return
-
+        
         # Store user-selected vertices for plane origin calculation
         self.user_selected_vertices = selected_vertices
-
+        
         # Hide the source object again (only our source object)
         if self.source_object and hasattr(self.source_object, 'ViewObject'):
             self.source_object.ViewObject.Visibility = False
-
+        
         # Change button back to "New Selection"
         self.new_selection_button.setText("New Selection (Select 3+ vertices)")
         self.new_selection_button.clicked.disconnect()
         self.new_selection_button.clicked.connect(self._on_new_selection)
-
+        
         try:
             # Calculate initial plane from selected vertices (fast - no full point cloud processing)
             if len(selected_vertices) == 3:
@@ -940,15 +1052,15 @@ class PointCloudPlaneWidget(QWidget):
                 self.info_display.append(
                     f"Calculated initial plane from {len(selected_vertices)} vertices using least-squares fit\n"
                 )
-
+            
             # Show tolerance controls and preview
             self.tolerance_widget.setVisible(True)
             self._update_preview()
-
+            
         except Exception as e:
             self.info_display.append(f"Error: {str(e)}\n")
             traceback.print_exc()
-
+    
     def _on_collect_button_pressed(self):
         """Handle collect button press - validate selection first."""
         # First validate selection before showing any messages
@@ -956,25 +1068,25 @@ class PointCloudPlaneWidget(QWidget):
         if not selection:
             self.info_display.append("Error: No selection made. Please select 3+ vertices.\n")
             return
-
+        
         # Count selected vertices
         selected_vertex_count = 0
         for sel in selection:
             for sub_name in sel.SubElementNames:
                 if sub_name.startswith("Vertex"):
                     selected_vertex_count += 1
-
+        
         if selected_vertex_count < 3:
             self.info_display.append(f"Error: Only {selected_vertex_count} vertex/vertices selected. Please select at least 3 vertices.\n")
             return
-
+        
         # Show immediate feedback
         self.info_display.append("Collecting vertex data, please wait...")
         QApplication.processEvents()  # Force UI update
-
+        
         # Use QTimer to defer actual collection so message can display
         QtCore.QTimer.singleShot(100, self._initialize_from_selection)
-
+    
     def _initialize_from_selection(self):
         """Initialize plane from selected vertices."""
         selection = Gui.Selection.getSelectionEx()
@@ -982,27 +1094,20 @@ class PointCloudPlaneWidget(QWidget):
             self.info_display.append("Error: No selection made.\n")
             return
 
-        # Collect selected vertices
+        # Collect selected vertices from BREP by index — avoids materializing all OCCT wrappers
         selected_vertices = []
         self.source_object = selection[0].Object
         vertices_from_other_objects = 0
 
         for sel in selection:
-            # Only collect vertices from the source object
             if sel.Object != self.source_object:
                 if hasattr(sel.Object, 'Shape'):
                     for sub_name in sel.SubElementNames:
                         if sub_name.startswith("Vertex"):
                             vertices_from_other_objects += 1
                 continue
-            if hasattr(sel.Object, 'Shape'):
-                vertexes = sel.Object.Shape.Vertexes
-                sub_names = sel.SubElementNames
-                for sub_name in sub_names:
-                    if sub_name.startswith("Vertex"):
-                        vertex_idx = int(sub_name[6:]) - 1
-                        if vertex_idx < len(vertexes):
-                            selected_vertices.append(vertexes[vertex_idx].Point)
+            for pt in sel.PickedPoints:
+                selected_vertices.append(App.Vector(pt.x, pt.y, pt.z))
 
         # Inform user if vertices from other objects were ignored
         if vertices_from_other_objects > 0:
@@ -1019,22 +1124,30 @@ class PointCloudPlaneWidget(QWidget):
             return
 
         try:
-            # Collect all points only once
+            # Collect all points only once via BREP string parsing —
+            # avoids materializing 400k+ OCCT vertex wrappers simultaneously
             if self.all_points_np is None or len(self.all_points_np) == 0:
-                if hasattr(self.source_object, 'Shape'):
-                    vertexes = self.source_object.Shape.Vertexes
-                    num_vertices = len(vertexes)
-                    self.all_points_np = np.empty((num_vertices, 3), dtype=np.float64)
-                    for i, v in enumerate(vertexes):
-                        p = v.Point
-                        self.all_points_np[i] = [p.x, p.y, p.z]
-                else:
+                if not hasattr(self.source_object, 'Shape'):
                     self.info_display.append("Error: Object does not have a Shape.\n")
                     return
 
-                if len(self.all_points_np) < 3:
+                self.info_display.append("Parsing point data from shape...\n")
+
+                brep = self.source_object.Shape.exportBrepToString()
+                coords = re.findall(
+                    r'Ve\n[\d.e+-]+\n([-\d.e+]+) ([-\d.e+]+) ([-\d.e+]+)',
+                    brep
+                )
+                del brep  # Free the string immediately
+
+                if len(coords) < 3:
                     self.info_display.append("Error: Object does not contain enough vertices.\n")
                     return
+
+                self.all_points_np = np.array(coords, dtype=np.float64)
+                del coords
+
+                self.info_display.append(f"Loaded {len(self.all_points_np)} points\n")
 
                 if hasattr(self.source_object, 'ViewObject'):
                     self.source_object_visibility = self.source_object.ViewObject.Visibility
@@ -1063,13 +1176,13 @@ class PointCloudPlaneWidget(QWidget):
         except Exception as e:
             self.info_display.append(f"Error: {str(e)}\n")
             traceback.print_exc()
-
+    
     def _update_preview(self):
         """Update the preview with current tolerance."""
         if self.all_points_np is None or self.initial_normal is None:
             self.info_display.append("Error: Collect vertex data first.\n")
             return
-
+        
         tolerance = self.tolerance_spin.value()
 
         try:
@@ -1089,10 +1202,17 @@ class PointCloudPlaneWidget(QWidget):
 
             selected_points_np = self.all_points_np[self.selected_indices]
 
+            # Subsample for RANSAC — full set not needed for plane fitting
+            if len(selected_points_np) > Config.MAX_RANSAC_POINTS:
+                ransac_indices = np.random.choice(len(selected_points_np), Config.MAX_RANSAC_POINTS, replace=False)
+                ransac_points = selected_points_np[ransac_indices]
+            else:
+                ransac_points = selected_points_np
+
             # Refine plane using RANSAC on selected points
             self.refined_normal, ransac_centroid, inlier_indices = \
                 PointCloudAnalyzer.fit_plane_ransac(
-                    selected_points_np,
+                    ransac_points,
                     tolerance,
                     Config.RANSAC_ITERATIONS
                 )
@@ -1146,7 +1266,7 @@ class PointCloudPlaneWidget(QWidget):
                 except ValueError:
                     pass
 
-            inlier_percentage = (len(inlier_indices) / len(selected_points_np)) * 100
+            inlier_percentage = (len(inlier_indices) / len(ransac_points)) * 100
             self.count_label.setText(
                 f"Selected: {len(self.selected_indices)} points "
                 f"({len(inlier_indices)} inliers, {inlier_percentage:.1f}%)"
@@ -1158,6 +1278,11 @@ class PointCloudPlaneWidget(QWidget):
 
             self.create_button.setEnabled(True)
             self.add_profile_button.setEnabled(True)
+            self.apply_filter_button.setEnabled(True)
+
+            # Clear any stale filter — selection has changed
+            if self.filter_active:
+                self._clear_voxel_filter(silent=True)
 
         except Exception as e:
             self.count_label.setText(f"Error: {str(e)}")
@@ -1165,20 +1290,20 @@ class PointCloudPlaneWidget(QWidget):
             self.highlighter.clear_highlights()
             self.info_display.append(f"Error: {str(e)}\n")
             traceback.print_exc()
-
+    
     def _add_profile_points(self):
         """Add profile plane points at offset distance from base plane."""
         if not self.refined_normal or not self.refined_plane_point:
             self.info_display.append("Error: No base plane defined yet.\n")
             return
-
+        
         # Parse distance from text input (can be positive or negative)
         try:
             distance = float(self.profile_distance_edit.text())
         except ValueError:
             self.info_display.append("Error: Invalid distance value.\n")
             return
-
+        
         # Parse tolerance from text input
         try:
             tolerance = float(self.profile_tolerance_edit.text())
@@ -1188,10 +1313,10 @@ class PointCloudPlaneWidget(QWidget):
         except ValueError:
             self.info_display.append("Error: Invalid tolerance value.\n")
             return
-
+        
         # Create offset plane (move away from camera, opposite of normal)
         offset_plane_point = self.refined_plane_point - (self.refined_normal * distance)
-
+        
         # Select points within tolerance of offset plane
         self.profile_indices = PointCloudAnalyzer.select_points_within_tolerance(
             self.all_points_np,
@@ -1199,14 +1324,14 @@ class PointCloudPlaneWidget(QWidget):
             offset_plane_point,
             tolerance
         )
-
+        
         num_profile = len(self.profile_indices)
-
+        
         if num_profile == 0:
             self.info_display.append(f"No points found at offset {distance}mm with tolerance {tolerance}mm\n")
             self.profile_count_label.setText("Profile: 0 points")
             return
-
+        
         # Highlight in profile color (magenta by default)
         profile_points_np = self.all_points_np[self.profile_indices]
         profile_color = Config.HIGHLIGHT_COLORS[self.profile_color_index]
@@ -1223,6 +1348,71 @@ class PointCloudPlaneWidget(QWidget):
 
         self.profile_count_label.setText(f"Profile: {num_profile} points at {distance}mm offset")
         self.info_display.append(f"Added {num_profile} profile points at {distance}mm offset (tolerance {tolerance}mm)\n")
+    
+    def _apply_voxel_filter(self):
+        """Apply 3D voxel filter to the current base and profile point selections."""
+        if not self.selected_indices or self.refined_normal is None:
+            self.info_display.append("Error: No valid selection to filter.\n")
+            return
+
+        cell_size = self.voxel_size_spin.value()
+        base_np = self.all_points_np[self.selected_indices]
+        profile_np = self.all_points_np[self.profile_indices] if self.profile_indices else np.empty((0, 3))
+
+        placement = SketchCreator.create_placement_from_plane(self.refined_normal, self.refined_plane_point)
+
+        try:
+            filtered_base, filtered_profile = PointCloudAnalyzer.voxel_filter(
+                base_np, profile_np, placement, cell_size
+            )
+        except Exception as e:
+            self.info_display.append(f"Filter error: {e}\n")
+            traceback.print_exc()
+            return
+
+        self.filtered_base_np = filtered_base
+        self.filtered_profile_np = filtered_profile
+        self.filter_active = True
+        self.clear_filter_button.setEnabled(True)
+
+        # Update highlights to show filtered sets
+        self.highlighter.highlight_points(filtered_base)
+        self.highlighter.show_normal_arrow(self.refined_plane_point, self.refined_normal, length=50.0)
+        if self.profile_indices and len(filtered_profile) > 0:
+            profile_color = Config.HIGHLIGHT_COLORS[self.profile_color_index]
+            self.highlighter.highlight_profile_points(filtered_profile, profile_color)
+
+        # Status label
+        base_orig = len(self.selected_indices)
+        base_filt = len(filtered_base)
+        status = f"Base: {base_orig} → {base_filt} points"
+        if self.profile_indices:
+            prof_orig = len(self.profile_indices)
+            prof_filt = len(filtered_profile)
+            status += f" | Profile: {prof_orig} → {prof_filt} points"
+        self.voxel_status_label.setText(status)
+        self.info_display.append(f"Voxel filter applied ({cell_size}mm): {status}\n")
+
+    def _clear_voxel_filter(self, silent=False):
+        """Remove voxel filter and restore full point highlights."""
+        self.filter_active = False
+        self.filtered_base_np = None
+        self.filtered_profile_np = None
+        self.voxel_status_label.setText("")
+        self.clear_filter_button.setEnabled(False)
+
+        # Restore full highlights
+        if self.selected_indices:
+            self.highlighter.highlight_points(self.all_points_np[self.selected_indices])
+            self.highlighter.show_normal_arrow(self.refined_plane_point, self.refined_normal, length=50.0)
+        if self.profile_indices:
+            profile_color = Config.HIGHLIGHT_COLORS[self.profile_color_index]
+            self.highlighter.highlight_profile_points(
+                self.all_points_np[self.profile_indices], profile_color
+            )
+
+        if not silent:
+            self.info_display.append("Voxel filter cleared.\n")
 
     def _create_sketch(self):
         """Create the sketch with datum plane."""
@@ -1230,30 +1420,41 @@ class PointCloudPlaneWidget(QWidget):
             self.info_display.append("Error: No valid plane to create sketch from.\n")
             return
 
-        # Get base plane points
-        selected_points_np = self.all_points_np[self.selected_indices]
-        selected_points = [App.Vector(pt[0], pt[1], pt[2]) for pt in selected_points_np]
-
-        # Add profile points if they exist
-        if self.profile_indices:
-            profile_points_np = self.all_points_np[self.profile_indices]
-            profile_points = [App.Vector(pt[0], pt[1], pt[2]) for pt in profile_points_np]
-            # Combine both sets
-            all_points = selected_points + profile_points
-            self.info_display.append(f"Including {len(selected_points)} base + {len(profile_points)} profile points\n")
+        # Use filtered sets if filter is active, otherwise full selections
+        if self.filter_active and self.filtered_base_np is not None:
+            selected_points = [App.Vector(pt[0], pt[1], pt[2]) for pt in self.filtered_base_np]
+            if self.filtered_profile_np is not None and len(self.filtered_profile_np) > 0:
+                profile_points = [App.Vector(pt[0], pt[1], pt[2]) for pt in self.filtered_profile_np]
+                all_points = selected_points + profile_points
+                self.info_display.append(
+                    f"Using filtered points: {len(selected_points)} base + {len(profile_points)} profile\n"
+                )
+            else:
+                all_points = selected_points
+                self.info_display.append(f"Using filtered points: {len(selected_points)} base\n")
         else:
-            all_points = selected_points
-
+            selected_points_np = self.all_points_np[self.selected_indices]
+            selected_points = [App.Vector(pt[0], pt[1], pt[2]) for pt in selected_points_np]
+            if self.profile_indices:
+                profile_points_np = self.all_points_np[self.profile_indices]
+                profile_points = [App.Vector(pt[0], pt[1], pt[2]) for pt in profile_points_np]
+                all_points = selected_points + profile_points
+                self.info_display.append(
+                    f"Including {len(selected_points)} base + {len(profile_points)} profile points\n"
+                )
+            else:
+                all_points = selected_points
+        
         # Show destination dialog
         destination = SketchCreator.show_destination_dialog()
-
+        
         if not destination:
             return
-
+        
         # Create sketch based on destination
         doc = App.ActiveDocument
         doc.openTransaction("Create Point Cloud Sketch")
-
+        
         try:
             if destination["type"] == "standalone":
                 datum, sketch = SketchCreator.create_standalone(
@@ -1262,7 +1463,7 @@ class PointCloudPlaneWidget(QWidget):
                     all_points
                 )
                 self.info_display.append("Created standalone datum plane and sketch\n")
-
+                
             elif destination["type"] == "new_body":
                 datum, sketch, body = SketchCreator.create_in_body(
                     self.refined_normal,
@@ -1270,12 +1471,12 @@ class PointCloudPlaneWidget(QWidget):
                     all_points
                 )
                 self.info_display.append(f"Created datum plane and sketch in new body: {body.Name}\n")
-
+                
             elif destination["type"] == "existing_body":
                 body = doc.getObject(destination["body_name"])
                 if not body:
                     raise ValueError(f"Body {destination['body_name']} not found")
-
+                
                 datum, sketch, _ = SketchCreator.create_in_body(
                     self.refined_normal,
                     self.refined_plane_point,
@@ -1283,31 +1484,31 @@ class PointCloudPlaneWidget(QWidget):
                     body
                 )
                 self.info_display.append(f"Created datum plane and sketch in existing body: {body.Name}\n")
-
+            
             # Select the new sketch and fit view
             Gui.Selection.clearSelection()
             Gui.Selection.addSelection(sketch)
             Gui.activeDocument().activeView().viewAxonometric()
             Gui.activeDocument().activeView().fitAll()
-
+            
             doc.commitTransaction()
-
+            
             self.info_display.append(
                 f"Success! Created sketch with {len(all_points)} construction points.\n"
             )
-
+            
             # Clear highlights after successful creation
             self.highlighter.clear_highlights()
-
+            
         except Exception as e:
             doc.abortTransaction()
             self.info_display.append(f"Error creating sketch: {str(e)}\n")
             traceback.print_exc()
-
+    
     def closeEvent(self, event):
         """Handle widget close event."""
         self.highlighter.clear_highlights()
-
+        
         # Restore source object visibility
         if self.source_object and self.source_object_visibility is not None:
             try:
@@ -1315,43 +1516,43 @@ class PointCloudPlaneWidget(QWidget):
                     self.source_object.ViewObject.Visibility = self.source_object_visibility
             except Exception:
                 pass
-
+        
         event.accept()
 
 
 class PointCloudPlaneDockWidget(QDockWidget):
     """Docker widget for Point Cloud Plane Sketch."""
-
+    
     def __init__(self):
         super().__init__()
         self._setup_dock_properties()
         self._setup_main_widget()
-
+    
     def _setup_dock_properties(self):
         """Setup dock widget properties."""
         self.setWindowTitle("Point Cloud Plane Sketch")
         self.setObjectName("PointCloudPlaneSketch")
-
+        
         self.setFeatures(
             QDockWidget.DockWidgetMovable |
             QDockWidget.DockWidgetFloatable |
             QDockWidget.DockWidgetClosable
         )
         self.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
-
+    
     def _setup_main_widget(self):
         """Setup the main widget."""
         self.main_widget = PointCloudPlaneWidget()
         self.setWidget(self.main_widget)
-
+    
     def closeEvent(self, event):
         """Handle dock close event."""
         self.main_widget.closeEvent(event)
-
+        
         # Clear global reference when closing
         global point_cloud_plane_dock
         point_cloud_plane_dock = None
-
+        
         event.accept()
 
 
@@ -1362,7 +1563,7 @@ point_cloud_plane_dock = None
 def show_point_cloud_plane_sketch():
     """Show the Point Cloud Plane Sketch docker."""
     global point_cloud_plane_dock
-
+    
     # Check for active document
     if not App.ActiveDocument:
         QMessageBox.warning(
@@ -1371,16 +1572,16 @@ def show_point_cloud_plane_sketch():
             "Please open or create a document first."
         )
         return
-
+    
     # Clean up existing dock
     main_window = Gui.getMainWindow()
     existing_docks = main_window.findChildren(QDockWidget)
-
+    
     for dock in existing_docks:
         if dock.objectName() == "PointCloudPlaneSketch":
             dock.close()
             dock.deleteLater()
-
+    
     # Create new dock
     point_cloud_plane_dock = PointCloudPlaneDockWidget()
     main_window.addDockWidget(QtCore.Qt.RightDockWidgetArea, point_cloud_plane_dock)
