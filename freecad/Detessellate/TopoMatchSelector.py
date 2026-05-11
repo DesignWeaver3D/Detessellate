@@ -3,7 +3,7 @@
 # SPDX-FileNotice: Part of the Detessellate addon.
 import FreeCAD as App
 import FreeCADGui as Gui
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide import QtCore, QtGui, QtWidgets
 import Part
 import math
 from typing import List, Dict, Tuple, Optional, Any

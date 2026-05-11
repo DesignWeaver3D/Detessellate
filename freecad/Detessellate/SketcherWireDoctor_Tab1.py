@@ -12,7 +12,7 @@ Version: 0.71 (Face-based area calculation with universal geometry support)
 """
 
 import FreeCAD as App
-from PySide6 import QtCore, QtWidgets
+from PySide import QtCore, QtWidgets
 from typing import Any, List, Dict
 
 

@@ -6,7 +6,7 @@ import FreeCADGui
 import Part
 import Sketcher
 import time
-from PySide6.QtWidgets import QInputDialog, QMessageBox
+from PySide.QtWidgets import QInputDialog, QMessageBox
 import DraftGeomUtils
 from collections import Counter
 

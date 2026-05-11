@@ -20,7 +20,7 @@ import FreeCADGui
 import Mesh
 import Part
 import PartDesign
-from PySide6 import QtCore, QtWidgets
+from PySide import QtCore, QtWidgets
 import time
 import sys
 

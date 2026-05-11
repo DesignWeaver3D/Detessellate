@@ -18,7 +18,7 @@ Version: 1.0 (Phased approach implementation)
 
 import FreeCAD as App
 import Part
-from PySide6 import QtCore, QtWidgets
+from PySide import QtCore, QtWidgets
 from typing import Any, List, Dict, Tuple, Set, Optional
 from collections import defaultdict
 from dataclasses import dataclass
@@ -1555,7 +1555,7 @@ def find_problematic_intersections(analyzer: Any) -> List[Dict[str, Any]]:
 
 def setup_intersections_tab(widget):
     """Setup the wire topology analysis tab with grouped issue categories."""
-    from PySide6 import QtCore, QtWidgets
+    from PySide import QtCore, QtWidgets
 
     tab = QtWidgets.QWidget()
     layout = QtWidgets.QVBoxLayout(tab)

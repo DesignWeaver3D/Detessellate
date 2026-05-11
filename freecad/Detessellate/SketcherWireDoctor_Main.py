@@ -34,7 +34,7 @@ import FreeCAD as App
 import FreeCADGui as Gui
 import Part
 import Sketcher
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide import QtCore, QtGui, QtWidgets
 
 
 # Constants

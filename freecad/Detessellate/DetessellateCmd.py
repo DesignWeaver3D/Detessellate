@@ -7,7 +7,7 @@ from importlib import reload
 
 import FreeCAD
 import FreeCADGui
-from PySide6 import QtGui, QtCore, QtWidgets
+from PySide import QtGui, QtCore, QtWidgets
 from freecad.Detessellate.Misc.Resources import asIcon
 
 

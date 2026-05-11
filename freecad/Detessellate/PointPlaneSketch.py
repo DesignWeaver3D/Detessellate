@@ -28,8 +28,8 @@ import traceback
 # Third-party
 import numpy as np
 from pivy import coin
-from PySide6 import QtCore
-from PySide6.QtWidgets import (QApplication, QDockWidget, QDoubleSpinBox,
+from PySide import QtCore
+from PySide.QtWidgets import (QApplication, QDockWidget, QDoubleSpinBox,
                                QHBoxLayout, QInputDialog, QLabel, QLineEdit,
                                QMessageBox, QPushButton, QTextEdit, QToolButton,
                                QVBoxLayout, QWidget)
