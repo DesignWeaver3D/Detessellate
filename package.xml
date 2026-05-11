@@ -12,8 +12,8 @@ standalone = 'no'
   <!--[ Versions ]―――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
   <freecadmin>1.1.0</freecadmin>
   <pythonmin>3.11</pythonmin>
-  <version>1.0.0</version>
-  <date>2026-04-01</date>
+  <version>1.1.0</version>
+  <date>2026-05-09</date>
   <!--[ Dependencies ]―――――――――――――――――――――――――――――――――――――――――――――――――――――-->
   <depend
     version_gte = '2.4.0'
