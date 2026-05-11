@@ -723,32 +723,32 @@ class SketcherWireDoctorWidget(QtWidgets.QWidget):
             tab1_module.populate_zero_length_list(self)
         except ImportError:
             pass
-        except Exception:
-            pass
+        except Exception as e:
+            App.Console.PrintError(f"[SketcherWireDoctor] Tab1 populate failed: {e}\n")
 
         try:
             tab2_module = importlib.import_module('freecad.Detessellate.SketcherWireDoctor_Tab2')
             tab2_module.populate_duplicate_list(self)
         except ImportError:
             pass
-        except Exception:
-            pass
+        except Exception as e:
+            App.Console.PrintError(f"[SketcherWireDoctor] Tab2 populate failed: {e}\n")
 
         try:
             tab3_module = importlib.import_module('freecad.Detessellate.SketcherWireDoctor_Tab3')
             tab3_module.populate_tab3_list(self)
         except ImportError:
             pass
-        except Exception:
-            pass
+        except Exception as e:
+            App.Console.PrintError(f"[SketcherWireDoctor] Tab3 populate failed: {e}\n")
 
         try:
             tab4_module = importlib.import_module('freecad.Detessellate.SketcherWireDoctor_Tab4')
             tab4_module.populate_intersections_list(self)
         except ImportError:
             pass
-        except Exception:
-            pass
+        except Exception as e:
+            App.Console.PrintError(f"[SketcherWireDoctor] Tab4 populate failed: {e}\n")
 
     # Unified hover handler
     def _on_hover(self, item: QtWidgets.QListWidgetItem) -> None:
