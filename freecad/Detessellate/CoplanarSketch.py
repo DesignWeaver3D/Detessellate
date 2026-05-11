@@ -15,8 +15,8 @@ import FreeCADGui
 import Part
 import Sketcher
 import PartDesign
-from PySide6.QtWidgets import QDockWidget, QWidget, QVBoxLayout, QPushButton, QTextEdit, QLabel, QInputDialog, QLineEdit
-from PySide6.QtCore import Qt
+from PySide.QtWidgets import QDockWidget, QWidget, QVBoxLayout, QPushButton, QTextEdit, QLabel, QInputDialog, QLineEdit
+from PySide.QtCore import Qt
 import time
 import random
 

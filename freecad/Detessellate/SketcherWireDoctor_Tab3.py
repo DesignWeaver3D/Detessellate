@@ -21,7 +21,7 @@ import Sketcher
 import math
 from typing import List, Tuple, Dict, Any, Optional
 from collections import defaultdict, deque
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide import QtCore, QtGui, QtWidgets
 
 # Tolerance thresholds for practical FreeCAD manufacturing use cases
 NEAR_COINCIDENT_THRESHOLD = 5e-6    # 5 micrometers - bell emoji (tiny discrepancy, high confidence)

@@ -14,7 +14,7 @@ import FreeCAD as App
 import Sketcher
 import math
 from typing import List, Tuple, Dict, Any
-from PySide6 import QtCore, QtWidgets
+from PySide import QtCore, QtWidgets
 
 # Tolerance thresholds - same as Tab3 for consistency
 NEAR_COINCIDENT_THRESHOLD = 5e-6    # 5 micrometers - tight tolerance
@@ -282,7 +282,7 @@ def delete_selected_duplicates(widget):
         duplicates_to_delete = []
         for item in selected_items:
             try:
-                from PySide6 import QtCore
+                from PySide import QtCore
                 data = item.data(QtCore.Qt.UserRole)
                 if data and data.get('type') == 'geometry':
                     duplicates_to_delete.append(data['data'])

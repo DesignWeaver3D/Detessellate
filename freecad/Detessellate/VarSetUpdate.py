@@ -5,7 +5,7 @@
 # SPDX-FileNotice: Part of the Detessellate addon.
 
 import FreeCAD
-from PySide6 import QtCore, QtWidgets
+from PySide import QtCore, QtWidgets
 import re
 
 # v0.1    2025-03-26 Original version by Mathias L. posted to https://github.com/FreeCAD/FreeCAD/issues/16222#issuecomment-2754714033

@@ -34,7 +34,7 @@ import FreeCAD as App
 import FreeCADGui as Gui
 import Part
 import Sketcher
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide import QtCore, QtGui, QtWidgets
 
 
 # Constants
@@ -541,27 +541,18 @@ class SketcherWireDoctorWidget(QtWidgets.QWidget):
 
     def _setup_tabs(self) -> None:
         """Setup all tab widgets by importing and calling tab modules."""
-        # Get the directory where this script is located
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        
-        # Add to sys.path if not already there
-        if script_dir not in sys.path:
-            sys.path.insert(0, script_dir)
-        
-        # Check for required tab modules
         required_modules = [
             'SketcherWireDoctor_Tab1',
-            'SketcherWireDoctor_Tab2', 
+            'SketcherWireDoctor_Tab2',
             'SketcherWireDoctor_Tab3',
             'SketcherWireDoctor_Tab4'
         ]
-        
+
         available_modules = {}
-        
-        # Check each module
+
         for module_name in required_modules:
             try:
-                module = __import__(module_name)
+                module = importlib.import_module(f'freecad.Detessellate.{module_name}')
                 available_modules[module_name] = module
             except ImportError:
                 pass
@@ -727,40 +718,35 @@ class SketcherWireDoctorWidget(QtWidgets.QWidget):
 
     def _populate_all_tabs(self) -> None:
         """Populate all list widgets with analysis results."""
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        if script_dir not in sys.path:
-            sys.path.insert(0, script_dir)
-            
-        # Try to use tab module functions with individual error handling
         try:
-            tab1_module = __import__('SketcherWireDoctor_Tab1')
+            tab1_module = importlib.import_module('freecad.Detessellate.SketcherWireDoctor_Tab1')
             tab1_module.populate_zero_length_list(self)
         except ImportError:
-            pass  # Tab not available
+            pass
         except Exception:
             pass
-            
+
         try:
-            tab2_module = __import__('SketcherWireDoctor_Tab2')
+            tab2_module = importlib.import_module('freecad.Detessellate.SketcherWireDoctor_Tab2')
             tab2_module.populate_duplicate_list(self)
         except ImportError:
-            pass  # Tab not available
+            pass
         except Exception:
             pass
-            
+
         try:
-            tab3_module = __import__('SketcherWireDoctor_Tab3')
+            tab3_module = importlib.import_module('freecad.Detessellate.SketcherWireDoctor_Tab3')
             tab3_module.populate_tab3_list(self)
         except ImportError:
-            pass  # Tab not available
+            pass
         except Exception:
             pass
-            
+
         try:
-            tab4_module = __import__('SketcherWireDoctor_Tab4')
+            tab4_module = importlib.import_module('freecad.Detessellate.SketcherWireDoctor_Tab4')
             tab4_module.populate_intersections_list(self)
         except ImportError:
-            pass  # Tab not available
+            pass
         except Exception:
             pass
 

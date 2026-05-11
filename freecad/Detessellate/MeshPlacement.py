@@ -27,7 +27,7 @@ __date__    = "2025-12-11"
 __doc__     = "A FreeCAD macro to position selected meshes or parts at the global origin using bounding box alignment."
 
 import FreeCAD, FreeCADGui
-from PySide6 import QtCore, QtWidgets
+from PySide import QtCore, QtWidgets
 
 class MeshPlacementDock(QtWidgets.QDockWidget):
     def __init__(self):
