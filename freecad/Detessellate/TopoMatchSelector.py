@@ -435,13 +435,14 @@ class TopoMatchSelectorWidget(QtWidgets.QWidget):
         self.setup_ui()
         self.connect_signals()
         self.selection_tracker.start_tracking()
+        self._sync_initial_selection()
 
     def setup_ui(self):
         """Setup the user interface."""
         layout = QtWidgets.QVBoxLayout(self)
 
         # Selection info
-        self.selection_label = QtWidgets.QLabel("No selection")
+        self.selection_label = QtWidgets.QLabel("Select a face, edge, or vertex inside a PartDesign Body")
         self.selection_label.setWordWrap(True)
         layout.addWidget(self.selection_label)
 
@@ -477,6 +478,34 @@ class TopoMatchSelectorWidget(QtWidgets.QWidget):
         self.selection_tracker.selection_changed.connect(self.on_selection_changed)
         self.exact_list.itemClicked.connect(self.on_exact_item_clicked)
         self.similar_list.itemClicked.connect(self.on_similar_item_clicked)
+
+    def _sync_initial_selection(self):
+        """Seed the display from whatever is already selected when the docker opens."""
+        try:
+            for sel in Gui.Selection.getSelectionEx():
+                if not sel.SubElementNames:
+                    continue
+                sub_name = sel.SubElementNames[0]
+                obj = sel.Object
+                if not obj or not hasattr(obj, 'Shape'):
+                    continue
+                if sub_name.startswith('Face'):
+                    sel_type = 'Face'
+                elif sub_name.startswith('Edge'):
+                    sel_type = 'Edge'
+                elif sub_name.startswith('Vertex'):
+                    sel_type = 'Vertex'
+                else:
+                    continue
+                self.selection_tracker.update_selection({
+                    'object': obj,
+                    'sub_name': sub_name,
+                    'type': sel_type,
+                    'shape': getattr(obj.Shape, sub_name),
+                })
+                return
+        except Exception:
+            pass
 
     def on_selection_changed(self, selection_info):
         """Handle selection changes."""
@@ -516,14 +545,14 @@ class TopoMatchSelectorWidget(QtWidgets.QWidget):
         self.status_browser.clear() # Clear status messages for new selection
 
         if not self.current_selection:
-            self.selection_label.setText("No selection")
+            self.selection_label.setText("Select a face, edge, or vertex inside a PartDesign Body")
             self.status_browser.setText("")
             return
 
         # Get current body
         self.current_body = self.find_parent_body(self.current_selection['object'])
         if not self.current_body:
-            self.selection_label.setText("Selection not in a body")
+            self.selection_label.setText("Selected object is not inside a PartDesign Body")
             self.status_browser.setText("")
             return
 
