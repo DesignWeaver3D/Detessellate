@@ -5,17 +5,6 @@
 """
 SketcherWireDoctor - FreeCAD Sketcher Analysis Tool - Main Module
 
-INSTALLATION INSTRUCTIONS:
-After downloading, rename the files to:
-- wire_doctor_main.py → SketcherWireDoctor_Main.py
-- wire_doctor_tab1.py → SketcherWireDoctor_Tab1.py  
-- wire_doctor_tab2.py → SketcherWireDoctor_Tab2.py
-- wire_doctor_tab3.py → SketcherWireDoctor_Tab3.py
-- wire_doctor_tab4.py → SketcherWireDoctor_Tab4.py
-
-Place all 5 files in your FreeCAD macro directory.
-Run SketcherWireDoctor_Main.py to start the tool.
-
 A comprehensive tool for analyzing and fixing wire closure issues in FreeCAD sketches.
 Identifies zero-length lines, duplicate geometry, non-coincident vertices, and
 problematic intersections.
@@ -259,12 +248,11 @@ class GeometryAnalyzer:
     def find_zero_length_lines(self) -> List[Dict[str, Any]]:
         """Find all zero-length line segments - delegated to Tab1."""
         try:
-            # Force reload if module already exists to avoid stale imports
-            if 'SketcherWireDoctor_Tab1' in sys.modules:
-                importlib.reload(sys.modules['SketcherWireDoctor_Tab1'])
-            
-            import SketcherWireDoctor_Tab1
-            return SketcherWireDoctor_Tab1.find_zero_length_lines(self)
+            _key = 'freecad.Detessellate.SketcherWireDoctor_Tab1'
+            if _key in sys.modules:
+                importlib.reload(sys.modules[_key])
+            mod = importlib.import_module(_key)
+            return mod.find_zero_length_lines(self)
         except ImportError:
             return []
         except Exception:
@@ -273,11 +261,11 @@ class GeometryAnalyzer:
     def find_duplicate_geometry(self) -> List[List[Dict[str, Any]]]:
         """Find duplicate or overlapping geometry - delegated to Tab2."""
         try:
-            if 'SketcherWireDoctor_Tab2' in sys.modules:
-                importlib.reload(sys.modules['SketcherWireDoctor_Tab2'])
-                
-            import SketcherWireDoctor_Tab2
-            return SketcherWireDoctor_Tab2.find_duplicate_geometry(self)
+            _key = 'freecad.Detessellate.SketcherWireDoctor_Tab2'
+            if _key in sys.modules:
+                importlib.reload(sys.modules[_key])
+            mod = importlib.import_module(_key)
+            return mod.find_duplicate_geometry(self)
         except ImportError:
             return []
         except Exception:
@@ -286,11 +274,11 @@ class GeometryAnalyzer:
     def find_non_coincident_vertices(self) -> List[Dict[str, Any]]:
         """Find vertices that should be coincident but aren't - delegated to Tab3."""
         try:
-            if 'SketcherWireDoctor_Tab3' in sys.modules:
-                importlib.reload(sys.modules['SketcherWireDoctor_Tab3'])
-                
-            import SketcherWireDoctor_Tab3
-            return SketcherWireDoctor_Tab3.find_non_coincident_vertices(self)
+            _key = 'freecad.Detessellate.SketcherWireDoctor_Tab3'
+            if _key in sys.modules:
+                importlib.reload(sys.modules[_key])
+            mod = importlib.import_module(_key)
+            return mod.find_non_coincident_vertices(self)
         except ImportError:
             return []
         except Exception:
@@ -299,11 +287,11 @@ class GeometryAnalyzer:
     def find_problematic_intersections(self) -> List[Dict[str, Any]]:
         """Find T-sections and bridge edges - delegated to Tab4."""
         try:
-            if 'SketcherWireDoctor_Tab4' in sys.modules:
-                importlib.reload(sys.modules['SketcherWireDoctor_Tab4'])
-                
-            import SketcherWireDoctor_Tab4
-            return SketcherWireDoctor_Tab4.find_problematic_intersections(self)
+            _key = 'freecad.Detessellate.SketcherWireDoctor_Tab4'
+            if _key in sys.modules:
+                importlib.reload(sys.modules[_key])
+            mod = importlib.import_module(_key)
+            return mod.find_problematic_intersections(self)
         except ImportError:
             return []
         except Exception:
