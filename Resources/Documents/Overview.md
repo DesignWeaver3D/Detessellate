@@ -1,10 +1,10 @@
 # Detessellate
 
-A FreeCAD workbench of algorithm-assisted tools for reverse engineering imported geometry including mesh models (STL, OBJ, 3MF), point cloud data, and non-parametric STEP solids.
+A FreeCAD workbench of algorithm-assisted tools for reverse engineering imported geometry including mesh models (STL, OBJ, 3MF), 3D scan point cloud data, and non-parametric STEP solids.
 
 ## Use Cases
 - Convert STL/OBJ/3MF meshes to parametric CAD models
-- Generate sketches from scanned point cloud data
+- Generate sketches from 3D scanned point cloud data
 - Rebuild imported STEP files with sketch-based features
 - Clean up and constrain sketch geometry
 
