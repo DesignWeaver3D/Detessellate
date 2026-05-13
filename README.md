@@ -20,7 +20,7 @@ FreeCAD Forum: https://forum.freecad.org/viewtopic.php?t=101467
 ## 📦 Included Macros
 
 ### General Tools
-- <img width="25" height="25" alt="MeshPlacementIcon" src="https://github.com/user-attachments/assets/57233128-99af-42cd-b23f-17bc44b23b97" /> [MeshPlacement](Documentation/MeshPlacement.md) – recenter and align meshes to origin 
+- <img width="25" height="25" alt="MeshPlacementIcon" src="https://github.com/user-attachments/assets/57233128-99af-42cd-b23f-17bc44b23b97" /> [MeshPlacement](Documentation/MeshPlacement.md) – recenter and align meshes and solid objects to origin 
 - <img width="25" height="25" alt="MeshToBodyIcon" src="https://github.com/user-attachments/assets/5ead9567-3c8c-40a1-a8f5-066e9259917e" /> [MeshToBody](Documentation/MeshToBody.md) – convert meshes into solids and bodies  
 - <img width="25" height="25" alt="CoplanarSketch" src="https://github.com/user-attachments/assets/a941d04a-1707-400b-bd9c-d0751c8ea021" /> [CoplanarSketch](Documentation/CoplanarSketch.md) – Generate construction sketches from coplanar edges on tessellated solids  
 - <img width="25" height="25" alt="PointPlaneSketch" src="https://github.com/user-attachments/assets/4ed28d6d-6908-47f5-bf3a-f589f030016a" /> [PointPlaneSketch](Documentation/PointPlaneSketch.md) - Generate sketches from selected points of a PointsObject.
