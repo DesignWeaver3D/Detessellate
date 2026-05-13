@@ -11,7 +11,7 @@ A FreeCAD workbench of algorithm-assisted tools for reverse engineering imported
 ## Tools
 
 ### General Tools
-- **MeshPlacement** — Recenter and align meshes to origin
+- **MeshPlacement** — Recenter and align meshes & solid objects to origin
 - **MeshToBody** — Convert meshes into solids and bodies
 - **CoplanarSketch** — Generate construction sketches from coplanar edges on tessellated solids
 - **PointPlaneSketch** — Generate sketches from selected points of a PointsObject
