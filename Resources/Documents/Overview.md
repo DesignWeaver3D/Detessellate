@@ -14,6 +14,7 @@ A FreeCAD workbench of algorithm-assisted tools for reverse engineering imported
 - **MeshPlacement** — Recenter and align meshes to origin
 - **MeshToBody** — Convert meshes into solids and bodies
 - **CoplanarSketch** — Generate construction sketches from coplanar edges on tessellated solids
+- **MeshCSToSplines** — Convert Mesh Cross Sections into loft-ready splines
 - **PointPlaneSketch** — Generate sketches from selected points of a PointsObject
 - **EdgeLoopSelector** — Select connected edge loops from sketches, faces, or solids
 - **EdgeLoopToSketch** — Generate sketches from selected coplanar 3D edges, preserving edge type

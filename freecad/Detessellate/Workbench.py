@@ -23,6 +23,7 @@ class DetessellateWorkbench(FreeCADGui.Workbench):
         ]
         sketch_cmds = [
             "Detessellate_CoplanarSketch",
+            "Detessellate_MeshCSToSplines",
             "Detessellate_PointPlaneSketch",
         ]
         utility_cmds = [
