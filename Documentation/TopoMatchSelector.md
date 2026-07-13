@@ -26,13 +26,16 @@ In PartDesign workflows, features are built on prior geometry, yet selecting fro
 - 🧱 **Docker Interface** that integrates natively into FreeCAD's UI
 - 🔍 **Geometry Matching Engine** with refined tolerance logic
 
-## 📦 Alternative Installation
-This macro is bundled with the Detessellate Workbench, but can also be manually installed separately.
+## Alternative Installation
 
-1. Place `TopoMatchSelector1.0.py` into your FreeCAD macro directory.
-2. Launch FreeCAD, switch to PartDesign Workbench.
-3. Execute the macro from the Macro menu.
-4. The **TopoMatchSelector** docker will appear on the right side of the UI.
+This macro is bundled with the Detessellate Workbench, but can also be installed as a standalone macro.
+
+1. Download `TopoMatchSelector.py` from this repository.
+2. Place it in your FreeCAD macros directory:
+   - `Macro → Macros...` → **User macros location**, or
+   - `Edit → Preferences → Python → Macro → Macro path`
+3. Restart FreeCAD, or click **Refresh** in the Macro dialog.
+4. (Optional) Copy the matching icon from `Resources/Icons/TopoMatchSelector.svg` for use as a custom toolbar button.
 
 ## 🎯 Usage
 

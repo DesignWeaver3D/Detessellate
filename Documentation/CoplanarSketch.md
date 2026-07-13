@@ -19,32 +19,34 @@ Forum Post: https://forum.freecad.org/viewtopic.php?p=830918#p830918
 * **User-Friendly Interface**: Provides a dockable GUI panel within FreeCAD with a guided user experience for easy access to its functionalities.
 * **Degenerate Edge Detection**: Detects degenerate edges in non-solid shape objects and provides a means to create a clean shape by copying non-degenerate faces and omitting degenerate faces and edges.
 
+## Running the Macro
+* Open a FreeCAD document containing a tessellated shape or solid body.
+* Select the shape (or specific edges/faces within it if desired).
+* Run the macro via the Detessellate toolbar/menu, or via `Macro → Macros... → CoplanarSketch.py → Execute` if installed standalone.
+* A dockable "Coplanar Sketch" docker panel will appear.
+* Click "Collect Edge Data" (required for an initial scan of all edge data for the selected object).
+   * If degenerate edges are detected, Click "Clean Degenerate Edges" to create a cleaned copy of the shape.
+* With a single face or two edges selected, Click "Select Coplanar Edges" to have the macro identify and select coplanar edges based on the plane calculated from the selection.
+* Click "Create Sketch from Selection". A dialog will appear asking you to choose the sketch destination:
+    * `<Standalone (Part Workbench)>`: Creates the sketch directly in the document root using placement properties.
+    * `<Create New Body (PartDesign)>`: Creates a new PartDesign Body and positions the sketch inside using attachment offset from the body's XY plane.
+    * `[Existing Body Name]`: Places the sketch inside a selected existing PartDesign Body and positions the sketch inside using attachment offset from the body's XY plane.
+* Choose your desired option and click "OK". The created sketch will have the coplanar edges drawn as block-constrained construction geometry with coincident edge vertices constrained. Sketch origin will be at the center of mass of the selected edges and the sketch geometry aligned with the real edges' 3D position.
+
+**Post-Creation**:
+* The new sketch will be created and automatically selected in the tree view.
+* You can then enter the sketch to convert the construction to regular or add further geometry, dimensions, and constraints.
+
 ## Alternative Installation
-This macro is bundled with the Detessellate Workbench, but can also be manually installed separately.
 
-1.  **Installation**:
-    * Save the `CoplanarSketch.py` file into your FreeCAD Macros directory. You can find this directory by going to `Macros -> Macros...` in FreeCAD and checking the "User macros location" path.
-    * (Optional but Recommended) Restart FreeCAD.
-    * (Optional) Copy the icon file for use as custom toolbar icon.
+This macro is bundled with the Detessellate Workbench, but can also be installed as a standalone macro.
 
-2.  **Running the Macro**:
-    * Open a FreeCAD document containing a tessellated shape or solid body.
-    * Select the shape (or specific edges/faces within it if desired).
-    * Go to `Macros -> Macros...`.
-    * Select `CoplanarSketch.py` from the list and click "Execute".
-    * A dockable "Coplanar Sketch" docker panel will appear.
-    * Click "Collect Edge Data" (required for an initial scan of all edge data for the selected object).
-       * If degenerate edges are detected, Click "Clean Degenerate Edges" to create a cleaned copy of the shape. 
-    * With a single face or two edges selected, Click "Select Coplanar Edges" to have the macro identify and select coplanar edges based the plane calculated from the selection.
-    * Click "Create Sketch from Selection". A dialog will appear asking you to choose the sketch destination:
-        * `<Standalone (Part Workbench)>`: Creates the sketch directly in the document root using placement properties.
-        * `<Create New Body (PartDesign)>`: Creates a new PartDesign Body and positions the sketch inside using attachment offset from the body's XY plane.
-        * `[Existing Body Name]`: Places the sketch inside a selected existing PartDesign Body and positions the sketch inside using attachment offset from the body's XY plane.
-    * Choose your desired option and click "OK". The created sketch will have the coplanar edges drawn as block-constrained construction geometry with coincident edge vertices constrained. Sketch origin will be at the center of mass of the selected edeges and the sketch geometry aligned with the real edges' 3D position.
-
-3.  **Post-Creation**:
-    * The new sketch will be created and automatically selected in the tree view.
-    * You can then enter the sketch to convert the construction to regular or add further geometry, dimensions, and constraints.
+1. Download `CoplanarSketch.py` from this repository.
+2. Place it in your FreeCAD macros directory:
+   - `Macro → Macros...` → **User macros location**, or
+   - `Edit → Preferences → Python → Macro → Macro path`
+3. Restart FreeCAD, or click **Refresh** in the Macro dialog.
+4. (Optional) Copy the matching icon from `Resources/Icons/CoplanarSketch.svg` for use as a custom toolbar button.
 
 ## Compatibility
 This macro has been developed and tested with the following FreeCAD environment:

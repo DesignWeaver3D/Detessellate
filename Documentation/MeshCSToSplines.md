@@ -23,7 +23,7 @@ Forum Post: PLACEHOLDER
 
 ## Running the Macro
 * Select the Mesh Workbench Cross Sections object in the 3D view or model tree.
-* Go to `Detessellate workbencg and click the MeshCSToSplines icon or via the menu Detessellate > MeshCSToSplines.
+* Run the macro via the Detessellate toolbar/menu, or via `Macro → Macros... → MeshCSToSplines.py → Execute` if installed standalone.
 * When prompted, enter the number of spline knots to fit per profile.
 * One sketch per profile is created, each containing the original polyline (as construction geometry) and a periodic B-spline fitted through the sampled knots.
 
@@ -32,10 +32,15 @@ Forum Post: PLACEHOLDER
 * Assemble the sketches into a loft (`Part::Loft` or `PartDesign::AdditiveLoft`) yourself; profile grouping, ruled/smooth, and workbench choice are use-case-specific and are left to you.
 
 ## Alternative Installation
-This macro is bundled with the Detessellate Workbench, but can also be manually installed separately.
-* Save the `MeshCSToSplines.py` file into your FreeCAD Macros directory. You can find this directory by going to `Macros -> Macros...` in FreeCAD and checking the "User macros location" path.
-* (Optional but Recommended) Restart FreeCAD.
-* (Optional) Copy the icon file for use as a custom toolbar icon.
+
+This macro is bundled with the Detessellate Workbench, but can also be installed as a standalone macro.
+
+1. Download `MeshCSToSplines.py` from this repository.
+2. Place it in your FreeCAD macros directory:
+   - `Macro → Macros...` → **User macros location**, or
+   - `Edit → Preferences → Python → Macro → Macro path`
+3. Restart FreeCAD, or click **Refresh** in the Macro dialog.
+4. (Optional) Copy the matching icon from `Resources/Icons/MeshCSToSplines.svg` for use as a custom toolbar button.
 
 ## 📜 Changelog
 - **v1.0.0** - Initial version integrated into Detessellate.

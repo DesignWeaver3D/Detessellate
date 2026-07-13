@@ -41,11 +41,15 @@
 - **FreeCAD Version**: 1.0 or newer. During development, v1.1 b40971 was used and confirmed stable.
 
 ## Alternative Installation
-This macro is bundled with the Detessellate Workbench, but can also be manually installed separately.
 
-1. Download the latest version of `VarSetUpdate` from [GitHub](https://github.com/NSUBB/VarSet-Update/tree/main).
-2. Place the macro file in your FreeCAD `Macro` folder.
-3. Launch FreeCAD and run the macro from the Macro menu.
+This macro is bundled with the Detessellate Workbench, but can also be installed as a standalone macro.
+
+1. Download `VarSetUpdate.py` from this repository.
+2. Place it in your FreeCAD macros directory:
+   - `Macro → Macros...` → **User macros location**, or
+   - `Edit → Preferences → Python → Macro → Macro path`
+3. Restart FreeCAD, or click **Refresh** in the Macro dialog.
+4. (Optional) Copy the matching icon from `Resources/Icons/VarSetUpdate.svg` for use as a custom toolbar button.
 
 ## Acknowledgments
 - **Original Author**: [Mathias L.](https://github.com/mathiaslec)
