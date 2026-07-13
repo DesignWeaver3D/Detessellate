@@ -621,3 +621,7 @@ def add_line_distance_constraints(sketch, geo_indices):
 
 def run():
     edge_loop_to_sketch()
+
+
+if __name__ == "__main__":
+    run()

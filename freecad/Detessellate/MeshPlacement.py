@@ -172,3 +172,7 @@ def run():
 
     dock = MeshPlacementDock()
     window.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock)
+
+
+if __name__ == "__main__":
+    run()

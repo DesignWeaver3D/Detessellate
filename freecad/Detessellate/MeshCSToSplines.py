@@ -47,7 +47,7 @@ GLOBAL_REFERENCE_VECTOR = App.Vector(1, 0, 0)  # shared "start direction" for
 
 
 # ---------------------------------------------------------------------------
-# Stage 1 â CS object -> list of Sketch objects
+# Stage 1 - CS object -> list of Sketch objects
 # ---------------------------------------------------------------------------
 
 def cross_section_to_sketches(cs_obj):
@@ -84,8 +84,36 @@ def cross_section_to_sketches(cs_obj):
         if leftover is not None:
             App.ActiveDocument.removeObject(temp_wire_name)
 
-    App.ActiveDocument.recompute()
+    # deferred: batched into the final recompute in process_cross_section
     return sketches
+
+
+def resolve_global_reference(sketches, requested_reference):
+    """
+    All profiles in one CS object share the same plane orientation, so this
+    only needs to be checked once. If requested_reference is (nearly)
+    parallel to that shared plane normal, its projection onto every
+    profile's plane would collapse to a null vector (see find_start_index).
+    Substitute a fallback axis in that case so every sketch in this run
+    still gets a consistent, valid reference direction.
+    """
+    probe = sketches[0]
+    local = probe.Placement.Rotation.inverted().multVec(requested_reference)
+    local.z = 0.0
+    if local.Length > 1e-6:
+        return requested_reference
+
+    for candidate in (App.Vector(1, 0, 0), App.Vector(0, 1, 0), App.Vector(0, 0, 1)):
+        local = probe.Placement.Rotation.inverted().multVec(candidate)
+        local.z = 0.0
+        if local.Length > 1e-6:
+            App.Console.PrintWarning(
+                "Cross Section to Aligned Splines: default reference direction "
+                f"is parallel to this run's profile normal; using {candidate} instead.\n"
+            )
+            return candidate
+
+    raise RuntimeError("Could not find a valid reference direction for these profiles.")
 
 
 # ---------------------------------------------------------------------------
@@ -302,6 +330,7 @@ def process_cross_section(global_reference=GLOBAL_REFERENCE_VECTOR):
     doc.openTransaction("Cross Section to Aligned Splines")
     try:
         sketches = cross_section_to_sketches(cs_obj)
+        global_reference = resolve_global_reference(sketches, global_reference)
         for sk in sketches:
             process_sketch(sk, n_knots, global_reference)
         doc.recompute()
@@ -316,3 +345,7 @@ def process_cross_section(global_reference=GLOBAL_REFERENCE_VECTOR):
 
 def run():
     process_cross_section()
+
+
+if __name__ == "__main__":
+    run()

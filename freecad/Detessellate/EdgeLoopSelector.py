@@ -350,3 +350,7 @@ def select_connected_loop_or_sketch():
 
 def run():
     select_connected_loop_or_sketch()
+
+
+if __name__ == "__main__":
+    run()
