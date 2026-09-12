@@ -92,18 +92,16 @@ The macro creates a sketch with proper 3D placement matching the original edge g
 3. Transforms all geometry to sketch local coordinates
 4. Maintains spatial relationship to original geometry
 
-## Installation
+## Alternative Installation
 
-This macro is bundled with the [Detessellate Workbench](https://github.com/yourusername/Detessellate), but can also be installed separately.
+This macro is bundled with the Detessellate Workbench, but can also be installed as a standalone macro.
 
-### Manual Installation
-
-1. Download `EdgeLoopToSketch.py`
-2. Place or Copy the downloaded file in the **Macro** folder
-    - In FreeCAD, Macro folder path can be found by going to: 
-      - `Macro → Macros...` shown in `User macros location`
-      - Or via `Preferences > Python > Macro > Macro Path`
-3. Close and reopen the Macro dialog or restart FreeCAD
+1. Download `EdgeLoopToSketch.py` from this repository.
+2. Place it in your FreeCAD macros directory:
+   - `Macro → Macros...` → **User macros location**, or
+   - `Edit → Preferences → Python → Macro → Macro path`
+3. Restart FreeCAD, or click **Refresh** in the Macro dialog.
+4. (Optional) Copy the matching icon from `Resources/Icons/EdgeLoopToSketch.svg` for use as a custom toolbar button.
 
 ## Workflow Integration
 

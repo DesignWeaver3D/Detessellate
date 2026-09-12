@@ -21,11 +21,16 @@
 - Sketcher Workbench  
 - Python 3 with NumPy (typically bundled)
 
-### 📦 Alternative Installation
-This macro is bundled with the Detessellate Workbench, but can also be manually installed separately.
+## Alternative Installation
 
-1. Place `SketchReProfile.py` in your FreeCAD macros directory  
-2. Restart FreeCAD or refresh the macro list
+This macro is bundled with the Detessellate Workbench, but can also be installed as a standalone macro.
+
+1. Download `SketchReProfile.py` from this repository.
+2. Place it in your FreeCAD macros directory:
+   - `Macro → Macros...` → **User macros location**, or
+   - `Edit → Preferences → Python → Macro → Macro path`
+3. Restart FreeCAD, or click **Refresh** in the Macro dialog.
+4. (Optional) Copy the matching icon from `Resources/Icons/SketchReProfile.svg` for use as a custom toolbar button.
 
 ## 📜 Changelog
 - **v2.0.0** (2026-01-18) - Massive optimization to quickly handle > 500 edge sketches in less 1 sec.

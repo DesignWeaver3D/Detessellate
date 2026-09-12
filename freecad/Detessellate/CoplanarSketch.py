@@ -873,3 +873,7 @@ def show_edge_data_collector_docker():
 
 def run():
     show_edge_data_collector_docker()
+
+
+if __name__ == "__main__":
+    run()

@@ -34,15 +34,13 @@ The original object is removed during the downgrade step, and a new solid is cre
 - Works best on clean STEP solids with well‑formed faces.
 - If the operation fails, inspect the Report View for details.
 
-## Installation
+## Alternative Installation
 
-This macro is bundled with the [Detessellate Workbench](https://github.com/yourusername/Detessellate), but can also be installed separately.
+This macro is bundled with the Detessellate Workbench, but can also be installed as a standalone macro.
 
-### Manual Installation
-
-1. Download `ReconstructSolid.py`
-2. Place or Copy the downloaded file in the Macro folder
-    - In FreeCAD, Macro folder path can be found by going to: 
-      - `Macro → Macros...` shown in `User macros location`
-      - Or via `Preferences > Python > Macro > Macro Path`
-3. Close and reopen the Macro dialog or restart FreeCAD
+1. Download `ReconstructSolid.py` from this repository.
+2. Place it in your FreeCAD macros directory:
+   - `Macro → Macros...` → **User macros location**, or
+   - `Edit → Preferences → Python → Macro → Macro path`
+3. Restart FreeCAD, or click **Refresh** in the Macro dialog.
+4. (Optional) Copy the matching icon from `Resources/Icons/ReconstructSolid.svg` for use as a custom toolbar button.

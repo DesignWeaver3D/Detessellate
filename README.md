@@ -1,5 +1,5 @@
 # Detessellate   
-Detessellate is a collection of FreeCAD macros that introduce an **algorithm-assisted workflow** for reverse engineering imported geometry including mesh models (STL, OBJ, 3MF), 3D scan point cloud data, and non-parametric STEP solids.  
+Detessellate is a collection of FreeCAD macros that introduce an **algorithm-assisted workflow** for reverse engineering imported geometry including mesh models (STL, OBJ, 3MF), point cloud data, and non-parametric STEP solids.  
 
 <img width="128" height="128" alt="Detessellate" src="https://github.com/user-attachments/assets/0c7ede91-acdf-4160-bc04-fc37f76c0e3c" />
 
@@ -20,9 +20,10 @@ FreeCAD Forum: https://forum.freecad.org/viewtopic.php?t=101467
 ## 📦 Included Macros
 
 ### General Tools
-- <img width="25" height="25" alt="MeshPlacementIcon" src="https://github.com/user-attachments/assets/57233128-99af-42cd-b23f-17bc44b23b97" /> [MeshPlacement](Documentation/MeshPlacement.md) – recenter and align meshes and solid objects to origin 
+- <img width="25" height="25" alt="MeshPlacementIcon" src="https://github.com/user-attachments/assets/57233128-99af-42cd-b23f-17bc44b23b97" /> [MeshPlacement](Documentation/MeshPlacement.md) – recenter and align meshes to origin 
 - <img width="25" height="25" alt="MeshToBodyIcon" src="https://github.com/user-attachments/assets/5ead9567-3c8c-40a1-a8f5-066e9259917e" /> [MeshToBody](Documentation/MeshToBody.md) – convert meshes into solids and bodies  
 - <img width="25" height="25" alt="CoplanarSketch" src="https://github.com/user-attachments/assets/a941d04a-1707-400b-bd9c-d0751c8ea021" /> [CoplanarSketch](Documentation/CoplanarSketch.md) – Generate construction sketches from coplanar edges on tessellated solids  
+- <img width="25" height="25" alt="MeshCSToSplines" src="PLACEHOLDER" /> [MeshCSToSplines](Documentation/MeshCSToSplines.md) – Convert Mesh Cross Sections into loft-ready splines
 - <img width="25" height="25" alt="PointPlaneSketch" src="https://github.com/user-attachments/assets/4ed28d6d-6908-47f5-bf3a-f589f030016a" /> [PointPlaneSketch](Documentation/PointPlaneSketch.md) - Generate sketches from selected points of a PointsObject.
 - <img width="25" height="25" alt="EdgeLoopSelectorIcon" src="https://github.com/user-attachments/assets/e2de31f8-bf12-46f7-b5eb-5a7271ec598b" /> [EdgeLoopSelector](Documentation/EdgeLoopSelector.md) – Select and process edge loops
 - <img width="25" height="25" alt="EdgeLoopToSketch" src="https://github.com/user-attachments/assets/2ed2553e-633c-4be4-aacc-32f5d4691915" /> [EdgeLoopToSketch](Documentation/EdgeLoopToSketch.md) - Generate sketches from selected coplanar 3D edges, preserving edge type.
@@ -40,20 +41,27 @@ FreeCAD Forum: https://forum.freecad.org/viewtopic.php?t=101467
 > Some of these macros are included for convenience and are not strictly part of the Detessellate workflow.
 
 ## 🚀 Getting Started
-Install via **FreeCAD Addon Manager**.
-1. In FreeCAD go to **Tools > Addon Manager**.
-2. In the Addon Manager dialog, search for **Detessellate** and select it.
-3. Click **Install**.
-4. Click **Ok**.
-5. **Restart** FreeCAD.
-6. Switch to the **Detessellate workbench** to load its custom toolbars.
+Install via **FreeCAD Addon Manager** by adding the Detessellate Repository to the custom repositories list.
+1. Open the Preferences via **Edit > Preferences**.
+2. Go to **Addon Manager Options**.
+3. Click the green **Plus** button under the **Custom Repository** list window to add to the list.
+4. Paste the **Repository URL** into the **Custom Repository** dialog box: **https://github.com/DesignWeaver3D/Detessellate**
+5. Type in the **Branch** name: **main**
+6. Click **OK**
+7. Open **Addon Manager** and find **Detessellate** in the list.
+8. Click **Install**
+10. **Restart** FreeCAD.
+11. Access tools from the **Detessellate workbench** and/or the custom toolbars that the workbench creates.
+
+<img width="885" height="932" alt="image" src="https://github.com/user-attachments/assets/8a0a0d23-7a0b-46d9-a032-3d1cb1f87fb2" />
 
 ## 🛣️ Roadmap
 - 📚 Expanded documentation and tutorials  
 - 🛠️ Additional utilities for Detessellate workflows  
+- 🎯 Integration with FreeCAD Addon Manager
 
 ## 📜 Changelog
-- **v1.1.0** (2026-05-12) - Detessellate workbench has been added to the FreeCAD Addon Manager Index!
+- **v1.2.0** (2026-07-12) - Added MeshCSToSplines macro for building loft-ready aligned splines from Mesh Workbench Cross Sections.
 - **v1.1.0** (2026-05-09) - PointPlaneSketch greatly improved with faster performance and a voxel filter for reducing points prior to creating a sketch.
 - **v1.0.0** (2026-05-07) - Restructured as a proper FreeCAD workbench for Addon Manager indexing.
 - **v0.4.2** (2026-04-01) - SketcherWireDoctor updated to v1.0.0, adding support for normal external geometry.

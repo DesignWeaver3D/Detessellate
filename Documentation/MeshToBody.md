@@ -27,13 +27,15 @@ https://forum.freecad.org/viewtopic.php?t=97579
 - **FreeCAD** v1.0.2+
 
 ## Alternative Installation
-This macro is bundled with the Detessellate Workbench, but can also be manually installed separately.
 
-1. Download `MeshToBody.py`  
-2. Place it in your FreeCAD macros directory which can be determined in these locations:
-   - `Edit > Preferences > Python > Macro > Macro path`
-   - `Macro > Macros... > User macros location:`
-3. Restart FreeCAD if already running
+This macro is bundled with the Detessellate Workbench, but can also be installed as a standalone macro.
+
+1. Download `MeshToBody.py` from this repository.
+2. Place it in your FreeCAD macros directory:
+   - `Macro → Macros...` → **User macros location**, or
+   - `Edit → Preferences → Python → Macro → Macro path`
+3. Restart FreeCAD, or click **Refresh** in the Macro dialog.
+4. (Optional) Copy the matching icon from `Resources/Icons/MeshToBody.svg` for use as a custom toolbar button.
 
 ## Usage
 

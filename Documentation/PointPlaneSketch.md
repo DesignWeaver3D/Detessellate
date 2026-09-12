@@ -1,7 +1,6 @@
 # PointPlaneSketch
-*Fit a sketch to scan points using RANSAC plane fitting*
 
-A FreeCAD tool for creating datum planes and sketches from mesh point data. Select a handful of vertices from a scanned surface, and PointPlaneSketch fits a best-fit plane through them — handling noise and outliers — then creates a sketch with construction points you can trace over. Available as part of the Detessellate workbench, installable via the FreeCAD Addon Manager.
+A FreeCAD macro for creating datum planes and sketches from mesh point data. It uses RANSAC plane fitting on user‑selected points, making it easier to turn scan data into usable geometry.
 
 <img width="128" height="128" alt="PointPlaneSketch" src="https://github.com/user-attachments/assets/4ed28d6d-6908-47f5-bf3a-f589f030016a" />
 
@@ -11,64 +10,75 @@ A FreeCAD tool for creating datum planes and sketches from mesh point data. Sele
 
 ## What it does
 
-- Fits planes to noisy point clouds using RANSAC
-- Lets you select 3+ vertices and refine with tolerance controls
-- Aligns the plane normal toward the camera for consistent orientation
-- Supports offset profile planes for capturing edge profiles through filleted geometry
-- Provides visual feedback with highlighted points and normal indicators
-- Outputs sketches & datum planes standalone or inside PartDesign bodies
+- Fits planes to noisy point clouds using RANSAC.
+- Lets you select 3+ vertices and refine with tolerance controls.
+- Aligns the plane normal toward the camera for consistent orientation.
+- Supports offset profile planes for capturing edges and fillets.
+- Provides visual feedback with highlighted points and normal indicators.
+- Outputs sketches either standalone or inside PartDesign bodies.
 
-The fitted plane aligns to your actual scan geometry regardless of where the mesh sits in 3D space — no need to align the mesh to the global origin first.
+## Why it's useful
 
-## Why not just manually place a datum plane?
-
-With clean CAD geometry you can snap to faces and edges. With scan data, surfaces are noisy and there is nothing to snap to. RANSAC fitting finds the statistically best plane through scattered points, ignoring outliers. You get a plane that actually matches the surface, not one you eyeballed.
+PointPlaneSketch reduces the manual effort of aligning datum planes to scan data. Instead of guessing or adjusting geometry by hand, you can interactively select points, preview the fit, and generate sketches that match your model's orientation.
 
 ## Quick Start
 
-1. **Import mesh or point cloud** into FreeCAD
-2. **Create a points shape**: use `Part > Points from Shape` to create a selectable points object
-3. **Select vertices**: pick 3 or more vertices that roughly define your plane
-4. **Click the PointPlaneSketch icon in the Detessellate workbench**: a panel appears
-5. **Adjust Tolerance**: control which points are included in the fit
-6. **Update Preview**: see highlighted points that will be used
-7. **Create Sketch**: generate the datum plane and sketch with construction points
+1. **Import mesh or point cloud**: Points shape object can be derived from either 
+2. **Create points shape**: Use `Part > Points from Shape` to create selectabe points shape object
+3. **Select vertices**: Pick 3 or more vertices that roughly define your plane
+4. **Run macro**: Execute PointPlaneSketch—a docker window appears
+5. **Adjust tolerance**: Fine-tune which points are included in the fit
+6. **Update preview**: See highlighted points that will be used
+7. **Create sketch**: Generate the datum plane and sketch with construction points for either Part or PartDesign
 
 ## Profile Plane Points (Optional)
 
-When a face has a filleted or rounded edge, the edge itself curves away from the face. If you want a sketch that traces the intended profile of that face — the boundary as if the fillet were not there — you need points sampled from the adjacent sides.
+For objects with filleted edges where the outer profile sits offset from the base:
 
-Profile Plane Points solves this by sampling a second set of points from a plane offset parallel to the base plane, then projecting them onto the base sketch.
-
-1. Enter an **Offset Distance** (mm) — positive moves away from camera, negative moves toward
-2. Set a **Profile Tolerance** for how thick the sampling band is
-3. Click **Add Profile Plane Points** — a second color shows the captured points
-4. Click **Create Sketch** — both sets appear as construction geometry in the sketch
-
-The result: base points define the surface plane, profile points trace the actual edge boundary through filleted geometry.
+1. Enter an **offset distance** (positive = away from camera, negative = toward)
+2. Set a **profile tolerance**
+3. Click **"Add Profile Plane Points"**—a second set of points highlights in a different color
+4. Click **"Create Sketch"** to include both base and profile points as construction geometry
 
 ## Controls
 
-- **Tolerance**: how far from the fitted plane a point can be and still be included (mm)
-- **Offset Distance**: distance from the base plane to the profile sampling plane (mm, accepts negative)
-- **Profile Tolerance**: thickness of the profile sampling band (mm)
-- **Highlight Color**: click swatches to change base or profile point preview colors
-- **Update Preview**: recalculate with current settings
-- **New Selection**: start over with a fresh vertex selection
+- **Tolerance**: Distance threshold (mm) for including points in the base plane
+- **Offset Distance**: How far (mm) to offset the profile plane from the base (accepts negative values)
+- **Profile Tolerance**: Distance threshold (mm) for profile plane points
+- **Highlight Color**: Click swatches to change base or profile point colors
+- **Update Preview**: Recalculate everything based on current settings
+- **New Selection**: Start over with a fresh selection
 
 ## Output Options
 
-- **Standalone (Part Workbench)**: independent datum plane and sketch using Placement
-- **New Body (PartDesign)**: creates a new PartDesign body containing the datum plane and sketch
-- **Existing Body**: adds the datum plane and sketch to a body you select
+- **Standalone (Part Workbench)**: Independent datum plane and sketch using Placement
+- **New Body (PartDesign)**: Creates a new PartDesign body containing the datum and sketch using Attachment Offset
+- **Existing Body**: Adds the datum and sketch to a body you select
+
+## Requirements
+
+- FreeCAD 1.0 or later
+- Python numpy
+
+## Alternative Installation
+
+This macro is bundled with the Detessellate Workbench, but can also be installed as a standalone macro.
+
+1. Download `PointPlaneSketch.py` from this repository.
+2. Place it in your FreeCAD macros directory:
+   - `Macro → Macros...` → **User macros location**, or
+   - `Edit → Preferences → Python → Macro → Macro path`
+3. Restart FreeCAD, or click **Refresh** in the Macro dialog.
+4. (Optional) Copy the matching icon from `Resources/Icons/PointPlaneSketch.svg` for use as a custom toolbar button.
 
 ## Tips
 
-- The centroid of your selected vertices becomes the sketch origin
-- Increase tolerance to include more points from noisy scans; decrease for tighter fits
-- Use negative offset distances to capture profiles on the camera-facing side
-- For easier point selection:
-  - Set the mesh object `View Property > Selectable` to `No`
-  - Set the points object `View Property > Point Size` to `8` or as desired
-  - Set the points object `View Property > On Top When Selected` to `Enabled`
-- To align a mesh to the global origin: put the sketch and mesh in a Part container, then use the sketch as the alignment reference with the Transform tool
+- Selected vertices will define the the created sketch origin
+- Increase tolerance to include more points from noisy scans
+- Decrease tolerance for tighter plane definitions
+- Use negative offset distances to capture profiles toward the camera
+- Profile points are particularly useful for rounded edges and chamfers
+- For easier point selection
+  - Set original mesh or points object `View Property > Selectable` to `No`
+  - Set point object `View Property > Point Size` to ≥ `8`
+  - Set point object `View Property > On Top When Selected` to `Enabled`

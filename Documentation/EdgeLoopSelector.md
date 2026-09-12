@@ -49,13 +49,15 @@ The macro builds a connectivity graph of all edges in the sketch by analyzing sh
 For 3D objects, at least two edges must be selected to define a plane. The macro first validates that all selected edges are coplanar by collecting their vertex points and computing a reference plane. It then filters each selected edge's parent faces to only those that are coplanar with the validated plane. For each selected edge, the macro identifies which wire (closed loop) on the coplanar faces contains that edge. All unique loops are collected and their edges are selected, allowing you to select multiple coplanar loops (such as an outer boundary and specific holes on a face) by selecting edges from each desired loop.
 
 ## Alternative Installation
-This macro is bundled with the Detessellate Workbench, but can also be manually installed separately.
 
-1. Download `SelectEdgeLoop.py`
-2. In FreeCAD, go to `Macro → Macros...`
-3. Click `User macros location` to open your macro folder
-4. Copy the downloaded file to this folder
-5. Restart FreeCAD or click `Refresh` in the Macro dialog
+This macro is bundled with the Detessellate Workbench, but can also be installed as a standalone macro.
+
+1. Download `EdgeLoopSelector.py` from this repository.
+2. Place it in your FreeCAD macros directory:
+   - `Macro → Macros...` → **User macros location**, or
+   - `Edit → Preferences → Python → Macro → Macro path`
+3. Restart FreeCAD, or click **Refresh** in the Macro dialog.
+4. (Optional) Copy the matching icon from `Resources/Icons/EdgeLoopSelector.svg` for use as a custom toolbar button.
 
 ## Contributing
 

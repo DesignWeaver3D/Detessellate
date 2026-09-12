@@ -88,6 +88,29 @@ class CoplanarSketchCommand:
         return FreeCAD.ActiveDocument is not None
 
 
+class MeshCSToSplinesCommand:
+
+    def GetResources(self):
+        return {
+            'Pixmap': asIcon('MeshCSToSplines'),
+            'MenuText': 'Mesh_CrossSection to Splines',
+            'ToolTip': 'Convert Mesh Cross Sections into loft-ready splines'
+        }
+
+    def Activated(self):
+        try:
+            import freecad.Detessellate.MeshCSToSplines as Macro
+            reload(Macro)
+            Macro.run()
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"Error running MeshCSToSplines: {e}\n")
+            import traceback
+            traceback.print_exc()
+
+    def IsActive(self):
+        return FreeCAD.ActiveDocument is not None
+
+
 class PointPlaneSketchCommand:
 
     def GetResources(self):
@@ -548,6 +571,7 @@ command_list = [
     ("Detessellate_MeshPlacement",          MeshPlacementCommand),
     ("Detessellate_MeshToBody",             MeshToBodyCommand),
     ("Detessellate_CoplanarSketch",         CoplanarSketchCommand),
+    ("Detessellate_MeshCSToSplines",        MeshCSToSplinesCommand),
     ("Detessellate_PointPlaneSketch",       PointPlaneSketchCommand),
     ("Detessellate_SketchReProfile",        SketchReProfileCommand),
     ("Detessellate_ConstrainAllPointOnPoint", ConstrainAllPointOnPointCommand),

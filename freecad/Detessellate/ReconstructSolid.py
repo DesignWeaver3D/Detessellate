@@ -46,3 +46,7 @@ def run():
         except Exception as e:
             doc.abortTransaction()
             FreeCAD.Console.PrintError(f"❌ Error: {e}\n")
+
+
+if __name__ == "__main__":
+    run()
